@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="page-actions">
+    <a class="btn btn-primary" href="/tanks/new">New tank</a>
+  </section>
+
+  {% if tanks %}
+    <section class="tank-grid">
+      {% for tank in tanks %}
+        <a class="tank-tile" href="/tanks/{{ tank.id }}">
+          <span class="metric-label">{{ tank.tank_type }}</span>
+          <strong>{{ tank.name }}</strong>
+          <div class="tile-meta">
+            <span>{{ tank.volume_liters or "--" }} L</span>
+            <span>{{ tank.event_count }} events</span>
+          </div>
+          {% if tank.latest_event_at %}
+            <small>Last event {{ tank.latest_event_at.strftime("%b %-d, %Y") }}</small>
+          {% else %}
+            <small>No events yet</small>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="panel">
+      <div class="empty-state">
+        <strong>No tanks yet</strong>
+        <span>Create your first tank to start logging water tests and trends.</span>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+

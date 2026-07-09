@@ -127,6 +127,12 @@ body {
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
 }
 
+.page-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 .panel {
   padding: 1rem;
 }
@@ -230,6 +236,146 @@ body {
   color: var(--aqua-text-muted);
 }
 
+.parameter-cell small {
+  color: var(--aqua-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+
+.status-ok {
+  border-color: rgb(55 194 161 / 50%);
+}
+
+.status-low,
+.status-high {
+  border-color: rgb(231 185 95 / 75%);
+}
+
+.tank-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.tank-tile,
+.tank-header,
+.chart-panel {
+  background: var(--aqua-panel);
+  border: 1px solid var(--aqua-border);
+  border-radius: 8px;
+}
+
+.tank-tile {
+  color: #edf4f7;
+  display: grid;
+  gap: 0.6rem;
+  min-height: 160px;
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.tank-tile:hover {
+  border-color: rgb(55 194 161 / 55%);
+}
+
+.tank-tile strong,
+.tank-header h2 {
+  font-size: 1.35rem;
+}
+
+.tank-tile small {
+  color: var(--aqua-text-muted);
+}
+
+.tile-meta {
+  color: var(--aqua-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tile-meta span {
+  background: var(--aqua-panel-soft);
+  border: 1px solid var(--aqua-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+.tank-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.tank-header h2 {
+  margin: 0;
+}
+
+.form-layout {
+  display: grid;
+  max-width: 920px;
+}
+
+.stack-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-grid,
+.water-test-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.water-test-grid {
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+}
+
+.chart-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart-panel {
+  min-height: 260px;
+  padding: 1rem;
+}
+
+.chart-panel h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.chart-panel canvas {
+  height: 200px;
+  max-height: 200px;
+  width: 100%;
+}
+
+.target-table {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.target-row {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(120px, 1fr) repeat(3, minmax(88px, 0.55fr));
+}
+
+.target-head {
+  color: var(--aqua-text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .auth-layout {
   display: grid;
   min-height: 60vh;
@@ -264,6 +410,11 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 
+  .chart-grid,
+  .water-test-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .parameter-grid {
     grid-template-columns: repeat(4, minmax(92px, 1fr));
   }
@@ -275,15 +426,26 @@ body {
   }
 
   .topbar,
-  .timeline-item {
+  .timeline-item,
+  .tank-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .stats-grid,
   .content-grid,
-  .parameter-grid {
+  .parameter-grid,
+  .form-grid,
+  .water-test-grid,
+  .chart-grid {
     grid-template-columns: 1fr;
   }
-}
 
+  .target-row {
+    grid-template-columns: 1fr;
+  }
+
+  .target-head {
+    display: none;
+  }
+}

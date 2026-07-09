@@ -32,6 +32,7 @@ def dashboard(
         "dashboard/index.html",
         {
             "title": "Dashboard",
+            "active_nav": "dashboard",
             "current_user": current_user,
             "snapshot": snapshot,
         },

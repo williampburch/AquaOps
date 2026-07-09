@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="tank-header">
+    <div>
+      <p class="eyebrow mb-1">{{ tank.tank_type }}</p>
+      <h2>{{ tank.name }}</h2>
+      <div class="tile-meta">
+        <span>{{ tank.volume_liters or "--" }} L</span>
+        {% if tank.started_on %}
+          <span>Started {{ tank.started_on.strftime("%b %-d, %Y") }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <a class="btn btn-outline-light" href="/tanks">All tanks</a>
+  </section>
+
+  <section class="parameter-grid mt-4">
+    {% for reading in tank.latest_readings %}
+      <div class="parameter-cell status-{{ reading.status }}">
+        <span>{{ reading.label }}</span>
+        <strong>{{ reading.value }} {{ reading.unit }}</strong>
+        <small>{{ reading.status|title }}</small>
+      </div>
+    {% endfor %}
+    {% if not tank.latest_readings %}
+      {% for target in tank.targets %}
+        <div class="parameter-cell muted">
+          <span>{{ target.label }}</span>
+          <strong>--</strong>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </section>
+
+  <section class="content-grid mt-4">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Water Test</h2>
+      </div>
+      <form class="stack-form" method="post" action="/tanks/{{ tank.id }}/water-tests">
+        <div>
+          <label class="form-label" for="occurred_at">Date</label>
+          <input class="form-control" id="occurred_at" name="occurred_at" type="datetime-local" />
+        </div>
+        <div class="water-test-grid">
+          {% for target in tank.targets %}
+            <div>
+              <label class="form-label" for="{{ target.metric_key }}">{{ target.label }}</label>
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  id="{{ target.metric_key }}"
+                  name="{{ target.metric_key }}"
+                  type="number"
+                  step="0.001"
+                />
+                <span class="input-group-text">{{ target.unit }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <div>
+          <label class="form-label" for="notes">Notes</label>
+          <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Log water test</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Recent Events</h2>
+      </div>
+      {% if tank.recent_events %}
+        <div class="timeline compact">
+          {% for event in tank.recent_events %}
+            <div class="timeline-item">
+              <span class="event-pill">{{ event.event_type.replace("_", " ") }}</span>
+              <div>
+                <h3>{{ event.title }}</h3>
+                <p>{{ event.occurred_at.strftime("%b %-d, %Y") }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <strong>No events yet</strong>
+          <span>Log a water test to start the timeline.</span>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel mt-4">
+    <div class="panel-heading">
+      <h2>Water Trends</h2>
+    </div>
+    {% if chart_payload %}
+      <div class="chart-grid">
+        {% for series in chart_payload %}
+          <div class="chart-panel">
+            <h3>{{ series.label }}</h3>
+            <canvas id="chart-{{ series.metric }}"></canvas>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <strong>No trend data yet</strong>
+        <span>Charts appear after water tests are logged.</span>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="panel mt-4">
+    <div class="panel-heading">
+      <h2>Target Ranges</h2>
+    </div>
+    <form method="post" action="/tanks/{{ tank.id }}/targets">
+      <div class="target-table">
+        <div class="target-row target-head">
+          <span>Metric</span>
+          <span>Minimum</span>
+          <span>Maximum</span>
+          <span>Unit</span>
+        </div>
+        {% for target in tank.targets %}
+          <div class="target-row">
+            <strong>{{ target.label }}</strong>
+            <input
+              class="form-control"
+              name="{{ target.metric_key }}_min"
+              type="number"
+              step="0.001"
+              value="{{ target.min_value if target.min_value is not none else '' }}"
+            />
+            <input
+              class="form-control"
+              name="{{ target.metric_key }}_max"
+              type="number"
+              step="0.001"
+              value="{{ target.max_value if target.max_value is not none else '' }}"
+            />
+            <input
+              class="form-control"
+              name="{{ target.metric_key }}_unit"
+              type="text"
+              value="{{ target.unit }}"
+            />
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary mt-3" type="submit">Save targets</button>
+    </form>
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if chart_payload %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+      const chartSeries = {{ chart_payload|tojson }};
+      const palette = ["#37c2a1", "#70a7ff", "#e7b95f", "#ef7d8a", "#a78bfa", "#55d6be", "#f29d49", "#8ecae6"];
+
+      chartSeries.forEach((series, index) => {
+        const canvas = document.getElementById(`chart-${series.metric}`);
+        new Chart(canvas, {
+          type: "line",
+          data: {
+            labels: series.labels,
+            datasets: [{
+              label: `${series.label} (${series.unit})`,
+              data: series.values,
+              borderColor: palette[index % palette.length],
+              backgroundColor: "rgba(55, 194, 161, 0.12)",
+              tension: 0.28,
+              pointRadius: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: "#c8d4dc" } }
+            },
+            scales: {
+              x: { ticks: { color: "#9aa8b3" }, grid: { color: "rgba(154, 168, 179, 0.12)" } },
+              y: { ticks: { color: "#9aa8b3" }, grid: { color: "rgba(154, 168, 179, 0.12)" } }
+            }
+          }
+        });
+      });
+    </script>
+  {% endif %}
+{% endblock %}

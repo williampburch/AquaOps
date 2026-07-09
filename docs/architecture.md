@@ -47,9 +47,15 @@ Reportable type-specific data lives in detail tables such as `event_measurements
 `maintenance_event_details`, and `fertilizer_event_details`. This keeps timeline queries
 simple without hiding important data inside an opaque JSON column.
 
+## Tank-Specific Targets
+
+Water parameters are interpreted through `tank_parameter_targets`, not global constants.
+Each tank can carry its own acceptable ranges for ammonia, nitrite, nitrate, pH,
+temperature, KH, GH, and TDS. The dashboard and tank detail pages can then classify
+readings against the tank's actual goals.
+
 ## Authentication
 
 Local auth uses bcrypt password hashes and server-side sessions. The browser receives a
 random session token. The database stores only an HMAC-SHA256 hash of that token, scoped by
 the application secret key.
-

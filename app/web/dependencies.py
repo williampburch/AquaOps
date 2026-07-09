@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -48,6 +48,9 @@ def get_current_user(
     return session_record.user
 
 
+CurrentUser = Annotated[UserModel | None, Depends(get_current_user)]
+
+
 def create_login_session(user: UserModel, db: Session, settings: Settings) -> str:
     token = generate_session_token()
     db.add(
@@ -59,3 +62,15 @@ def create_login_session(user: UserModel, db: Session, settings: Settings) -> st
     )
     db.commit()
     return token
+
+
+def require_current_user(current_user: CurrentUser) -> UserModel:
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            headers={"Location": "/login"},
+        )
+    return current_user
+
+
+AuthenticatedUser = Annotated[UserModel, Depends(require_current_user)]

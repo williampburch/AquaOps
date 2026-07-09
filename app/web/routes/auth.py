@@ -31,7 +31,12 @@ def register_form(request: Request, current_user: CurrentUser):
     return templates.TemplateResponse(
         request,
         "auth/register.html",
-        {"title": "Create account", "current_user": current_user, "error": None},
+        {
+            "title": "Create account",
+            "active_nav": "auth",
+            "current_user": current_user,
+            "error": None,
+        },
     )
 
 
@@ -57,6 +62,7 @@ def register(
             "auth/register.html",
             {
                 "title": "Create account",
+                "active_nav": "auth",
                 "current_user": None,
                 "error": "That email or username is already in use.",
             },
@@ -85,7 +91,12 @@ def login_form(request: Request, current_user: CurrentUser):
     return templates.TemplateResponse(
         request,
         "auth/login.html",
-        {"title": "Sign in", "current_user": current_user, "error": None},
+        {
+            "title": "Sign in",
+            "active_nav": "auth",
+            "current_user": current_user,
+            "error": None,
+        },
     )
 
 
@@ -109,6 +120,7 @@ def login(
             "auth/login.html",
             {
                 "title": "Sign in",
+                "active_nav": "auth",
                 "current_user": None,
                 "error": "Invalid email or password.",
             },

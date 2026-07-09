@@ -50,3 +50,8 @@ alembic upgrade head
 The app can auto-create tables in development through `AUTO_CREATE_TABLES=true`, but
 production deployments should rely on Alembic migrations.
 
+## Current Product Slice
+
+After creating an account, create a tank from `/tanks`, adjust its water parameter
+targets, and log water tests from the tank detail page. Trend charts render after at
+least one water test exists.

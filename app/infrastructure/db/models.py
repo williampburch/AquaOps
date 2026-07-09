@@ -86,7 +86,27 @@ class TankModel(TimestampMixin, Base):
         back_populates="tank",
         cascade="all, delete-orphan",
     )
+    parameter_targets: Mapped[list[TankParameterTargetModel]] = relationship(
+        back_populates="tank",
+        cascade="all, delete-orphan",
+    )
     events: Mapped[list[EventModel]] = relationship(back_populates="tank")
+
+
+class TankParameterTargetModel(TimestampMixin, Base):
+    __tablename__ = "tank_parameter_targets"
+    __table_args__ = (
+        UniqueConstraint("tank_id", "metric_key", name="uq_tank_parameter_target_metric"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
+    metric_key: Mapped[str] = mapped_column(String(40), index=True)
+    min_value: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
+    max_value: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
+    unit: Mapped[str] = mapped_column(String(24))
+
+    tank: Mapped[TankModel] = relationship(back_populates="parameter_targets")
 
 
 class LivestockModel(TimestampMixin, Base):

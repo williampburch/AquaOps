@@ -10,6 +10,7 @@ erDiagram
 
   TANKS ||--o{ LIVESTOCK : contains
   TANKS ||--o{ PLANTS : contains
+  TANKS ||--o{ TANK_PARAMETER_TARGETS : defines
   TANKS ||--o{ EVENTS : records
   TANKS ||--o{ REMINDERS : schedules
 
@@ -31,6 +32,7 @@ erDiagram
 - `tanks`: aquariums owned by a user
 - `livestock`: fish, shrimp, snails, and other aquatic animals
 - `plants`: aquatic plants per tank
+- `tank_parameter_targets`: acceptable per-tank ranges for water parameters
 - `events`: generic chronological record
 - `event_measurements`: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
 - `maintenance_event_details`: water changes, cleaning, filter work, substrate vacuum, equipment replacement, plant trimming
@@ -40,4 +42,3 @@ erDiagram
 - `media_assets`: local media metadata
 - `photo_event_details`: photo captions linked to events
 - `reminders`: upcoming and completed operational reminders
-

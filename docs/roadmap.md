@@ -11,7 +11,9 @@
 
 ## Phase 2: Tanks and Inventory
 
-- Tank CRUD
+- Tank creation and profile pages
+- Tank-specific target ranges
+- Water test logging and charts
 - Livestock CRUD
 - Plant CRUD
 - Tank detail timeline
@@ -47,4 +49,3 @@
 - Backup and restore scripts
 - PostgreSQL deployment profile
 - Media storage abstraction for Azure Blob Storage
-

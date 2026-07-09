@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="form-layout">
+    <form class="panel stack-form" method="post" action="/tanks">
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <div class="form-grid">
+        <div>
+          <label class="form-label" for="name">Name</label>
+          <input class="form-control" id="name" name="name" type="text" required />
+        </div>
+        <div>
+          <label class="form-label" for="tank_type">Type</label>
+          <select class="form-select" id="tank_type" name="tank_type">
+            <option value="freshwater">Freshwater</option>
+            <option value="planted">Planted freshwater</option>
+            <option value="brackish">Brackish</option>
+            <option value="saltwater">Saltwater</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="volume_liters">Volume</label>
+          <input class="form-control" id="volume_liters" name="volume_liters" type="number" step="0.01" />
+        </div>
+        <div>
+          <label class="form-label" for="started_on">Started</label>
+          <input class="form-control" id="started_on" name="started_on" type="date" />
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label class="form-label" for="lighting">Lighting</label>
+          <input class="form-control" id="lighting" name="lighting" type="text" />
+        </div>
+        <div>
+          <label class="form-label" for="filtration">Filtration</label>
+          <input class="form-control" id="filtration" name="filtration" type="text" />
+        </div>
+        <div>
+          <label class="form-label" for="substrate">Substrate</label>
+          <input class="form-control" id="substrate" name="substrate" type="text" />
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Create tank</button>
+        <a class="btn btn-outline-light" href="/tanks">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}
+

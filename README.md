@@ -14,7 +14,11 @@ This repository contains the publishable foundation:
 - SQLAlchemy ORM models for users, sessions, tanks, livestock, plants, generic events, event details, media, and reminders
 - Alembic migration environment with an initial schema migration
 - Local bcrypt authentication with hashed server-side session tokens
-- Responsive dark dashboard shell using Jinja2, Bootstrap 5, and HTMX
+- Tank creation and tank detail pages
+- Tank-specific water parameter target ranges
+- Water test logging through the generic event model
+- Latest-reading status cards and trend charts
+- Responsive dark UI using Jinja2, Bootstrap 5, HTMX, and Chart.js
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - GitHub Actions CI for linting, formatting, and tests
 - Architecture, ERD, developer setup, and deployment documentation
@@ -74,8 +78,14 @@ make migrate
 - [Deployment Guide](docs/deployment.md)
 - [Roadmap](docs/roadmap.md)
 
+## Implemented Tracking
+
+- Tank profile: type, volume, start date, lighting, filtration, substrate
+- Water targets: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
+- Water tests: logged as generic `water_test` events with metric rows
+- Analytics: latest reading status and per-parameter trend charts
+
 ## Roadmap
 
-The next implementation phases are tank CRUD, inventory management, event logging forms,
-fertilizer reminders, photo timelines, and reports/charts.
-
+The next implementation phases are inventory management, maintenance events, fertilizer/root-tab
+events, feeding logs, photo timelines, and richer reports.
