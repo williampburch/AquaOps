@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="command-strip">
+    <div>
+      <strong>Care Queue</strong>
+      <span>{{ snapshot.items|length }} open reminders and alerts</span>
+    </div>
+    <div class="command-actions">
+      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
+      <a class="btn btn-primary btn-sm" href="/settings">Configure</a>
+    </div>
+  </section>
+
+  <section class="inventory-summary">
+    <article class="insight-card">
+      <span>Overdue</span>
+      <strong>{{ snapshot.overdue_count }}</strong>
+      <small>Needs attention</small>
+    </article>
+    <article class="insight-card">
+      <span>Due Today</span>
+      <strong>{{ snapshot.due_today_count }}</strong>
+      <small>Today's care queue</small>
+    </article>
+    <article class="insight-card">
+      <span>Upcoming</span>
+      <strong>{{ snapshot.upcoming_count }}</strong>
+      <small>Next 14 days</small>
+    </article>
+  </section>
+
+  <section class="panel surface-panel mt-4">
+    <div class="panel-heading">
+      <h2>Open Items</h2>
+    </div>
+    {% if snapshot.items %}
+      <div class="notification-list">
+        {% for item in snapshot.items %}
+          <article class="notification-row {{ item.status }}">
+            <div>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.reminder_type.replace("_", " ")|title }} · {{ item.tank_name or "No tank" }}</span>
+            </div>
+            <div class="notification-meta">
+              <span>{{ item.status.replace("_", " ")|title }}</span>
+              <time>{{ item.due_at.strftime("%b %-d, %Y") }}</time>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state elevated-empty">
+        <strong>No open notifications</strong>
+        <span>Scheduled care and parameter alerts will appear here.</span>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

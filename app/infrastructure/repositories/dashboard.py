@@ -60,19 +60,19 @@ class SqlAlchemyDashboardRepository:
 
     def _count_livestock(self, user_id: int) -> int:
         statement = (
-            select(func.count())
+            select(func.coalesce(func.sum(LivestockModel.quantity), 0))
             .select_from(LivestockModel)
             .join(TankModel, TankModel.id == LivestockModel.tank_id)
-            .where(TankModel.user_id == user_id)
+            .where(TankModel.user_id == user_id, LivestockModel.retired_on.is_(None))
         )
         return self._scalar_count(statement)
 
     def _count_plants(self, user_id: int) -> int:
         statement = (
-            select(func.count())
+            select(func.coalesce(func.sum(func.coalesce(PlantModel.quantity, 1)), 0))
             .select_from(PlantModel)
             .join(TankModel, TankModel.id == PlantModel.tank_id)
-            .where(TankModel.user_id == user_id)
+            .where(TankModel.user_id == user_id, PlantModel.removed_on.is_(None))
         )
         return self._scalar_count(statement)
 

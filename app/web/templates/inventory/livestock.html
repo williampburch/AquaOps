@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="command-strip">
+    <div>
+      <strong>Livestock Inventory</strong>
+      <span>{{ snapshot.summary.total_count }} animals across {{ snapshot.summary.species_count }} species</span>
+    </div>
+    <div class="command-actions">
+      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
+      <a class="btn btn-primary btn-sm" href="/tanks">View tanks</a>
+    </div>
+  </section>
+
+  <section class="inventory-summary">
+    <article class="insight-card">
+      <span>Total Animals</span>
+      <strong>{{ snapshot.summary.total_count }}</strong>
+      <small>Current active livestock count</small>
+    </article>
+    <article class="insight-card">
+      <span>Species</span>
+      <strong>{{ snapshot.summary.species_count }}</strong>
+      <small>Grouped by scientific or common name</small>
+    </article>
+    <article class="insight-card">
+      <span>Tanks</span>
+      <strong>{{ snapshot.summary.tank_count }}</strong>
+      <small>Habitats with active livestock</small>
+    </article>
+  </section>
+
+  <section class="panel surface-panel mt-4">
+    <div class="panel-heading">
+      <h2>Species Breakdown</h2>
+    </div>
+    {% if snapshot.groups %}
+      <div class="inventory-list">
+        {% for group in snapshot.groups %}
+          <article class="inventory-row">
+            <div>
+              <strong>{{ group.common_name }}</strong>
+              <span>{{ group.species or "Species not recorded" }}</span>
+            </div>
+            <div class="inventory-tanks">
+              {% for tank_name in group.tank_names %}
+                <span>{{ tank_name }}</span>
+              {% endfor %}
+            </div>
+            <strong class="inventory-count">{{ group.quantity }}</strong>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state elevated-empty">
+        <strong>No livestock yet</strong>
+        <span>Add fish, shrimp, snails, or other animals from a tank detail page.</span>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

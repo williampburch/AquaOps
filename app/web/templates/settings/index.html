@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="command-strip">
+    <div>
+      <strong>Automation Control</strong>
+      <span>Schedules, thresholds, reminders, and feature modules</span>
+    </div>
+    <div class="command-actions">
+      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
+      <a class="btn btn-primary btn-sm" href="/notifications">Notifications</a>
+    </div>
+  </section>
+
+  <section class="settings-grid">
+    {% for card in automation_cards %}
+      <article class="settings-card">
+        <div>
+          <span>{{ card.status }}</span>
+          <strong>{{ card.title }}</strong>
+          <p>{{ card.detail }}</p>
+        </div>
+        <button class="toggle-shell" type="button" aria-label="{{ card.title }} toggle" disabled>
+          <span></span>
+        </button>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

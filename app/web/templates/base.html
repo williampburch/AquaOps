@@ -32,10 +32,26 @@
           </span>
         </a>
         <nav class="nav flex-column gap-1">
-          <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">Dashboard</a>
-          <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">Tanks</a>
-          <a class="nav-link disabled" aria-disabled="true">Events</a>
-          <a class="nav-link disabled" aria-disabled="true">Reports</a>
+          <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">
+            <span class="nav-glyph" aria-hidden="true"></span>
+            Dashboard
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">
+            <span class="nav-glyph" aria-hidden="true"></span>
+            Tanks
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">
+            <span class="nav-glyph" aria-hidden="true"></span>
+            Events
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="/reports">
+            <span class="nav-glyph" aria-hidden="true"></span>
+            Reports
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">
+            <span class="nav-glyph" aria-hidden="true"></span>
+            Settings
+          </a>
         </nav>
       </aside>
 
@@ -58,6 +74,9 @@
               </button>
             </div>
             {% if current_user %}
+              <a class="icon-button notification-button {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications" title="Notifications" aria-label="Notifications">
+                <span class="notification-dot" aria-hidden="true"></span>
+              </a>
               <span class="user-chip">{{ current_user.username }}</span>
               <form method="post" action="/logout">
                 <button class="btn btn-outline-light btn-sm" type="submit">Sign out</button>

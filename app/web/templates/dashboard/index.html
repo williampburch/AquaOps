@@ -14,22 +14,26 @@
   </section>
 
   <section class="stats-grid">
-    <article class="metric-card">
+    <a class="metric-card metric-link" href="/tanks">
       <span class="metric-label">Tanks</span>
       <strong class="metric-value">{{ snapshot.tank_count }}</strong>
-    </article>
-    <article class="metric-card">
+      <span class="metric-action">Open tanks</span>
+    </a>
+    <a class="metric-card metric-link" href="/events">
       <span class="metric-label">Events</span>
       <strong class="metric-value">{{ snapshot.event_count }}</strong>
-    </article>
-    <article class="metric-card">
+      <span class="metric-action">Open events</span>
+    </a>
+    <a class="metric-card metric-link" href="/livestock">
       <span class="metric-label">Livestock</span>
       <strong class="metric-value">{{ snapshot.livestock_count }}</strong>
-    </article>
-    <article class="metric-card">
+      <span class="metric-action">View species</span>
+    </a>
+    <a class="metric-card metric-link" href="/plants">
       <span class="metric-label">Plants</span>
       <strong class="metric-value">{{ snapshot.plant_count }}</strong>
-    </article>
+      <span class="metric-action">View species</span>
+    </a>
   </section>
 
   <section class="content-grid mt-4">

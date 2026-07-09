@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="command-strip">
+    <div>
+      <strong>Operations Intelligence</strong>
+      <span>Portfolio-grade summaries from the generic event stream</span>
+    </div>
+    <div class="command-actions">
+      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
+      <a class="btn btn-primary btn-sm" href="/events">View events</a>
+    </div>
+  </section>
+
+  <section class="insight-grid">
+    {% for metric in snapshot.metrics %}
+      <article class="insight-card">
+        <span>{{ metric.label }}</span>
+        <strong>{{ metric.value }}</strong>
+        <small>{{ metric.detail }}</small>
+      </article>
+    {% endfor %}
+  </section>
+
+  <section class="report-grid mt-4">
+    <div class="panel surface-panel">
+      <div class="panel-heading">
+        <h2>Event Mix</h2>
+      </div>
+      {% if event_mix_payload %}
+        <div class="report-chart">
+          <canvas id="eventMixChart"></canvas>
+        </div>
+      {% else %}
+        <div class="empty-state elevated-empty">
+          <strong>No event data</strong>
+          <span>Seed demo data or log events to populate this chart.</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="panel surface-panel">
+      <div class="panel-heading">
+        <h2>Nitrate Trend</h2>
+      </div>
+      {% if nitrate_payload %}
+        <div class="report-chart">
+          <canvas id="nitrateTrendChart"></canvas>
+        </div>
+      {% else %}
+        <div class="empty-state elevated-empty">
+          <strong>No nitrate data</strong>
+          <span>Log water tests to track nitrate over time.</span>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel surface-panel mt-4">
+    <div class="panel-heading">
+      <h2>Event Breakdown</h2>
+    </div>
+    {% if snapshot.event_type_summary %}
+      <div class="data-table">
+        <div class="data-row data-head">
+          <span>Event Type</span>
+          <span>Count</span>
+          <span>Share</span>
+        </div>
+        {% set total_events = snapshot.metrics[1].value|int %}
+        {% for item in snapshot.event_type_summary %}
+          <div class="data-row">
+            <strong>{{ item.event_type.replace("_", " ")|title }}</strong>
+            <span>{{ item.count }}</span>
+            <span>{{ ((item.count / total_events) * 100)|round(1) if total_events else 0 }}%</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state elevated-empty">
+        <strong>No report rows</strong>
+        <span>Reports will populate as events are logged.</span>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if event_mix_payload or nitrate_payload %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+      const eventMixPayload = {{ event_mix_payload|tojson }};
+      const nitratePayload = {{ nitrate_payload|tojson }};
+      const reportCharts = [];
+
+      const cssColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      const reportColors = () => ({
+        text: cssColor("--aqua-text"),
+        muted: cssColor("--aqua-text-muted"),
+        grid: cssColor("--aqua-chart-grid"),
+        accent: cssColor("--aqua-accent"),
+        blue: cssColor("--aqua-blue"),
+        warning: cssColor("--aqua-warning"),
+        danger: cssColor("--aqua-danger"),
+      });
+
+      const buildCharts = () => {
+        const colors = reportColors();
+        if (eventMixPayload.length) {
+          const eventMixChart = new Chart(document.getElementById("eventMixChart"), {
+            type: "doughnut",
+            data: {
+              labels: eventMixPayload.map((row) => row.label),
+              datasets: [{
+                data: eventMixPayload.map((row) => row.value),
+                backgroundColor: [colors.accent, colors.blue, colors.warning, colors.danger, "#8b5cf6", "#14b8a6"],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: "bottom", labels: { color: colors.muted, boxWidth: 10 } }
+              }
+            }
+          });
+          reportCharts.push(eventMixChart);
+        }
+
+        if (nitratePayload.length) {
+          const nitrateTrendChart = new Chart(document.getElementById("nitrateTrendChart"), {
+            type: "line",
+            data: {
+              labels: nitratePayload.map((row) => `${row.date} · ${row.tank}`),
+              datasets: [{
+                label: "Nitrate ppm",
+                data: nitratePayload.map((row) => row.value),
+                borderColor: colors.accent,
+                backgroundColor: "rgba(15, 159, 133, 0.12)",
+                pointRadius: 2,
+                tension: 0.3
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { labels: { color: colors.muted } }
+              },
+              scales: {
+                x: { ticks: { color: colors.muted, maxTicksLimit: 6 }, grid: { color: colors.grid } },
+                y: { ticks: { color: colors.muted }, grid: { color: colors.grid } }
+              }
+            }
+          });
+          reportCharts.push(nitrateTrendChart);
+        }
+      };
+
+      buildCharts();
+      window.addEventListener("aquaops:theme-change", () => {
+        reportCharts.forEach((chart) => chart.destroy());
+        reportCharts.length = 0;
+        buildCharts();
+      });
+    </script>
+  {% endif %}
+{% endblock %}

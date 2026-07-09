@@ -9,7 +9,19 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import Settings, get_settings
 from app.infrastructure.db.base import Base
 from app.infrastructure.db.session import engine
-from app.web.routes import auth, dashboard, health, tanks
+from app.web.routes import (
+    auth,
+    dashboard,
+    events,
+    health,
+    inventory,
+    notifications,
+    reports,
+    tanks,
+)
+from app.web.routes import (
+    settings as settings_routes,
+)
 
 
 @asynccontextmanager
@@ -36,6 +48,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(tanks.router)
+    app.include_router(inventory.router)
+    app.include_router(events.router)
+    app.include_router(notifications.router)
+    app.include_router(reports.router)
+    app.include_router(settings_routes.router)
     app.include_router(dashboard.router)
     return app
 
