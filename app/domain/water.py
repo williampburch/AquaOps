@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from dataclasses import dataclass
 from decimal import Decimal
 
 from app.domain.enums import MeasurementMetric
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WaterMetricDefinition:
     key: MeasurementMetric
     label: str
@@ -14,11 +16,11 @@ class WaterMetricDefinition:
     decimal_places: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class WaterTargetPreset:
     metric_key: str
-    min_value: Decimal | None
-    max_value: Decimal | None
+    min_value: Optional[Decimal]
+    max_value: Optional[Decimal]
     unit: str
 
 

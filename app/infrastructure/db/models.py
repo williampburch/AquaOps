@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import (
     JSON,
@@ -57,7 +57,7 @@ class SessionModel(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     user: Mapped[UserModel] = relationship(back_populates="sessions")
 
@@ -68,14 +68,14 @@ class TankModel(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(120))
-    description: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[Optional[str]] = mapped_column(Text)
     tank_type: Mapped[str] = mapped_column(String(80), default="freshwater")
-    volume_liters: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
-    lighting: Mapped[str | None] = mapped_column(String(255))
-    filtration: Mapped[str | None] = mapped_column(String(255))
-    substrate: Mapped[str | None] = mapped_column(String(255))
-    started_on: Mapped[date | None] = mapped_column(Date)
-    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    volume_liters: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2))
+    lighting: Mapped[Optional[str]] = mapped_column(String(255))
+    filtration: Mapped[Optional[str]] = mapped_column(String(255))
+    substrate: Mapped[Optional[str]] = mapped_column(String(255))
+    started_on: Mapped[Optional[date]] = mapped_column(Date)
+    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
 
     user: Mapped[UserModel] = relationship(back_populates="tanks")
     livestock: Mapped[list[LivestockModel]] = relationship(
@@ -102,8 +102,8 @@ class TankParameterTargetModel(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
     metric_key: Mapped[str] = mapped_column(String(40), index=True)
-    min_value: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
-    max_value: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
+    min_value: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 3))
+    max_value: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 3))
     unit: Mapped[str] = mapped_column(String(24))
 
     tank: Mapped[TankModel] = relationship(back_populates="parameter_targets")
@@ -115,12 +115,12 @@ class LivestockModel(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
     common_name: Mapped[str] = mapped_column(String(120))
-    species: Mapped[str | None] = mapped_column(String(160))
+    species: Mapped[str] = mapped_column(String(160))
     quantity: Mapped[int] = mapped_column(Integer, default=1)
-    sex: Mapped[str | None] = mapped_column(String(40))
-    notes: Mapped[str | None] = mapped_column(Text)
-    acquired_on: Mapped[date | None] = mapped_column(Date)
-    retired_on: Mapped[date | None] = mapped_column(Date)
+    sex: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    acquired_on: Mapped[Optional[date]] = mapped_column(Date)
+    retired_on: Mapped[Optional[date]] = mapped_column(Date)
 
     tank: Mapped[TankModel] = relationship(back_populates="livestock")
 
@@ -131,11 +131,11 @@ class PlantModel(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
     common_name: Mapped[str] = mapped_column(String(120))
-    species: Mapped[str | None] = mapped_column(String(160))
-    quantity: Mapped[int | None] = mapped_column(Integer)
-    notes: Mapped[str | None] = mapped_column(Text)
-    planted_on: Mapped[date | None] = mapped_column(Date)
-    removed_on: Mapped[date | None] = mapped_column(Date)
+    species: Mapped[str] = mapped_column(String(160))
+    quantity: Mapped[int] = mapped_column(Integer)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    planted_on: Mapped[Optional[date]] = mapped_column(Date)
+    removed_on: Mapped[Optional[date]] = mapped_column(Date)
 
     tank: Mapped[TankModel] = relationship(back_populates="plants")
 
@@ -152,35 +152,35 @@ class EventModel(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
     )
-    tank_id: Mapped[int | None] = mapped_column(
+    tank_id: Mapped[int] = mapped_column(
         ForeignKey("tanks.id", ondelete="SET NULL"),
         index=True,
     )
     event_type: Mapped[str] = mapped_column(String(40), index=True)
     title: Mapped[str] = mapped_column(String(180))
-    notes: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[Optional[str]] = mapped_column(Text, default="", nullable=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     user: Mapped[UserModel] = relationship(back_populates="events")
-    tank: Mapped[TankModel | None] = relationship(back_populates="events")
+    tank: Mapped[Optional[TankModel]] = relationship(back_populates="events")
     measurements: Mapped[list[EventMeasurementModel]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
     )
-    maintenance_detail: Mapped[MaintenanceEventDetailModel | None] = relationship(
+    maintenance_detail: Mapped[Optional[MaintenanceEventDetailModel]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
     )
-    fertilizer_detail: Mapped[FertilizerEventDetailModel | None] = relationship(
+    fertilizer_detail: Mapped[Optional[FertilizerEventDetailModel]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
     )
-    feeding_detail: Mapped[FeedingEventDetailModel | None] = relationship(
+    feeding_detail: Mapped[Optional[FeedingEventDetailModel]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
     )
-    photo_detail: Mapped[PhotoEventDetailModel | None] = relationship(
+    photo_detail: Mapped[Optional[PhotoEventDetailModel]] = relationship(
         back_populates="event",
         cascade="all, delete-orphan",
     )
@@ -213,9 +213,9 @@ class MaintenanceEventDetailModel(Base):
         index=True,
     )
     maintenance_type: Mapped[str] = mapped_column(String(80), index=True)
-    duration_minutes: Mapped[int | None] = mapped_column(Integer)
-    volume_changed_liters: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
-    equipment_name: Mapped[str | None] = mapped_column(String(160))
+    duration_minutes: Mapped[Optional[int]] = mapped_column(Integer)
+    volume_changed_liters: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2))
+    equipment_name: Mapped[Optional[str]] = mapped_column(String(160))
 
     event: Mapped[EventModel] = relationship(back_populates="maintenance_detail")
 
@@ -227,15 +227,15 @@ class FertilizerProductModel(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int | None] = mapped_column(
+    user_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
     )
     product_key: Mapped[str] = mapped_column(String(80), index=True)
     name: Mapped[str] = mapped_column(String(160))
-    default_interval_days: Mapped[int | None] = mapped_column(Integer)
-    default_dose_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
-    default_dose_unit: Mapped[str | None] = mapped_column(String(24))
+    default_interval_days: Mapped[Optional[int]] = mapped_column(Integer)
+    default_dose_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 3))
+    default_dose_unit: Mapped[Optional[str]] = mapped_column(String(24))
     is_builtin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     events: Mapped[list[FertilizerEventDetailModel]] = relationship(back_populates="product")
@@ -250,15 +250,15 @@ class FertilizerEventDetailModel(Base):
         unique=True,
         index=True,
     )
-    product_id: Mapped[int | None] = mapped_column(ForeignKey("fertilizer_products.id"))
+    product_id: Mapped[Optional[int]] = mapped_column(ForeignKey("fertilizer_products.id"))
     dose_amount: Mapped[Decimal] = mapped_column(Numeric(10, 3))
     dose_unit: Mapped[str] = mapped_column(String(24))
-    location: Mapped[str | None] = mapped_column(String(180))
-    next_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
-    interval_days_override: Mapped[int | None] = mapped_column(Integer)
+    location: Mapped[Optional[str]] = mapped_column(String(180))
+    next_due_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    interval_days_override: Mapped[Optional[int]] = mapped_column(Integer)
 
     event: Mapped[EventModel] = relationship(back_populates="fertilizer_detail")
-    product: Mapped[FertilizerProductModel | None] = relationship(back_populates="events")
+    product: Mapped[Optional[FertilizerProductModel]] = relationship(back_populates="events")
 
 
 class FeedingEventDetailModel(Base):
@@ -271,9 +271,9 @@ class FeedingEventDetailModel(Base):
         index=True,
     )
     food_name: Mapped[str] = mapped_column(String(160))
-    amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 3))
-    unit: Mapped[str | None] = mapped_column(String(24))
-    target_livestock: Mapped[str | None] = mapped_column(String(160))
+    amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 3))
+    unit: Mapped[Optional[str]] = mapped_column(String(24))
+    target_livestock: Mapped[Optional[str]] = mapped_column(String(160))
 
     event: Mapped[EventModel] = relationship(back_populates="feeding_detail")
 
@@ -284,13 +284,13 @@ class MediaAssetModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     storage_path: Mapped[str] = mapped_column(String(500))
-    original_filename: Mapped[str | None] = mapped_column(String(255))
-    content_type: Mapped[str | None] = mapped_column(String(120))
-    byte_size: Mapped[int | None] = mapped_column(Integer)
-    checksum_sha256: Mapped[str | None] = mapped_column(String(64), index=True)
+    original_filename: Mapped[Optional[str]] = mapped_column(String(255))
+    content_type: Mapped[Optional[str]] = mapped_column(String(120))
+    byte_size: Mapped[Optional[int]] = mapped_column(Integer)
+    checksum_sha256: Mapped[Optional[str]] = mapped_column(String(64), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
-    photo_detail: Mapped[PhotoEventDetailModel | None] = relationship(back_populates="media_asset")
+    photo_detail: Mapped[Optional[PhotoEventDetailModel]] = relationship(back_populates="media_asset")
 
 
 class PhotoEventDetailModel(Base):
@@ -303,7 +303,7 @@ class PhotoEventDetailModel(Base):
         index=True,
     )
     media_asset_id: Mapped[int] = mapped_column(ForeignKey("media_assets.id", ondelete="CASCADE"))
-    caption: Mapped[str | None] = mapped_column(String(240))
+    caption: Mapped[Optional[str]] = mapped_column(String(240))
 
     event: Mapped[EventModel] = relationship(back_populates="photo_detail")
     media_asset: Mapped[MediaAssetModel] = relationship(back_populates="photo_detail")
@@ -318,18 +318,18 @@ class ReminderModel(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
     )
-    tank_id: Mapped[int | None] = mapped_column(
+    tank_id: Optional[Mapped[int]] = mapped_column(
         ForeignKey("tanks.id", ondelete="SET NULL"),
         index=True,
     )
-    source_event_id: Mapped[int | None] = mapped_column(
+    source_event_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("events.id", ondelete="SET NULL")
     )
     reminder_type: Mapped[str] = mapped_column(String(80), index=True)
     title: Mapped[str] = mapped_column(String(180))
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
-    snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
+    snoozed_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
-    source_event: Mapped[EventModel | None] = relationship(back_populates="reminders")
+    source_event: Mapped[Optional[EventModel]] = relationship(back_populates="reminders")

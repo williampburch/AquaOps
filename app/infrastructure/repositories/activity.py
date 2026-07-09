@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -72,7 +74,7 @@ class SqlAlchemyActivityRepository:
             or 0
         )
 
-    def _count_events(self, user_id: int, event_type: str | None = None) -> int:
+    def _count_events(self, user_id: int, event_type: Optional[str] = None) -> int:
         statement = (
             select(func.count()).select_from(EventModel).where(EventModel.user_id == user_id)
         )

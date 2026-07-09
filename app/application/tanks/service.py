@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -8,7 +10,7 @@ from app.application.ports.tanks import ParameterTarget, TankCreate, TankReposit
 from app.domain.water import FRESHWATER_BEGINNER_TARGETS, WATER_METRIC_BY_KEY, metric_label
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TankService:
     repository: TankRepository
 
@@ -27,7 +29,7 @@ class TankService:
         self,
         user_id: int,
         tank_id: int,
-        raw_targets: dict[str, tuple[Decimal | None, Decimal | None, str]],
+        raw_targets: dict[str, Optional[tuple[Decimal], Optional[Decimal], str]],
     ) -> bool:
         targets = [
             ParameterTarget(
@@ -48,8 +50,8 @@ class TankService:
         tank_id: int,
         occurred_at: datetime,
         measurements: dict[str, Decimal],
-        notes: str | None,
-    ) -> int | None:
+        notes: Optional[str],
+    ) -> Optional[int]:
         filtered_measurements = {
             metric_key: value
             for metric_key, value in measurements.items()

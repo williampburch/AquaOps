@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 import argparse
 from collections.abc import Sequence
 
@@ -8,7 +10,7 @@ from app.demo.seed import seed_demo_data
 from app.infrastructure.db.session import SessionLocal
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="aquaops")
     subcommands = parser.add_subparsers(dest="command", required=True)
 

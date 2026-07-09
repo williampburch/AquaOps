@@ -3,36 +3,36 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Protocol
+from typing import Protocol, Optional
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RecentEvent:
     id: int
     event_type: str
     title: str
     occurred_at: datetime
-    tank_name: str | None
+    tank_name: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UpcomingReminder:
     id: int
     title: str
     due_at: datetime
-    tank_name: str | None
+    tank_name: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class LatestMeasurement:
     metric_key: str
     value: Decimal
     unit: str
     occurred_at: datetime
-    tank_name: str | None
+    tank_name: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DashboardSnapshot:
     tank_count: int
     event_count: int
@@ -44,5 +44,5 @@ class DashboardSnapshot:
 
 
 class DashboardReadRepository(Protocol):
-    def get_snapshot(self, user_id: int | None) -> DashboardSnapshot:
+    def get_snapshot(self, user_id: Optional[int]) -> DashboardSnapshot:
         """Return a dashboard snapshot for a user or an empty public snapshot."""

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from app.application.ports.inventory import InventoryReadRepository, InventorySnapshot
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InventoryService:
     repository: InventoryReadRepository
 

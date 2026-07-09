@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import RedirectResponse
@@ -176,7 +176,7 @@ async def update_targets(
     return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
-def _form_text(form, key: str) -> str | None:
+def _form_text(form, key: str) -> Optional[str]:
     value = form.get(key)
     if value is None:
         return None
@@ -184,7 +184,7 @@ def _form_text(form, key: str) -> str | None:
     return text or None
 
 
-def _optional_decimal(value: str | None) -> Decimal | None:
+def _optional_decimal(value: Optional[str]) -> Optional[Decimal]:
     if value is None:
         return None
     try:
@@ -193,13 +193,13 @@ def _optional_decimal(value: str | None) -> Decimal | None:
         raise ValueError(f"Invalid decimal value: {value}") from exc
 
 
-def _optional_date(value: str | None) -> date | None:
+def _optional_date(value: Optional[str]) -> Optional[date]:
     if value is None:
         return None
     return date.fromisoformat(value)
 
 
-def _optional_datetime(value: str | None) -> datetime | None:
+def _optional_datetime(value: Optional[str]) -> Optional[datetime]:
     if value is None:
         return None
     parsed = datetime.fromisoformat(value)

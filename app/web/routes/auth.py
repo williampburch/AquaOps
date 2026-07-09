@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Form, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -20,12 +20,11 @@ templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-CurrentUser = Annotated[UserModel | None, Depends(get_current_user)]
 FormText = Annotated[str, Form(...)]
 
 
 @router.get("/register")
-def register_form(request: Request, current_user: CurrentUser):
+def register_form(request: Request, current_user: Optional[UserModel] = Depends(get_current_user)):
     if current_user:
         return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(
@@ -85,7 +84,7 @@ def register(
 
 
 @router.get("/login")
-def login_form(request: Request, current_user: CurrentUser):
+def login_form(request: Request, current_user: Optional[UserModel] = Depends(get_current_user)):
     if current_user:
         return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(

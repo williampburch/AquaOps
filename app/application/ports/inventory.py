@@ -1,25 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, Optional
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InventorySummary:
     total_count: int
     species_count: int
     tank_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InventoryGroup:
     common_name: str
-    species: str | None
+    species: Optional[str]
     quantity: int
     tank_names: list[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class InventorySnapshot:
     summary: InventorySummary
     groups: list[InventoryGroup]

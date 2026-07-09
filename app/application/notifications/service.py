@@ -8,7 +8,7 @@ from app.application.ports.notifications import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NotificationService:
     repository: NotificationReadRepository
 

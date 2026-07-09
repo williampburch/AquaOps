@@ -3,41 +3,41 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Protocol
+from typing import Protocol, Optional
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TankCreate:
     name: str
     tank_type: str
-    volume_liters: Decimal | None
-    started_on: date | None
-    description: str | None
-    lighting: str | None
-    filtration: str | None
-    substrate: str | None
+    volume_liters: Optional[Decimal]
+    started_on: Optional[date]
+    description: Optional[str]
+    lighting: Optional[str]
+    filtration: Optional[str]
+    substrate: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TankSummary:
     id: int
     name: str
     tank_type: str
-    volume_liters: Decimal | None
+    volume_liters: Optional[Decimal]
     event_count: int
-    latest_event_at: datetime | None
+    latest_event_at: Optional[datetime]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ParameterTarget:
     metric_key: str
     label: str
-    min_value: Decimal | None
-    max_value: Decimal | None
+    min_value: Optional[Decimal]
+    max_value: Optional[Decimal]
     unit: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ParameterReading:
     metric_key: str
     label: str
@@ -47,13 +47,13 @@ class ParameterReading:
     status: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ChartPoint:
     occurred_at: str
     value: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ChartSeries:
     metric_key: str
     label: str
@@ -61,26 +61,26 @@ class ChartSeries:
     points: list[ChartPoint]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TankEvent:
     id: int
     event_type: str
     title: str
     occurred_at: datetime
-    notes: str | None
+    notes: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class TankDetail:
     id: int
     name: str
     tank_type: str
-    volume_liters: Decimal | None
-    started_on: date | None
-    description: str | None
-    lighting: str | None
-    filtration: str | None
-    substrate: str | None
+    volume_liters: Optional[Decimal]
+    started_on: Optional[date]
+    description: Optional[str]
+    lighting: Optional[str]
+    filtration: Optional[str]
+    substrate: Optional[str]
     targets: list[ParameterTarget]
     latest_readings: list[ParameterReading]
     chart_series: list[ChartSeries]
@@ -94,7 +94,7 @@ class TankRepository(Protocol):
     def create_tank(self, user_id: int, data: TankCreate) -> int:
         """Create a tank and return its id."""
 
-    def get_tank_detail(self, user_id: int, tank_id: int) -> TankDetail | None:
+    def get_tank_detail(self, user_id: int, tank_id: int) -> Optional[TankDetail]:
         """Return full tank details if owned by the user."""
 
     def update_targets(
@@ -111,6 +111,6 @@ class TankRepository(Protocol):
         tank_id: int,
         occurred_at: datetime,
         measurements: dict[str, Decimal],
-        notes: str | None,
-    ) -> int | None:
+        notes: Optional[str],
+    ) -> Optional[int]:
         """Log a water test as a generic event."""

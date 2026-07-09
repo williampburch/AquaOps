@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Optional
+
 import math
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from sqlalchemy import delete, func, select
@@ -33,9 +35,10 @@ from app.infrastructure.db.models import (
 DEMO_EMAIL = "demo@example.com"
 DEMO_USERNAME = "demo"
 DEMO_PASSWORD = "demo-password"
+UTC = timezone.utc
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DemoSeedResult:
     email: str
     password: str
@@ -44,7 +47,7 @@ class DemoSeedResult:
     reminder_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class DemoTankSpec:
     name: str
     description: str
@@ -597,7 +600,7 @@ def _add_event(
     event_type: str,
     title: str,
     occurred_at: datetime,
-    notes: str | None,
+    notes: Optional[str],
 ) -> EventModel:
     event = EventModel(
         user_id=user_id,

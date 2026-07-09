@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
@@ -16,14 +16,13 @@ router = APIRouter(tags=["dashboard"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
-CurrentUser = Annotated[UserModel | None, Depends(get_current_user)]
 
 
 @router.get("/")
 def dashboard(
     request: Request,
     db: DbSession,
-    current_user: CurrentUser,
+    current_user: Optional[UserModel] = Depends(get_current_user),
 ):
     service = DashboardService(SqlAlchemyDashboardRepository(db))
     snapshot = service.get_dashboard(current_user.id if current_user else None)

@@ -2,40 +2,40 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Optional
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ActivityEvent:
     id: int
     event_type: str
     title: str
     occurred_at: datetime
-    tank_name: str | None
-    notes: str | None
+    tank_name: Optional[str]
+    notes: Optional[str]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class EventTypeSummary:
     event_type: str
     count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ReportMetric:
     label: str
     value: str
     detail: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NitrateTrendPoint:
     occurred_at: str
     value: float
     tank_name: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ReportsSnapshot:
     metrics: list[ReportMetric]
     event_type_summary: list[EventTypeSummary]

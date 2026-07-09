@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from datetime import datetime, timedelta
 
 from app.domain.enums import FertilizerProductKey
@@ -14,8 +16,8 @@ DEFAULT_FERTILIZER_INTERVAL_DAYS: dict[str, int] = {
 def calculate_next_due_at(
     occurred_at: datetime,
     product_key: str,
-    interval_days_override: int | None = None,
-) -> datetime | None:
+    interval_days_override: Optional[int] = None,
+) -> Optional[datetime]:
     if interval_days_override is not None:
         if interval_days_override <= 0:
             raise ValueError("interval_days_override must be greater than zero")

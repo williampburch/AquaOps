@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -78,7 +80,7 @@ class SqlAlchemyTankRepository:
         self.session.commit()
         return tank.id
 
-    def get_tank_detail(self, user_id: int, tank_id: int) -> TankDetail | None:
+    def get_tank_detail(self, user_id: int, tank_id: int) -> Optional[TankDetail]:
         tank = self._get_owned_tank(user_id, tank_id)
         if tank is None:
             return None
@@ -144,8 +146,8 @@ class SqlAlchemyTankRepository:
         tank_id: int,
         occurred_at: datetime,
         measurements: dict[str, Decimal],
-        notes: str | None,
-    ) -> int | None:
+        notes: Optional[str],
+    ) -> Optional[int]:
         tank = self._get_owned_tank(user_id, tank_id)
         if tank is None:
             return None
@@ -155,7 +157,7 @@ class SqlAlchemyTankRepository:
             tank_id=tank_id,
             event_type=EventType.WATER_TEST.value,
             title="Water test",
-            notes=notes,
+            notes=notes or "",
             occurred_at=occurred_at,
             metadata_json={},
         )
@@ -177,7 +179,7 @@ class SqlAlchemyTankRepository:
         self.session.commit()
         return event.id
 
-    def _get_owned_tank(self, user_id: int, tank_id: int) -> TankModel | None:
+    def _get_owned_tank(self, user_id: int, tank_id: int) -> Optional[TankModel]:
         return self.session.execute(
             select(TankModel).where(
                 TankModel.id == tank_id,
@@ -338,7 +340,7 @@ class SqlAlchemyTankRepository:
         ]
 
 
-def _classify_reading(value: Decimal, target: ParameterTarget | None) -> str:
+def _classify_reading(value: Decimal, target: Optional[ParameterTarget]) -> str:
     if target is None:
         return "unknown"
     if target.min_value is not None and value < target.min_value:

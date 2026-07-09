@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
@@ -23,7 +25,7 @@ class SqlAlchemyDashboardRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def get_snapshot(self, user_id: int | None) -> DashboardSnapshot:
+    def get_snapshot(self, user_id: Optional[int]) -> DashboardSnapshot:
         if user_id is None:
             return DashboardSnapshot(
                 tank_count=0,

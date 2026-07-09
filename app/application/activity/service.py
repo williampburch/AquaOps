@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from app.application.ports.activity import ActivityReadRepository
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ActivityService:
     repository: ActivityReadRepository
 

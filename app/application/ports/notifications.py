@@ -2,20 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Optional
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NotificationItem:
     id: int
     title: str
     reminder_type: str
     due_at: datetime
-    tank_name: str | None
+    tank_name: Optional[str]
     status: str
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class NotificationSnapshot:
     overdue_count: int
     due_today_count: int
