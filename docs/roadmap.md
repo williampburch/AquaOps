@@ -7,6 +7,8 @@
 - SQLAlchemy and Alembic
 - Auth/session foundation
 - Dashboard shell
+- Light/dark/system theme control
+- Demo seed command for portfolio review
 - Docker and CI
 
 ## Phase 2: Tanks and Inventory

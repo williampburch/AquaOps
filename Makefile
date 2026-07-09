@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format migrate revision
+.PHONY: install dev test lint format migrate revision seed-demo
 
 install:
 	python -m pip install --upgrade pip
@@ -24,3 +24,5 @@ migrate:
 revision:
 	alembic revision --autogenerate -m "$(message)"
 
+seed-demo:
+	aquaops seed-demo

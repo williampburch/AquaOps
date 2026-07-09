@@ -162,18 +162,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script>
       const chartSeries = {{ chart_payload|tojson }};
-      const palette = ["#37c2a1", "#70a7ff", "#e7b95f", "#ef7d8a", "#a78bfa", "#55d6be", "#f29d49", "#8ecae6"];
+      const aquariumCharts = [];
+      const chartPalette = ["--aqua-accent", "--aqua-blue", "--aqua-warning", "--aqua-danger"];
+
+      const cssColor = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      const chartColors = () => ({
+        muted: cssColor("--aqua-text-muted"),
+        grid: cssColor("--aqua-chart-grid"),
+      });
 
       chartSeries.forEach((series, index) => {
         const canvas = document.getElementById(`chart-${series.metric}`);
-        new Chart(canvas, {
+        const colors = chartColors();
+        const chart = new Chart(canvas, {
           type: "line",
           data: {
             labels: series.labels,
             datasets: [{
               label: `${series.label} (${series.unit})`,
               data: series.values,
-              borderColor: palette[index % palette.length],
+              borderColor: cssColor(chartPalette[index % chartPalette.length]),
               backgroundColor: "rgba(55, 194, 161, 0.12)",
               tension: 0.28,
               pointRadius: 3
@@ -183,13 +191,27 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { labels: { color: "#c8d4dc" } }
+              legend: { labels: { color: colors.muted } }
             },
             scales: {
-              x: { ticks: { color: "#9aa8b3" }, grid: { color: "rgba(154, 168, 179, 0.12)" } },
-              y: { ticks: { color: "#9aa8b3" }, grid: { color: "rgba(154, 168, 179, 0.12)" } }
+              x: { ticks: { color: colors.muted }, grid: { color: colors.grid } },
+              y: { ticks: { color: colors.muted }, grid: { color: colors.grid } }
             }
           }
+        });
+        aquariumCharts.push(chart);
+      });
+
+      window.addEventListener("aquaops:theme-change", () => {
+        const colors = chartColors();
+        aquariumCharts.forEach((chart, index) => {
+          chart.data.datasets[0].borderColor = cssColor(chartPalette[index % chartPalette.length]);
+          chart.options.plugins.legend.labels.color = colors.muted;
+          chart.options.scales.x.ticks.color = colors.muted;
+          chart.options.scales.x.grid.color = colors.grid;
+          chart.options.scales.y.ticks.color = colors.muted;
+          chart.options.scales.y.grid.color = colors.grid;
+          chart.update();
         });
       });
     </script>

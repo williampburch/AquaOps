@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="page-actions">
-    <a class="btn btn-primary" href="/tanks/new">New tank</a>
+  <section class="workspace-strip">
+    <div>
+      <strong>Tank Registry</strong>
+      <span>{{ tanks|length }} active tanks</span>
+    </div>
+    <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
   </section>
 
   {% if tanks %}
@@ -32,4 +36,3 @@
     </section>
   {% endif %}
 {% endblock %}
-

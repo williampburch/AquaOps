@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+  <section class="workspace-strip">
+    <div>
+      <strong>Today</strong>
+      <span>Monitor readings, upcoming care, and the latest tank activity.</span>
+    </div>
+    {% if current_user %}
+      <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
+    {% else %}
+      <a class="btn btn-primary btn-sm" href="/register">Create account</a>
+    {% endif %}
+  </section>
+
   <section class="stats-grid">
     <article class="metric-card">
       <span class="metric-label">Tanks</span>
@@ -78,7 +90,7 @@
       <div class="parameter-grid">
         {% for measurement in snapshot.latest_measurements %}
           <div class="parameter-cell">
-            <span>{{ measurement.metric_key }}</span>
+            <span>{{ measurement.metric_key.replace("_", " ") }}</span>
             <strong>{{ measurement.value }} {{ measurement.unit }}</strong>
           </div>
         {% endfor %}
@@ -95,4 +107,3 @@
     {% endif %}
   </section>
 {% endblock %}
-

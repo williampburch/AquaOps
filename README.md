@@ -18,7 +18,8 @@ This repository contains the publishable foundation:
 - Tank-specific water parameter target ranges
 - Water test logging through the generic event model
 - Latest-reading status cards and trend charts
-- Responsive dark UI using Jinja2, Bootstrap 5, HTMX, and Chart.js
+- Responsive UI with persisted light, dark, and system theme choices
+- Jinja2, Bootstrap 5, HTMX, and Chart.js
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - GitHub Actions CI for linting, formatting, and tests
 - Architecture, ERD, developer setup, and deployment documentation
@@ -68,7 +69,30 @@ make dev
 make lint
 make test
 make migrate
+make seed-demo
 ```
+
+## Demo Login
+
+Create or refresh a portfolio-friendly demo account:
+
+```bash
+aquaops seed-demo
+# or
+python -m app.scripts.seed_demo
+```
+
+Then log in with:
+
+```text
+Email: demo@example.com
+Password: demo-password
+```
+
+The seed command is idempotent: rerunning it replaces the demo account data with a fresh
+set of fictional tanks, water tests, feedings, maintenance events, fertilizer events,
+livestock, plants, and reminders. It refuses to run when `APP_ENV=production` unless
+`--allow-production` is passed.
 
 ## Documentation
 
@@ -84,6 +108,7 @@ make migrate
 - Water targets: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
 - Water tests: logged as generic `water_test` events with metric rows
 - Analytics: latest reading status and per-parameter trend charts
+- Demo data: realistic fictional tanks and event history for screenshots and review
 
 ## Roadmap
 

@@ -55,3 +55,27 @@ production deployments should rely on Alembic migrations.
 After creating an account, create a tank from `/tanks`, adjust its water parameter
 targets, and log water tests from the tank detail page. Trend charts render after at
 least one water test exists.
+
+## Demo Data
+
+Seed a realistic demo account:
+
+```bash
+aquaops seed-demo
+```
+
+Alternative module form:
+
+```bash
+python -m app.scripts.seed_demo
+```
+
+Login:
+
+```text
+demo@example.com
+demo-password
+```
+
+The command replaces only the demo account on each run. It will not run in production
+unless `--allow-production` is supplied.
