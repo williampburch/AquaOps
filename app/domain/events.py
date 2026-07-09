@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -22,5 +20,5 @@ class EventDraft:
     event_type: EventType
     occurred_at: datetime
     title: str
-    tank_id: Optional[int] = None
-    notes: Optional[str] = None
+    tank_id: int | None = None
+    notes: str | None = None

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from collections.abc import Generator
 from pathlib import Path
 
@@ -12,7 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import get_settings
 
 
-def _sqlite_path(database_url: str) -> Optional[Path]:
+def _sqlite_path(database_url: str) -> Path | None:
     if not database_url.startswith("sqlite:///"):
         return None
     raw_path = database_url.removeprefix("sqlite:///")

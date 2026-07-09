@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -19,8 +17,8 @@ class WaterMetricDefinition:
 @dataclass(frozen=True)
 class WaterTargetPreset:
     metric_key: str
-    min_value: Optional[Decimal]
-    max_value: Optional[Decimal]
+    min_value: Decimal | None
+    max_value: Decimal | None
     unit: str
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import timedelta
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -27,7 +27,7 @@ def get_current_user(
     request: Request,
     db: DbSession,
     settings: SettingsDep,
-) -> Optional[UserModel]:
+) -> UserModel | None:
     token = request.cookies.get(settings.session_cookie_name)
     if not token:
         return None
@@ -48,7 +48,7 @@ def get_current_user(
     return session_record.user
 
 
-CurrentUser = Annotated[Optional[UserModel], Depends(get_current_user)]
+CurrentUser = Annotated[UserModel | None, Depends(get_current_user)]
 
 
 def create_login_session(user: UserModel, db: Session, settings: Settings) -> str:
@@ -64,7 +64,7 @@ def create_login_session(user: UserModel, db: Session, settings: Settings) -> st
     return token
 
 
-def require_current_user(current_user: Optional[UserModel] = Depends(get_current_user)) -> UserModel:
+def require_current_user(current_user: CurrentUser) -> UserModel:
     if current_user is None:
         raise HTTPException(
             status_code=status.HTTP_303_SEE_OTHER,

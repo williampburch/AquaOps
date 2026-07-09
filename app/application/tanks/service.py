@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -29,7 +27,7 @@ class TankService:
         self,
         user_id: int,
         tank_id: int,
-        raw_targets: dict[str, Optional[tuple[Decimal], Optional[Decimal], str]],
+        raw_targets: dict[str, tuple[Decimal | None, Decimal | None, str]],
     ) -> bool:
         targets = [
             ParameterTarget(
@@ -50,8 +48,8 @@ class TankService:
         tank_id: int,
         occurred_at: datetime,
         measurements: dict[str, Decimal],
-        notes: Optional[str],
-    ) -> Optional[int]:
+        notes: str | None,
+    ) -> int | None:
         filtered_measurements = {
             metric_key: value
             for metric_key, value in measurements.items()

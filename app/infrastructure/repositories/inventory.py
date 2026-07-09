@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -106,7 +104,7 @@ class SqlAlchemyInventoryRepository:
             for common_name, species, quantity, tank_names in self.session.execute(statement).all()
         ]
 
-    def _split_tank_names(self, tank_names: Optional[str]) -> list[str]:
+    def _split_tank_names(self, tank_names: str | None) -> list[str]:
         if not tank_names:
             return []
         return sorted(tank_names.split(","))

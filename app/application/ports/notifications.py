@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol, Optional
+from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -11,7 +11,7 @@ class NotificationItem:
     title: str
     reminder_type: str
     due_at: datetime
-    tank_name: Optional[str]
+    tank_name: str | None
     status: str
 
 

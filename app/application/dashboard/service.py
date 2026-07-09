@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from dataclasses import dataclass
 
 from app.application.ports.dashboard import DashboardReadRepository, DashboardSnapshot
@@ -11,5 +9,5 @@ from app.application.ports.dashboard import DashboardReadRepository, DashboardSn
 class DashboardService:
     repository: DashboardReadRepository
 
-    def get_dashboard(self, user_id: Optional[int]) -> DashboardSnapshot:
+    def get_dashboard(self, user_id: int | None) -> DashboardSnapshot:
         return self.repository.get_snapshot(user_id)

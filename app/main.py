@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -36,7 +34,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-def create_app(settings: Optional[Settings] = None) -> FastAPI:
+def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
     app = FastAPI(title=app_settings.app_name, version="0.1.0", lifespan=lifespan)
     app.state.settings = app_settings

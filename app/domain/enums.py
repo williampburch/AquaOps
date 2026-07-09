@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
-
-
-class StrEnum(str, Enum):
-    pass
+from enum import StrEnum
 
 
 class EventType(StrEnum):

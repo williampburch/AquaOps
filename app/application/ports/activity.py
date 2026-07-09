@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol, Optional
+from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -11,8 +11,8 @@ class ActivityEvent:
     event_type: str
     title: str
     occurred_at: datetime
-    tank_name: Optional[str]
-    notes: Optional[str]
+    tank_name: str | None
+    notes: str | None
 
 
 @dataclass(frozen=True)

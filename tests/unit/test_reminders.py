@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from app.domain.enums import FertilizerProductKey
 from app.domain.reminders import calculate_next_due_at
 
-
-UTC = timezone.utc
+UTC = UTC
 
 
 def test_calculates_builtin_root_tab_due_date() -> None:

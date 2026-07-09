@@ -3,19 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Protocol, Optional
+from typing import Protocol
 
 
 @dataclass(frozen=True)
 class TankCreate:
     name: str
     tank_type: str
-    volume_liters: Optional[Decimal]
-    started_on: Optional[date]
-    description: Optional[str]
-    lighting: Optional[str]
-    filtration: Optional[str]
-    substrate: Optional[str]
+    volume_liters: Decimal | None
+    started_on: date | None
+    description: str | None
+    lighting: str | None
+    filtration: str | None
+    substrate: str | None
 
 
 @dataclass(frozen=True)
@@ -23,17 +23,17 @@ class TankSummary:
     id: int
     name: str
     tank_type: str
-    volume_liters: Optional[Decimal]
+    volume_liters: Decimal | None
     event_count: int
-    latest_event_at: Optional[datetime]
+    latest_event_at: datetime | None
 
 
 @dataclass(frozen=True)
 class ParameterTarget:
     metric_key: str
     label: str
-    min_value: Optional[Decimal]
-    max_value: Optional[Decimal]
+    min_value: Decimal | None
+    max_value: Decimal | None
     unit: str
 
 
@@ -67,7 +67,7 @@ class TankEvent:
     event_type: str
     title: str
     occurred_at: datetime
-    notes: Optional[str]
+    notes: str | None
 
 
 @dataclass(frozen=True)
@@ -75,12 +75,12 @@ class TankDetail:
     id: int
     name: str
     tank_type: str
-    volume_liters: Optional[Decimal]
-    started_on: Optional[date]
-    description: Optional[str]
-    lighting: Optional[str]
-    filtration: Optional[str]
-    substrate: Optional[str]
+    volume_liters: Decimal | None
+    started_on: date | None
+    description: str | None
+    lighting: str | None
+    filtration: str | None
+    substrate: str | None
     targets: list[ParameterTarget]
     latest_readings: list[ParameterReading]
     chart_series: list[ChartSeries]
@@ -94,7 +94,7 @@ class TankRepository(Protocol):
     def create_tank(self, user_id: int, data: TankCreate) -> int:
         """Create a tank and return its id."""
 
-    def get_tank_detail(self, user_id: int, tank_id: int) -> Optional[TankDetail]:
+    def get_tank_detail(self, user_id: int, tank_id: int) -> TankDetail | None:
         """Return full tank details if owned by the user."""
 
     def update_targets(
@@ -111,6 +111,6 @@ class TankRepository(Protocol):
         tank_id: int,
         occurred_at: datetime,
         measurements: dict[str, Decimal],
-        notes: Optional[str],
-    ) -> Optional[int]:
+        notes: str | None,
+    ) -> int | None:
         """Log a water test as a generic event."""
