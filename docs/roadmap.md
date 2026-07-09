@@ -1,50 +1,65 @@
 # Roadmap
 
-## Phase 1: Foundation
+## Completed Foundation
 
-- Project structure
+- Project structure and clean architecture layers
 - Settings and environment loading
-- SQLAlchemy and Alembic
-- Auth/session foundation
-- Dashboard shell
-- Light/dark/system theme control
+- SQLAlchemy ORM and Alembic migrations
+- Local bcrypt authentication and server-side sessions
+- Dashboard shell with responsive light, dark, and system themes
+- Docker, Docker Compose, and CI
 - Demo seed command for portfolio review
-- Docker and CI
 
-## Phase 2: Tanks and Inventory
+## Current Product Slice
 
 - Tank creation and profile pages
-- Tank-specific target ranges
-- Water test logging and charts
-- Livestock CRUD
-- Plant CRUD
-- Tank detail timeline
+- Tank-specific water parameter target ranges
+- Water test logging through the generic event model
+- Latest water readings and per-parameter trend charts
+- Dashboard cards linking to detailed views
+- Activity stream page
+- Reports page with event mix and nitrate trend charts
+- Read-only livestock inventory grouped by species and quantity
+- Read-only plant inventory grouped by species and quantity
+- Notifications page for open reminders
+- Settings/automation foundation for future schedules, alerts, and feature modules
 
-## Phase 3: Event Logging
+## Next: Core Data Entry
 
-- Generic event creation flow
-- Water parameter forms
-- Maintenance log
-- Feeding log
-- Notes
+- Livestock create/edit/archive screens
+- Plant create/edit/remove screens
+- Generic event entry flow
+- Maintenance log UI
+- Feeding log UI
+- Notes UI
 
-## Phase 4: Fertilizer and Reminders
+## Next: Fertilizer and Reminders
 
-- Built-in fertilizer products
+- Built-in fertilizer product management
 - Custom fertilizer products
-- Dose logging
+- Dose logging UI
 - Root-tab location tracking
-- Automatic next-due calculation
-- Reminder completion/snoozing
+- Automatic next-due calculation in user workflows
+- Reminder completion and snoozing
+- Configurable care schedules for feeding, water changes, filter cleaning, trimming, and dosing
 
-## Phase 5: Photos and Reports
+## Next: Alerts and Automation
+
+- Configurable water-parameter alert thresholds
+- Alert generation after water tests
+- Notification badges/counts
+- Feature module toggles
+- Admin/settings persistence
+
+## Next: Photos and Richer Reports
 
 - Local photo uploads
 - Photo timeline
-- Water parameter charts
 - Maintenance and fertilizer reports
+- Livestock and plant history reports
+- Exportable report data
 
-## Phase 6: Production Hardening
+## Production Hardening
 
 - CSRF protection for all mutating forms
 - Rate limiting on auth routes

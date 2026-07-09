@@ -1,28 +1,32 @@
 # AquaOps
 
-AquaOps is a production-minded personal aquarium tracker built with FastAPI, SQLAlchemy,
-Jinja2, Bootstrap 5, HTMX, Alembic, and Docker.
+AquaOps is a production-minded personal aquarium tracker built with FastAPI,
+SQLAlchemy, Jinja2, Bootstrap 5, HTMX, Chart.js, Alembic, and Docker.
 
-The project is designed as a long-lived personal application and a portfolio-quality example
-of a clean, maintainable Python web app.
+It is designed as a real long-lived personal app and as a portfolio-quality example of
+a clean, maintainable Python web application.
 
 ## Current Status
 
-This repository contains the publishable foundation:
+This repository contains a publishable, working foundation:
 
-- Layered FastAPI application structure
+- Layered FastAPI application structure with web, application, domain, and infrastructure boundaries
 - SQLAlchemy ORM models for users, sessions, tanks, livestock, plants, generic events, event details, media, and reminders
 - Alembic migration environment with an initial schema migration
 - Local bcrypt authentication with hashed server-side session tokens
-- Tank creation and tank detail pages
-- Tank-specific water parameter target ranges
+- Tank creation, tank detail, and tank-specific water parameter targets
 - Water test logging through the generic event model
-- Latest-reading status cards and trend charts
+- Dashboard metric cards, recent events, reminders, latest readings, and trend charts
+- Activity stream page powered by the generic event table
+- Reports page with event mix and nitrate trend charts
+- Read-only livestock and plant inventory pages grouped by species with quantity totals
+- Notifications page for open reminders and a settings/automation foundation
 - Responsive UI with persisted light, dark, and system theme choices
-- Jinja2, Bootstrap 5, HTMX, and Chart.js
+- Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
+- Example Nginx reverse proxy config for hosting behind a domain
 - GitHub Actions CI for linting, formatting, and tests
-- Architecture, ERD, developer setup, and deployment documentation
+- Architecture, ERD, developer setup, deployment, and roadmap documentation
 
 ## Architecture
 
@@ -30,20 +34,23 @@ AquaOps is a modular monolith using clean architecture boundaries:
 
 ```text
 Browser
-  -> app.web                 FastAPI routes, Jinja templates, HTMX partials
+  -> app.web                 FastAPI routes, Jinja templates, static assets
   -> app.application         Use cases and orchestration
   -> app.domain              Framework-independent rules and value types
-  -> app.infrastructure      SQLAlchemy, auth persistence, file storage
+  -> app.infrastructure      SQLAlchemy repositories, auth persistence, storage
 ```
 
 The central design choice is the generic `events` table. Water tests, feedings,
-maintenance, fertilizer dosing, notes, and photos all share a single chronological
-event stream, with type-specific detail tables for reportable data.
+maintenance, fertilizer dosing, notes, and photos all share a single chronological event
+stream, with type-specific detail tables for reportable data.
 
 ## Quick Start
 
 ```bash
 cp .env.example .env
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 alembic upgrade head
 uvicorn app.main:app --reload
@@ -59,7 +66,8 @@ docker compose up --build
 ```
 
 The app will be available at <http://127.0.0.1:8000>. SQLite data and uploaded media are
-stored in Docker volumes.
+stored in Docker volumes. The Compose file binds the app to `127.0.0.1` so it can sit
+behind Nginx without exposing Uvicorn directly to the public internet.
 
 ## Development Commands
 
@@ -107,10 +115,15 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Tank profile: type, volume, start date, lighting, filtration, substrate
 - Water targets: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
 - Water tests: logged as generic `water_test` events with metric rows
-- Analytics: latest reading status and per-parameter trend charts
+- Activity stream: recent event timeline across all tanks
+- Inventory summaries: livestock and plants grouped by species with quantity totals
+- Reports: event mix and nitrate trend charts
+- Notifications: open reminder queue with overdue, due today, and upcoming buckets
+- Automation foundation: settings page for future schedules, alerts, and feature modules
 - Demo data: realistic fictional tanks and event history for screenshots and review
 
 ## Roadmap
 
-The next implementation phases are inventory management, maintenance events, fertilizer/root-tab
-events, feeding logs, photo timelines, and richer reports.
+The next implementation phases are CRUD screens for livestock and plants, broader event
+entry forms, maintenance and feeding logs, fertilizer/root-tab workflows, notification
+completion/snoozing, photo timelines, CSRF protection, and production hardening.

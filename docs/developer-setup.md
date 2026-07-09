@@ -18,6 +18,8 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+Open <http://127.0.0.1:8000>.
+
 ## Quality Checks
 
 ```bash
@@ -31,6 +33,12 @@ Or use the Makefile:
 ```bash
 make lint
 make test
+```
+
+Format local changes:
+
+```bash
+make format
 ```
 
 ## Migrations
@@ -48,13 +56,27 @@ alembic upgrade head
 ```
 
 The app can auto-create tables in development through `AUTO_CREATE_TABLES=true`, but
-production deployments should rely on Alembic migrations.
+production deployments should use Alembic migrations with `AUTO_CREATE_TABLES=false`.
 
 ## Current Product Slice
 
-After creating an account, create a tank from `/tanks`, adjust its water parameter
-targets, and log water tests from the tank detail page. Trend charts render after at
-least one water test exists.
+After creating an account, the current app supports:
+
+- Dashboard cards for tanks, events, livestock, and plants
+- Tank creation and tank detail pages
+- Per-tank water parameter targets
+- Water test logging from a tank detail page
+- Latest readings and per-parameter trend charts
+- `/events` activity stream
+- `/reports` event mix and nitrate trend charts
+- `/livestock` inventory summary grouped by species
+- `/plants` inventory summary grouped by species
+- `/notifications` open reminder queue
+- `/settings` automation and feature-module foundation
+
+Some domain tables already exist before full UI workflows do. Maintenance, fertilizer,
+feeding, media, and reminder detail models are present, while complete user-facing CRUD
+flows for those areas are still roadmap work.
 
 ## Demo Data
 
