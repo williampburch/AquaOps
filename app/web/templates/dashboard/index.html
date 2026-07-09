@@ -1,16 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="workspace-strip">
-    <div>
-      <strong>Today</strong>
-      <span>Monitor readings, upcoming care, and the latest tank activity.</span>
+  <section class="ops-hero">
+    <div class="ops-hero-copy">
+      <span class="hero-kicker">Live aquarium command center</span>
+      <h2>Today</h2>
+      <p>Monitor readings, upcoming care, and the latest tank activity.</p>
+      <div class="hero-actions">
+        {% if current_user %}
+          <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
+          <a class="btn btn-outline-light btn-sm" href="/notifications">Care queue</a>
+        {% else %}
+          <a class="btn btn-primary btn-sm" href="/register">Create account</a>
+          <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
+        {% endif %}
+      </div>
     </div>
-    {% if current_user %}
-      <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
-    {% else %}
-      <a class="btn btn-primary btn-sm" href="/register">Create account</a>
-    {% endif %}
+    <div class="ops-hero-panel" aria-label="Aquarium status summary">
+      <div>
+        <span>Open reminders</span>
+        <strong>{{ snapshot.upcoming_reminders|length }}</strong>
+      </div>
+      <div>
+        <span>Latest readings</span>
+        <strong>{{ snapshot.latest_measurements|length }}</strong>
+      </div>
+      <div>
+        <span>Recent events</span>
+        <strong>{{ snapshot.recent_events|length }}</strong>
+      </div>
+    </div>
   </section>
 
   <section class="stats-grid">

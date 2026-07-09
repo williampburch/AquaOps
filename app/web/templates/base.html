@@ -31,6 +31,10 @@
             <small>aquarium tracker</small>
           </span>
         </a>
+        <div class="sidebar-status">
+          <span>Workspace</span>
+          <strong>{{ current_user.username if current_user else "Guest mode" }}</strong>
+        </div>
         <nav class="nav flex-column gap-1">
           <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">
             <span class="nav-glyph" aria-hidden="true"></span>
