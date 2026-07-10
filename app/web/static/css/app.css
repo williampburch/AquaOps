@@ -1,8 +1,10 @@
 :root,
 [data-bs-theme="light"] {
   --aqua-bg: #f3f7fa;
-  --aqua-sidebar: #071c2f;
-  --aqua-sidebar-border: #123a4a;
+  --aqua-sidebar: #ffffff;
+  --aqua-sidebar-border: #dce8ef;
+  --aqua-sidebar-text: #0d1b2a;
+  --aqua-sidebar-muted: #607080;
   --aqua-panel: #ffffff;
   --aqua-panel-soft: #f5f9fb;
   --aqua-panel-raised: #ffffff;
@@ -35,6 +37,8 @@
   --aqua-bg: #06141d;
   --aqua-sidebar: #061421;
   --aqua-sidebar-border: #123545;
+  --aqua-sidebar-text: #f4feff;
+  --aqua-sidebar-muted: rgb(244 254 255 / 66%);
   --aqua-panel: #0d1f2b;
   --aqua-panel-soft: #102b38;
   --aqua-panel-raised: #143342;
@@ -94,39 +98,69 @@ body::after {
 }
 
 .app-shell {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .sidebar {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--aqua-sidebar) 84%, #0f5a66), var(--aqua-sidebar) 42%),
-    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 16%, transparent), transparent 42%);
-  border-right: 1px solid var(--aqua-sidebar-border);
+    linear-gradient(180deg, color-mix(in srgb, var(--aqua-sidebar) 94%, transparent), var(--aqua-sidebar)),
+    linear-gradient(90deg, color-mix(in srgb, var(--aqua-brand-teal) 8%, transparent), transparent 44%);
+  border: 1px solid var(--aqua-sidebar-border);
+  border-radius: 0 0 8px 8px;
   box-shadow:
-    inset -1px 0 0 color-mix(in srgb, var(--aqua-river) 18%, transparent),
-    20px 0 52px rgb(8 29 45 / 8%);
-  color: #eefcff;
-  padding: 1.15rem;
+    inset 0 -1px 0 color-mix(in srgb, var(--aqua-river) 12%, transparent),
+    var(--aqua-shadow);
+  color: var(--aqua-sidebar-text);
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2rem);
+  margin: 0 clamp(0.75rem, 1.6vw, 1.5rem);
+  min-height: 5.1rem;
+  padding: 0.85rem clamp(1rem, 2vw, 1.5rem);
   position: sticky;
   top: 0;
-  height: 100vh;
+  z-index: 30;
+}
+
+.sidebar .nav {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.45rem;
+}
+
+[data-bs-theme="dark"] .logo-drop::after {
+  background: #081d2d;
+}
+
+[data-bs-theme="dark"] .logo-fish,
+[data-bs-theme="dark"] .logo-fish::after {
+  background: #ffffff;
+}
+
+[data-bs-theme="dark"] .logo-fish::before {
+  border-right-color: #ffffff;
+}
+
+[data-bs-theme="dark"] .logo-fish::after {
+  background: #081d2d;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  color: #f4feff;
+  color: var(--aqua-sidebar-text);
   font-weight: 700;
   text-decoration: none;
-  margin-bottom: 1.2rem;
-  min-height: 3.25rem;
+  margin-bottom: 0;
+  min-height: 3rem;
 }
 
 .brand small {
-  color: rgb(244 254 255 / 66%);
+  color: var(--aqua-sidebar-muted);
   display: block;
   font-size: 0.68rem;
   font-weight: 600;
@@ -136,20 +170,18 @@ body::after {
 }
 
 .brand-mark {
-  background: linear-gradient(145deg, #08314c, #061826 72%);
-  border: 1px solid rgb(102 212 255 / 38%);
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 4px rgb(0 188 212 / 14%),
-    0 14px 32px rgb(0 0 0 / 28%);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   flex: 0 0 auto;
-  height: 2.55rem;
+  height: 2.9rem;
   position: relative;
-  width: 2.55rem;
+  width: 2.9rem;
 }
 
 .brand-word {
-  color: #f8fcff;
+  color: var(--aqua-sidebar-text);
   display: block;
   font-size: 1.16rem;
   font-weight: 850;
@@ -161,68 +193,99 @@ body::after {
 }
 
 .logo-drop {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .logo-drop::before {
-  border: 3px solid var(--aqua-brand-teal);
-  border-bottom-color: color-mix(in srgb, var(--aqua-brand-mint) 82%, white);
-  border-radius: 999px 999px 999px 12px;
+  background:
+    linear-gradient(135deg, var(--aqua-brand-teal), #1e6fe5);
+  clip-path: polygon(50% 3%, 90% 26%, 90% 72%, 50% 97%, 10% 72%, 10% 26%);
   content: "";
-  height: 1.34rem;
-  left: 0.55rem;
+  height: 2.8rem;
+  left: 0.04rem;
   position: absolute;
-  top: 0.42rem;
-  transform: rotate(45deg);
-  width: 1.34rem;
+  top: 0.04rem;
+  width: 2.8rem;
 }
 
 .logo-drop::after {
-  border: 2px solid color-mix(in srgb, var(--aqua-brand-teal) 78%, white);
-  border-left: 0;
-  border-top: 0;
-  border-radius: 0 0 999px;
+  background: var(--aqua-panel);
+  clip-path: polygon(50% 12%, 82% 31%, 82% 67%, 50% 86%, 18% 67%, 18% 31%);
   content: "";
-  height: 1.2rem;
+  height: 2.28rem;
+  left: 0.3rem;
   position: absolute;
-  right: 0.37rem;
-  top: 0.38rem;
-  width: 1.2rem;
+  top: 0.3rem;
+  width: 2.28rem;
+}
+
+.logo-fish {
+  background: var(--aqua-brand-navy);
+  border-radius: 56% 44% 44% 56% / 50%;
+  height: 0.74rem;
+  left: 0.88rem;
+  position: absolute;
+  top: 0.94rem;
+  width: 1.12rem;
+  z-index: 2;
+}
+
+.logo-fish::before {
+  border-bottom: 0.33rem solid transparent;
+  border-right: 0.48rem solid var(--aqua-brand-navy);
+  border-top: 0.33rem solid transparent;
+  content: "";
+  left: -0.34rem;
+  position: absolute;
+  top: 0.04rem;
+}
+
+.logo-fish::after {
+  background: var(--aqua-panel);
+  border-radius: 999px;
+  content: "";
+  height: 0.16rem;
+  position: absolute;
+  right: 0.22rem;
+  top: 0.25rem;
+  width: 0.16rem;
 }
 
 .logo-wave {
-  background:
-    linear-gradient(90deg, transparent 0 12%, var(--aqua-brand-teal) 12% 28%, transparent 28% 38%, var(--aqua-brand-mint) 38% 54%, transparent 54% 64%, var(--aqua-brand-teal) 64% 82%, transparent 82%);
-  border-radius: 999px;
-  bottom: 0.86rem;
-  height: 0.18rem;
-  left: 0.55rem;
+  background: var(--aqua-brand-teal);
+  border-radius: 999px 999px 0 0;
+  bottom: 0.9rem;
+  height: 0.2rem;
+  left: 0.82rem;
   position: absolute;
-  width: 1.45rem;
+  width: 1.36rem;
+  z-index: 3;
 }
 
 .logo-bars {
-  border-bottom: 0.26rem solid var(--aqua-brand-teal);
-  border-left: 0.18rem solid var(--aqua-brand-mint);
-  border-right: 0.18rem solid var(--aqua-river);
-  bottom: 0.42rem;
-  height: 0.65rem;
-  left: 0.82rem;
+  background:
+    linear-gradient(90deg, var(--aqua-brand-teal) 0 24%, transparent 24% 38%, #1e6fe5 38% 62%, transparent 62% 76%, var(--aqua-brand-teal) 76%);
+  bottom: 0.46rem;
+  height: 0.58rem;
+  left: 1.05rem;
   position: absolute;
-  width: 0.78rem;
+  width: 0.82rem;
+  z-index: 3;
 }
 
 .sidebar-status {
   background:
-    linear-gradient(135deg, rgb(40 224 239 / 14%), rgb(255 255 255 / 6%));
-  border: 1px solid rgb(102 212 255 / 20%);
+    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 10%, var(--aqua-panel)), var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 24%, var(--aqua-sidebar-border));
   border-radius: 8px;
-  margin-bottom: 1rem;
-  padding: 0.7rem;
+  margin: 0 0 0 auto;
+  order: 3;
+  padding: 0.55rem 0.75rem;
+  white-space: nowrap;
 }
 
 .sidebar-status span {
-  color: rgb(244 254 255 / 58%);
+  color: var(--aqua-sidebar-muted);
   display: block;
   font-size: 0.72rem;
   font-weight: 800;
@@ -230,7 +293,7 @@ body::after {
 }
 
 .sidebar-status strong {
-  color: #f4feff;
+  color: var(--aqua-sidebar-text);
   display: block;
   font-size: 0.92rem;
   margin-top: 0.15rem;
@@ -238,12 +301,12 @@ body::after {
 
 .nav-link {
   align-items: center;
-  color: rgb(244 254 255 / 68%);
+  color: var(--aqua-sidebar-text);
   display: flex;
   gap: 0.65rem;
   border-radius: 8px;
   font-weight: 650;
-  min-height: 2.75rem;
+  min-height: 2.55rem;
   padding: 0.62rem 0.74rem;
   position: relative;
   transition:
@@ -255,27 +318,27 @@ body::after {
 
 .nav-link.active,
 .nav-link:hover {
-  color: #ffffff;
-  background: rgb(255 255 255 / 9%);
-  box-shadow: 0 10px 26px rgb(0 0 0 / 18%);
+  color: var(--aqua-blue);
+  background: color-mix(in srgb, var(--aqua-brand-teal) 8%, transparent);
+  box-shadow: none;
 }
 
 .nav-link:hover {
-  transform: translateX(2px);
+  transform: translateY(-1px);
 }
 
 .nav-link.active::after {
-  background: linear-gradient(180deg, var(--aqua-brand-teal), var(--aqua-brand-mint));
+  background: linear-gradient(90deg, var(--aqua-brand-teal), #1e6fe5);
   border-radius: 999px;
   content: "";
-  inset: 0.55rem auto 0.55rem 0;
+  height: 3px;
+  inset: auto 0.65rem 0.2rem;
   position: absolute;
-  width: 3px;
 }
 
 .nav-glyph {
-  background: rgb(40 224 239 / 12%);
-  border: 1px solid rgb(102 212 255 / 22%);
+  background: color-mix(in srgb, var(--aqua-brand-teal) 10%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 24%, var(--aqua-border));
   border-radius: 6px;
   height: 1.28rem;
   position: relative;
@@ -368,7 +431,7 @@ body::after {
 }
 
 .main-panel {
-  padding: 1.15rem clamp(1rem, 2vw, 2rem) 2rem;
+  padding: 1rem clamp(1rem, 2vw, 2rem) 2rem;
 }
 
 .topbar {
@@ -385,7 +448,7 @@ body::after {
   margin-bottom: 1.25rem;
   padding: 0.9rem 1rem;
   position: sticky;
-  top: 1rem;
+  top: 6.25rem;
   z-index: 10;
 }
 
@@ -572,6 +635,8 @@ body::after {
 .ops-hero {
   align-items: stretch;
   background:
+    radial-gradient(circle at 73% 35%, rgb(30 111 229 / 34%), transparent 19%),
+    radial-gradient(circle at 84% 78%, rgb(0 188 212 / 18%), transparent 24%),
     linear-gradient(100deg, rgb(5 20 34 / 88%) 0 42%, rgb(5 54 76 / 72%) 66%, rgb(6 84 88 / 78%) 100%),
     linear-gradient(160deg, #081d2d 0%, #083752 48%, #075967 100%);
   border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 34%, var(--aqua-border));
@@ -582,6 +647,7 @@ body::after {
   gap: 1rem;
   grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
   margin-bottom: 1rem;
+  min-height: 330px;
   overflow: hidden;
   padding: clamp(1rem, 2.4vw, 1.6rem);
   position: relative;
@@ -625,11 +691,35 @@ body::after {
   text-transform: uppercase;
 }
 
+.hero-status-pill {
+  align-items: center;
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid rgb(102 212 255 / 22%);
+  border-radius: 999px;
+  color: rgb(248 251 255 / 88%);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 740;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  padding: 0.45rem 0.75rem;
+}
+
+.hero-status-pill::before {
+  background: var(--aqua-brand-mint);
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgb(38 198 164 / 16%);
+  content: "";
+  height: 0.48rem;
+  width: 0.48rem;
+}
+
 .ops-hero h2 {
-  font-size: clamp(2rem, 1.35rem + 2.6vw, 3.8rem);
+  font-size: clamp(2.6rem, 1.45rem + 4vw, 5.25rem);
   font-weight: 900;
-  line-height: 0.98;
+  line-height: 0.94;
   margin: 0;
+  max-width: 11ch;
 }
 
 .ops-hero p {
@@ -650,6 +740,70 @@ body::after {
   align-content: stretch;
   display: grid;
   gap: 0.65rem;
+  grid-template-rows: 1fr repeat(3, auto);
+}
+
+.hero-brand-mark {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 9rem;
+}
+
+.hero-brand-mark .brand-mark {
+  filter: drop-shadow(0 24px 48px rgb(0 0 0 / 30%));
+  height: clamp(8rem, 15vw, 13rem);
+  opacity: 0.7;
+  transform: scale(1.08);
+  width: clamp(8rem, 15vw, 13rem);
+}
+
+.hero-brand-mark .logo-drop::before {
+  height: 100%;
+  width: 100%;
+}
+
+.hero-brand-mark .logo-drop::after {
+  height: 82%;
+  left: 9%;
+  top: 9%;
+  width: 82%;
+}
+
+.hero-brand-mark .logo-fish {
+  height: 26%;
+  left: 30%;
+  top: 31%;
+  width: 39%;
+}
+
+.hero-brand-mark .logo-fish::before {
+  border-bottom-width: 0.95rem;
+  border-right-width: 1.35rem;
+  border-top-width: 0.95rem;
+  left: -31%;
+  top: 6%;
+}
+
+.hero-brand-mark .logo-fish::after {
+  height: 0.44rem;
+  right: 18%;
+  top: 34%;
+  width: 0.44rem;
+}
+
+.hero-brand-mark .logo-wave {
+  bottom: 31%;
+  height: 4%;
+  left: 28%;
+  width: 48%;
+}
+
+.hero-brand-mark .logo-bars {
+  bottom: 16%;
+  height: 20%;
+  left: 37%;
+  width: 29%;
 }
 
 .ops-hero-panel div {
@@ -736,8 +890,8 @@ body::after {
 .metric-card {
   color: var(--aqua-text);
   position: relative;
-  padding: 1rem 1rem 1.1rem;
-  min-height: 128px;
+  padding: 1.1rem 1rem 1.1rem 4.8rem;
+  min-height: 134px;
   overflow: hidden;
   transition:
     box-shadow 160ms ease,
@@ -763,6 +917,22 @@ body::after {
   position: absolute;
 }
 
+.metric-card::after {
+  align-items: center;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 22%, var(--aqua-panel)), color-mix(in srgb, #1e6fe5 18%, var(--aqua-panel)));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 34%, var(--aqua-border));
+  border-radius: 8px;
+  color: var(--aqua-accent-strong);
+  content: "";
+  display: flex;
+  height: 2.8rem;
+  left: 1rem;
+  position: absolute;
+  top: 1.35rem;
+  width: 2.8rem;
+}
+
 .metric-card:nth-child(2)::before {
   background: linear-gradient(90deg, var(--aqua-blue), var(--aqua-brand-teal));
 }
@@ -786,9 +956,9 @@ body::after {
 
 .metric-value {
   display: block;
-  font-size: 2.45rem;
+  font-size: 2.25rem;
   font-weight: 900;
-  margin-top: 0.65rem;
+  margin-top: 0.48rem;
 }
 
 .metric-action {
@@ -1580,7 +1750,14 @@ body::after {
 
 .density-compact .metric-card {
   min-height: 104px;
-  padding: 0.8rem;
+  padding: 0.8rem 0.8rem 0.8rem 4rem;
+}
+
+.density-compact .metric-card::after {
+  height: 2.35rem;
+  left: 0.8rem;
+  top: 1rem;
+  width: 2.35rem;
 }
 
 .density-compact .metric-value {
@@ -1724,6 +1901,7 @@ body::after {
   .sidebar {
     border-bottom: 1px solid var(--aqua-border);
     border-right: 0;
+    flex-wrap: wrap;
     height: auto;
     position: static;
   }
@@ -1756,6 +1934,10 @@ body::after {
   .parameter-grid {
     grid-template-columns: repeat(4, minmax(92px, 1fr));
   }
+
+  .topbar {
+    top: 1rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1773,6 +1955,17 @@ body::after {
   .tank-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .sidebar {
+    align-items: flex-start;
+    flex-direction: column;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .sidebar .nav {
+    width: 100%;
   }
 
   .stats-grid,
@@ -1817,7 +2010,7 @@ body::after {
   }
 
   .brand {
-    margin-bottom: 0.85rem;
+    margin-bottom: 0;
   }
 
   .brand small {

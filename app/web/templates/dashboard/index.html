@@ -4,8 +4,9 @@
   {% set visible_measurements = display.visible_water_items(snapshot.latest_measurements) %}
   <section class="ops-hero">
     <div class="ops-hero-copy">
+      <span class="hero-status-pill">All systems operational</span>
       <span class="hero-kicker">AquaOps command center</span>
-      <h2>Track. Optimize. Thrive.</h2>
+      <h2>Smarter aquariums. Better operations.</h2>
       <p>{{ current_user.username if current_user else "Demo workspace" }} workspace · {{ preferences.unit_system|upper }} units · {{ preferences.dashboard_density|title }} density</p>
       <div class="hero-actions">
         {% if current_user %}
@@ -20,6 +21,13 @@
       </div>
     </div>
     <div class="ops-hero-panel" aria-label="Aquarium status summary">
+      <div class="hero-brand-mark" aria-hidden="true">
+        <span class="brand-mark logo-drop">
+          <span class="logo-fish"></span>
+          <span class="logo-wave"></span>
+          <span class="logo-bars"></span>
+        </span>
+      </div>
       <div>
         <span>Open reminders</span>
         <strong>{{ snapshot.upcoming_reminders|length }}</strong>
