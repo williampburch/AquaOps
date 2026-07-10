@@ -176,6 +176,12 @@ body::after {
   width: 2.9rem;
 }
 
+.brand .brand-mark,
+.auth-brand .brand-mark {
+  border-radius: 10px;
+  filter: drop-shadow(0 8px 18px rgb(8 29 45 / 14%));
+}
+
 .brand-word {
   color: var(--aqua-sidebar-text);
   display: block;
@@ -748,10 +754,10 @@ body::after {
 
 .hero-brand-mark .brand-mark {
   filter: drop-shadow(0 24px 48px rgb(0 0 0 / 30%));
-  height: clamp(8rem, 15vw, 13rem);
-  opacity: 0.7;
-  transform: scale(1.08);
-  width: clamp(8rem, 15vw, 13rem);
+  height: clamp(11rem, 20vw, 17rem);
+  opacity: 0.78;
+  transform: scale(1.03);
+  width: clamp(11rem, 20vw, 17rem);
 }
 
 .ops-hero-panel div {
