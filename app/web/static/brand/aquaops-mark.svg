@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">AquaOps mark</title>
+  <desc id="desc">Hexagon aquarium operations mark with fish and data bars.</desc>
+  <defs>
+    <linearGradient id="aquaops-frame" x1="54" y1="38" x2="202" y2="218" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C2B8"/>
+      <stop offset="1" stop-color="#1E6FE5"/>
+    </linearGradient>
+    <linearGradient id="aquaops-water" x1="68" y1="151" x2="190" y2="151" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00BCD4"/>
+      <stop offset="1" stop-color="#26C6A4"/>
+    </linearGradient>
+    <filter id="aquaops-shadow" x="18" y="18" width="220" height="224" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#081D2D" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <path d="M128 20 218 72v112l-90 52-90-52V72l90-52Z" fill="url(#aquaops-frame)" filter="url(#aquaops-shadow)"/>
+  <path d="M128 38 201 80v96l-73 42-73-42V80l73-42Z" fill="#F6FBFE"/>
+  <path d="M75 117c14-22 43-36 78-30 25 4 45 19 56 38-13 19-36 31-63 32-30 1-56-10-71-31l-24 17v-43l24 17Z" fill="#0D1B2A"/>
+  <circle cx="170" cy="119" r="6" fill="#D8E7EF"/>
+  <path d="M69 157c16-12 34-12 51 0 16 11 35 11 52 0 10-7 21-10 33-8" stroke="url(#aquaops-water)" stroke-linecap="round" stroke-width="12"/>
+  <path d="M94 170h20v36H94v-36Zm36-14h20v50h-20v-50Zm36-25h20v75h-20v-75Z" fill="url(#aquaops-frame)"/>
+</svg>
