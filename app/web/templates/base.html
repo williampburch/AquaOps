@@ -21,7 +21,8 @@
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     {% block extra_head %}{% endblock %}
   </head>
-  <body>
+  <body class="{{ display.density_class if display is defined else 'density-comfortable' }}">
+    {% set prefs = preferences if preferences is defined else none %}
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="/">
@@ -48,10 +49,24 @@
             <span class="nav-glyph" aria-hidden="true"></span>
             Events
           </a>
-          <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="/reports">
-            <span class="nav-glyph" aria-hidden="true"></span>
-            Reports
-          </a>
+          {% if prefs is none or prefs.enable_livestock %}
+            <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">
+              <span class="nav-glyph" aria-hidden="true"></span>
+              Livestock
+            </a>
+          {% endif %}
+          {% if prefs is none or prefs.enable_plants %}
+            <a class="nav-link {{ 'active' if active_nav == 'plants' else '' }}" href="/plants">
+              <span class="nav-glyph" aria-hidden="true"></span>
+              Plants
+            </a>
+          {% endif %}
+          {% if prefs is none or prefs.enable_reports %}
+            <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="/reports">
+              <span class="nav-glyph" aria-hidden="true"></span>
+              Reports
+            </a>
+          {% endif %}
           <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">
             <span class="nav-glyph" aria-hidden="true"></span>
             Settings
@@ -78,9 +93,14 @@
               </button>
             </div>
             {% if current_user %}
-              <a class="icon-button notification-button {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications" title="Notifications" aria-label="Notifications">
-                <span class="notification-dot" aria-hidden="true"></span>
-              </a>
+              {% if prefs is none or prefs.enable_notifications %}
+                <a class="icon-button notification-button {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications" title="Notifications" aria-label="Notifications">
+                  <span class="notification-dot" aria-hidden="true"></span>
+                </a>
+              {% endif %}
+              {% if prefs is not none %}
+                <span class="user-chip">{{ prefs.unit_system|upper }} · {{ prefs.temperature_unit }}</span>
+              {% endif %}
               <span class="user-chip">{{ current_user.username }}</span>
               <form method="post" action="/logout">
                 <button class="btn btn-outline-light btn-sm" type="submit">Sign out</button>

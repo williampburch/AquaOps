@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
+  {% set visible_readings = display.visible_water_items(tank.latest_readings) %}
+  {% set visible_targets = display.visible_water_items(tank.targets) %}
+
   <section class="tank-header">
     <div>
       <p class="eyebrow mb-1">{{ tank.tank_type }}</p>
       <h2>{{ tank.name }}</h2>
       <div class="tile-meta">
-        <span>{{ tank.volume_liters or "--" }} L</span>
+        <span>{{ display.format_volume(tank.volume_liters) }}</span>
         {% if tank.started_on %}
-          <span>Started {{ tank.started_on.strftime("%b %-d, %Y") }}</span>
+          <span>Started {{ display.format_date(tank.started_on) }}</span>
         {% endif %}
       </div>
     </div>
@@ -16,15 +19,15 @@
   </section>
 
   <section class="parameter-grid mt-4">
-    {% for reading in tank.latest_readings %}
+    {% for reading in visible_readings %}
       <div class="parameter-cell status-{{ reading.status }}">
         <span>{{ reading.label }}</span>
         <strong>{{ reading.value }} {{ reading.unit }}</strong>
         <small>{{ reading.status|title }}</small>
       </div>
     {% endfor %}
-    {% if not tank.latest_readings %}
-      {% for target in tank.targets %}
+    {% if not visible_readings %}
+      {% for target in visible_targets %}
         <div class="parameter-cell muted">
           <span>{{ target.label }}</span>
           <strong>--</strong>
@@ -44,7 +47,7 @@
           <input class="form-control" id="occurred_at" name="occurred_at" type="datetime-local" />
         </div>
         <div class="water-test-grid">
-          {% for target in tank.targets %}
+          {% for target in visible_targets %}
             <div>
               <label class="form-label" for="{{ target.metric_key }}">{{ target.label }}</label>
               <div class="input-group">
@@ -79,7 +82,7 @@
               <span class="event-pill">{{ event.event_type.replace("_", " ") }}</span>
               <div>
                 <h3>{{ event.title }}</h3>
-                <p>{{ event.occurred_at.strftime("%b %-d, %Y") }}</p>
+                <p>{{ display.format_date(event.occurred_at) }}</p>
               </div>
             </div>
           {% endfor %}
@@ -126,7 +129,7 @@
           <span>Maximum</span>
           <span>Unit</span>
         </div>
-        {% for target in tank.targets %}
+        {% for target in visible_targets %}
           <div class="target-row">
             <strong>{{ target.label }}</strong>
             <input

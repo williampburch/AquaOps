@@ -8,15 +8,25 @@ from sqlalchemy.orm import Session
 from app.application.ports.notifications import NotificationItem, NotificationSnapshot
 from app.core.time import utc_now
 from app.infrastructure.db.models import ReminderModel, TankModel
+from app.infrastructure.repositories.feature_flags import (
+    filter_plant_care_reminders,
+    plant_care_is_active,
+)
 
 
 class SqlAlchemyNotificationRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def get_snapshot(self, user_id: int) -> NotificationSnapshot:
+    def get_snapshot(
+        self,
+        user_id: int,
+        window_days: int = 14,
+        plant_care_mode: str = "auto",
+    ) -> NotificationSnapshot:
         now = utc_now()
-        soon = now + timedelta(days=14)
+        soon = now + timedelta(days=window_days)
+        include_plant_care = plant_care_is_active(self.session, user_id, plant_care_mode)
         statement = (
             select(ReminderModel, TankModel.name)
             .outerjoin(TankModel, TankModel.id == ReminderModel.tank_id)
@@ -28,6 +38,7 @@ class SqlAlchemyNotificationRepository:
             .order_by(ReminderModel.due_at.asc())
             .limit(40)
         )
+        statement = filter_plant_care_reminders(statement, include_plant_care)
         items = [
             NotificationItem(
                 id=reminder.id,
@@ -44,6 +55,7 @@ class SqlAlchemyNotificationRepository:
             due_today_count=sum(1 for item in items if item.status == "due_today"),
             upcoming_count=sum(1 for item in items if item.status == "upcoming"),
             items=items,
+            plant_care_active=include_plant_care,
         )
 
     def _status(self, due_at, now) -> str:

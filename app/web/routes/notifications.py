@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.application.notifications.service import NotificationService
 from app.core.config import get_settings
 from app.infrastructure.repositories.notifications import SqlAlchemyNotificationRepository
-from app.web.dependencies import AuthenticatedUser, get_db
+from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
+from app.web.presentation import UserDisplay
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
@@ -24,6 +25,7 @@ def notifications_index(
     current_user: AuthenticatedUser,
 ):
     service = NotificationService(SqlAlchemyNotificationRepository(db))
+    preferences = preferences_for_user(db, current_user)
     return templates.TemplateResponse(
         request,
         "notifications/index.html",
@@ -31,6 +33,12 @@ def notifications_index(
             "title": "Notifications",
             "active_nav": "notifications",
             "current_user": current_user,
-            "snapshot": service.get_notifications(current_user.id),
+            "preferences": preferences,
+            "display": UserDisplay(preferences),
+            "snapshot": service.get_notifications(
+                current_user.id,
+                preferences.reminder_window_days,
+                preferences.plant_care_mode,
+            ),
         },
     )

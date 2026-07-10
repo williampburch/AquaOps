@@ -4,26 +4,202 @@
   <section class="command-strip">
     <div>
       <strong>Automation Control</strong>
-      <span>Schedules, thresholds, reminders, and feature modules</span>
+      <span>Workspace defaults, measurement units, care windows, and modules</span>
     </div>
     <div class="command-actions">
-      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
+      {% if saved %}
+        <span class="save-indicator">Saved</span>
+      {% endif %}
+      <a class="btn btn-outline-light btn-sm" href="/">Dashboard</a>
       <a class="btn btn-primary btn-sm" href="/notifications">Notifications</a>
     </div>
   </section>
 
-  <section class="settings-grid">
-    {% for card in automation_cards %}
-      <article class="settings-card">
+  <form class="settings-workspace" method="post" action="/settings">
+    <section class="settings-panel">
+      <div class="settings-heading">
         <div>
-          <span>{{ card.status }}</span>
-          <strong>{{ card.title }}</strong>
-          <p>{{ card.detail }}</p>
+          <span>Global</span>
+          <h2>Measurement System</h2>
         </div>
-        <button class="toggle-shell" type="button" aria-label="{{ card.title }} toggle" disabled>
-          <span></span>
-        </button>
-      </article>
-    {% endfor %}
-  </section>
+        <button class="btn btn-primary btn-sm" type="submit">Save settings</button>
+      </div>
+
+      <div class="preference-grid">
+        <fieldset>
+          <legend>System</legend>
+          <div class="segmented-control">
+            <label>
+              <input type="radio" name="unit_system" value="us" {{ "checked" if preferences.unit_system == "us" else "" }} />
+              <span>US</span>
+            </label>
+            <label>
+              <input type="radio" name="unit_system" value="metric" {{ "checked" if preferences.unit_system == "metric" else "" }} />
+              <span>Metric</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="form-label" for="volume_unit">Volume</label>
+          <select class="form-select" id="volume_unit" name="volume_unit">
+            <option value="gallon" {{ "selected" if preferences.volume_unit == "gallon" else "" }}>Gallons</option>
+            <option value="liter" {{ "selected" if preferences.volume_unit == "liter" else "" }}>Liters</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" for="temperature_unit">Temperature</label>
+          <select class="form-select" id="temperature_unit" name="temperature_unit">
+            <option value="F" {{ "selected" if preferences.temperature_unit == "F" else "" }}>Fahrenheit</option>
+            <option value="C" {{ "selected" if preferences.temperature_unit == "C" else "" }}>Celsius</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" for="date_format">Dates</label>
+          <select class="form-select" id="date_format" name="date_format">
+            <option value="mdy" {{ "selected" if preferences.date_format == "mdy" else "" }}>Jul 9, 2026</option>
+            <option value="dmy" {{ "selected" if preferences.date_format == "dmy" else "" }}>9 Jul 2026</option>
+            <option value="iso" {{ "selected" if preferences.date_format == "iso" else "" }}>2026-07-09</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-panel">
+      <div class="settings-heading">
+        <div>
+          <span>Workspace</span>
+          <h2>Complexity</h2>
+        </div>
+      </div>
+
+      <div class="preference-grid">
+        <fieldset>
+          <legend>Density</legend>
+          <div class="segmented-control">
+            <label>
+              <input type="radio" name="dashboard_density" value="comfortable" {{ "checked" if preferences.dashboard_density == "comfortable" else "" }} />
+              <span>Comfort</span>
+            </label>
+            <label>
+              <input type="radio" name="dashboard_density" value="compact" {{ "checked" if preferences.dashboard_density == "compact" else "" }} />
+              <span>Compact</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="form-label" for="reminder_window_days">Due-soon window</label>
+          <input
+            class="form-control"
+            id="reminder_window_days"
+            name="reminder_window_days"
+            type="number"
+            min="1"
+            max="60"
+            value="{{ preferences.reminder_window_days }}"
+          />
+        </div>
+
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="advanced_mode" {{ "checked" if preferences.advanced_mode else "" }} />
+          <span>
+            <strong>Advanced mode</strong>
+            <small>Show deeper controls as they are added</small>
+          </span>
+        </label>
+
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="enable_advanced_water" {{ "checked" if preferences.enable_advanced_water else "" }} />
+          <span>
+            <strong>Advanced water metrics</strong>
+            <small>KH, GH, and TDS</small>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-panel">
+      <div class="settings-heading">
+        <div>
+          <span>Modules</span>
+          <h2>Feature Modules</h2>
+        </div>
+      </div>
+
+      <div class="module-grid">
+        <fieldset class="module-toggle module-toggle-stack">
+          <legend>Plant Care</legend>
+          <div class="segmented-control segmented-control-three">
+            <label>
+              <input type="radio" name="plant_care_mode" value="auto" {{ "checked" if preferences.plant_care_mode == "auto" else "" }} />
+              <span>Auto</span>
+            </label>
+            <label>
+              <input type="radio" name="plant_care_mode" value="on" {{ "checked" if preferences.plant_care_mode == "on" else "" }} />
+              <span>On</span>
+            </label>
+            <label>
+              <input type="radio" name="plant_care_mode" value="off" {{ "checked" if preferences.plant_care_mode == "off" else "" }} />
+              <span>Off</span>
+            </label>
+          </div>
+          <small>Fertilizer, root tabs, and plant trim care</small>
+        </fieldset>
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="enable_notifications" {{ "checked" if preferences.enable_notifications else "" }} />
+          <span>
+            <strong>Water Alerts</strong>
+            <small>Notifications and due care</small>
+          </span>
+        </label>
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="enable_reports" {{ "checked" if preferences.enable_reports else "" }} />
+          <span>
+            <strong>Reports</strong>
+            <small>Charts and operations summaries</small>
+          </span>
+        </label>
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="enable_livestock" {{ "checked" if preferences.enable_livestock else "" }} />
+          <span>
+            <strong>Livestock</strong>
+            <small>Species inventory</small>
+          </span>
+        </label>
+        <label class="module-toggle">
+          <input class="form-check-input" type="checkbox" name="enable_plants" {{ "checked" if preferences.enable_plants else "" }} />
+          <span>
+            <strong>Plants</strong>
+            <small>Plant inventory</small>
+          </span>
+        </label>
+      </div>
+    </section>
+  </form>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    (() => {
+      const volumeUnit = document.querySelector("#volume_unit");
+      const temperatureUnit = document.querySelector("#temperature_unit");
+      document.querySelectorAll('input[name="unit_system"]').forEach((option) => {
+        option.addEventListener("change", () => {
+          if (!option.checked) {
+            return;
+          }
+          if (option.value === "metric") {
+            volumeUnit.value = "liter";
+            temperatureUnit.value = "C";
+          } else {
+            volumeUnit.value = "gallon";
+            temperatureUnit.value = "F";
+          }
+        });
+      });
+    })();
+  </script>
 {% endblock %}

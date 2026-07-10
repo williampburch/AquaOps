@@ -9,5 +9,10 @@ from app.application.ports.dashboard import DashboardReadRepository, DashboardSn
 class DashboardService:
     repository: DashboardReadRepository
 
-    def get_dashboard(self, user_id: int | None) -> DashboardSnapshot:
-        return self.repository.get_snapshot(user_id)
+    def get_dashboard(
+        self,
+        user_id: int | None,
+        reminder_window_days: int = 14,
+        plant_care_mode: str = "auto",
+    ) -> DashboardSnapshot:
+        return self.repository.get_snapshot(user_id, reminder_window_days, plant_care_mode)

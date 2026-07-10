@@ -41,8 +41,14 @@ class DashboardSnapshot:
     recent_events: list[RecentEvent]
     upcoming_reminders: list[UpcomingReminder]
     latest_measurements: list[LatestMeasurement]
+    plant_care_active: bool = False
 
 
 class DashboardReadRepository(Protocol):
-    def get_snapshot(self, user_id: int | None) -> DashboardSnapshot:
+    def get_snapshot(
+        self,
+        user_id: int | None,
+        reminder_window_days: int = 14,
+        plant_care_mode: str = "auto",
+    ) -> DashboardSnapshot:
         """Return a dashboard snapshot for a user or an empty public snapshot."""

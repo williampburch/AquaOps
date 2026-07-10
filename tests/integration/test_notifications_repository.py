@@ -87,3 +87,94 @@ def test_notification_repository_classifies_open_reminders(session: Session) -> 
         "Feed fish",
         "Root tabs",
     ]
+
+
+def test_notification_repository_auto_hides_plant_care_without_plant_signal(
+    session: Session,
+) -> None:
+    now = utc_now()
+    user = UserModel(
+        email="quiet@example.com",
+        username="quiet",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Display Tank", tank_type="freshwater")
+    session.add_all([user, tank])
+    session.flush()
+
+    session.add_all(
+        [
+            ReminderModel(
+                user_id=user.id,
+                tank_id=tank.id,
+                reminder_type="water_change",
+                title="Water change",
+                due_at=now,
+            ),
+            ReminderModel(
+                user_id=user.id,
+                tank_id=tank.id,
+                reminder_type="root_tabs",
+                title="Root tabs",
+                due_at=now + timedelta(days=2),
+            ),
+            ReminderModel(
+                user_id=user.id,
+                tank_id=tank.id,
+                reminder_type="fertilizer",
+                title="Weekly fertilizer",
+                due_at=now + timedelta(days=3),
+            ),
+        ]
+    )
+    session.commit()
+
+    snapshot = SqlAlchemyNotificationRepository(session).get_snapshot(
+        user.id,
+        plant_care_mode="auto",
+    )
+
+    assert snapshot.plant_care_active is False
+    assert [item.title for item in snapshot.items] == ["Water change"]
+
+
+def test_notification_repository_can_force_plant_care_off_for_planted_tank(
+    session: Session,
+) -> None:
+    now = utc_now()
+    user = UserModel(
+        email="planted@example.com",
+        username="planted",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Planted Tank", tank_type="planted")
+    session.add_all([user, tank])
+    session.flush()
+
+    session.add_all(
+        [
+            ReminderModel(
+                user_id=user.id,
+                tank_id=tank.id,
+                reminder_type="water_change",
+                title="Water change",
+                due_at=now,
+            ),
+            ReminderModel(
+                user_id=user.id,
+                tank_id=tank.id,
+                reminder_type="fertilizer",
+                title="Weekly fertilizer",
+                due_at=now + timedelta(days=3),
+            ),
+        ]
+    )
+    session.commit()
+
+    snapshot = SqlAlchemyNotificationRepository(session).get_snapshot(
+        user.id,
+        plant_care_mode="off",
+    )
+
+    assert snapshot.plant_care_active is False
+    assert [item.title for item in snapshot.items] == ["Water change"]

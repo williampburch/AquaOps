@@ -21,6 +21,7 @@ from app.domain.enums import EventType
 from app.domain.water import (
     FRESHWATER_BEGINNER_TARGETS,
     WATER_METRIC_BY_KEY,
+    freshwater_targets_for_temperature_unit,
     metric_label,
 )
 from app.infrastructure.db.models import (
@@ -74,7 +75,7 @@ class SqlAlchemyTankRepository:
         )
         self.session.add(tank)
         self.session.flush()
-        self._seed_default_targets(tank.id)
+        self._seed_default_targets(tank.id, data.temperature_unit)
         self.session.commit()
         return tank.id
 
@@ -186,8 +187,8 @@ class SqlAlchemyTankRepository:
             )
         ).scalar_one_or_none()
 
-    def _seed_default_targets(self, tank_id: int) -> None:
-        for target in FRESHWATER_BEGINNER_TARGETS:
+    def _seed_default_targets(self, tank_id: int, temperature_unit: str = "F") -> None:
+        for target in freshwater_targets_for_temperature_unit(temperature_unit):
             self.session.add(
                 TankParameterTargetModel(
                     tank_id=tank_id,

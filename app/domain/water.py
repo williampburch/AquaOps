@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from app.domain.enums import MeasurementMetric
+from app.domain.preferences import fahrenheit_to_celsius
 
 
 @dataclass(frozen=True)
@@ -53,3 +54,27 @@ FRESHWATER_TARGET_BY_KEY = {target.metric_key: target for target in FRESHWATER_B
 def metric_label(metric_key: str) -> str:
     metric = WATER_METRIC_BY_KEY.get(metric_key)
     return metric.label if metric else metric_key.replace("_", " ").title()
+
+
+def freshwater_targets_for_temperature_unit(temperature_unit: str) -> tuple[WaterTargetPreset, ...]:
+    if temperature_unit != "C":
+        return FRESHWATER_BEGINNER_TARGETS
+    return tuple(
+        WaterTargetPreset(
+            metric_key=target.metric_key,
+            min_value=(
+                fahrenheit_to_celsius(target.min_value)
+                if target.metric_key == MeasurementMetric.TEMPERATURE.value
+                and target.min_value is not None
+                else target.min_value
+            ),
+            max_value=(
+                fahrenheit_to_celsius(target.max_value)
+                if target.metric_key == MeasurementMetric.TEMPERATURE.value
+                and target.max_value is not None
+                else target.max_value
+            ),
+            unit="C" if target.metric_key == MeasurementMetric.TEMPERATURE.value else target.unit,
+        )
+        for target in FRESHWATER_BEGINNER_TARGETS
+    )

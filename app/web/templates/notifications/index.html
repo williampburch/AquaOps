@@ -26,7 +26,7 @@
     <article class="insight-card">
       <span>Upcoming</span>
       <strong>{{ snapshot.upcoming_count }}</strong>
-      <small>Next 14 days</small>
+      <small>Next {{ preferences.reminder_window_days }} days</small>
     </article>
   </section>
 
@@ -44,7 +44,7 @@
             </div>
             <div class="notification-meta">
               <span>{{ item.status.replace("_", " ")|title }}</span>
-              <time>{{ item.due_at.strftime("%b %-d, %Y") }}</time>
+              <time>{{ display.format_date(item.due_at) }}</time>
             </div>
           </article>
         {% endfor %}
@@ -52,7 +52,11 @@
     {% else %}
       <div class="empty-state elevated-empty">
         <strong>No open notifications</strong>
-        <span>Scheduled care and parameter alerts will appear here.</span>
+        {% if snapshot.plant_care_active %}
+          <span>Scheduled care, plant care, and parameter alerts will appear here.</span>
+        {% else %}
+          <span>Scheduled care and parameter alerts will appear here.</span>
+        {% endif %}
       </div>
     {% endif %}
   </section>

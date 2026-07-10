@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.application.activity.service import ActivityService
 from app.core.config import get_settings
 from app.infrastructure.repositories.activity import SqlAlchemyActivityRepository
-from app.web.dependencies import AuthenticatedUser, get_db
+from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
+from app.web.presentation import UserDisplay
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
@@ -24,7 +25,8 @@ def reports_index(
     current_user: AuthenticatedUser,
 ):
     service = ActivityService(SqlAlchemyActivityRepository(db))
-    snapshot = service.get_reports_snapshot(current_user.id)
+    preferences = preferences_for_user(db, current_user)
+    snapshot = service.get_reports_snapshot(current_user.id, preferences.plant_care_mode)
     return templates.TemplateResponse(
         request,
         "reports/index.html",
@@ -32,6 +34,8 @@ def reports_index(
             "title": "Reports",
             "active_nav": "reports",
             "current_user": current_user,
+            "preferences": preferences,
+            "display": UserDisplay(preferences),
             "snapshot": snapshot,
             "event_mix_payload": [
                 {"label": item.event_type.replace("_", " ").title(), "value": item.count}

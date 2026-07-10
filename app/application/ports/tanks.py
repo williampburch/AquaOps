@@ -16,6 +16,7 @@ class TankCreate:
     lighting: str | None
     filtration: str | None
     substrate: str | None
+    temperature_unit: str = "F"
 
 
 @dataclass(frozen=True)

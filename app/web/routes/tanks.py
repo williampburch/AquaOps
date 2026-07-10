@@ -13,9 +13,11 @@ from app.application.ports.tanks import TankCreate
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
+from app.domain.preferences import volume_to_liters
 from app.domain.water import WATER_METRICS
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
-from app.web.dependencies import AuthenticatedUser, get_db
+from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
+from app.web.presentation import UserDisplay
 
 router = APIRouter(prefix="/tanks", tags=["tanks"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
@@ -30,6 +32,7 @@ def list_tanks(
     current_user: AuthenticatedUser,
 ):
     service = TankService(SqlAlchemyTankRepository(db))
+    preferences = preferences_for_user(db, current_user)
     return templates.TemplateResponse(
         request,
         "tanks/index.html",
@@ -37,13 +40,16 @@ def list_tanks(
             "title": "Tanks",
             "active_nav": "tanks",
             "current_user": current_user,
+            "preferences": preferences,
+            "display": UserDisplay(preferences),
             "tanks": service.list_tanks(current_user.id),
         },
     )
 
 
 @router.get("/new")
-def new_tank_form(request: Request, current_user: AuthenticatedUser):
+def new_tank_form(request: Request, db: DbSession, current_user: AuthenticatedUser):
+    preferences = preferences_for_user(db, current_user)
     return templates.TemplateResponse(
         request,
         "tanks/new.html",
@@ -51,6 +57,8 @@ def new_tank_form(request: Request, current_user: AuthenticatedUser):
             "title": "New Tank",
             "active_nav": "tanks",
             "current_user": current_user,
+            "preferences": preferences,
+            "display": UserDisplay(preferences),
             "error": None,
         },
     )
@@ -64,18 +72,26 @@ async def create_tank(
 ):
     form = await request.form()
     service = TankService(SqlAlchemyTankRepository(db))
+    preferences = preferences_for_user(db, current_user)
     try:
+        volume = _optional_decimal(_form_text(form, "volume"))
+        volume_liters = (
+            volume_to_liters(volume, preferences.volume_unit)
+            if volume is not None
+            else _optional_decimal(_form_text(form, "volume_liters"))
+        )
         tank_id = service.create_tank(
             current_user.id,
             TankCreate(
                 name=_form_text(form, "name") or "",
                 tank_type=_form_text(form, "tank_type") or "freshwater",
-                volume_liters=_optional_decimal(_form_text(form, "volume_liters")),
+                volume_liters=volume_liters,
                 started_on=_optional_date(_form_text(form, "started_on")),
                 description=_form_text(form, "description"),
                 lighting=_form_text(form, "lighting"),
                 filtration=_form_text(form, "filtration"),
                 substrate=_form_text(form, "substrate"),
+                temperature_unit=preferences.temperature_unit,
             ),
         )
     except ValueError as exc:
@@ -86,6 +102,8 @@ async def create_tank(
                 "title": "New Tank",
                 "active_nav": "tanks",
                 "current_user": current_user,
+                "preferences": preferences,
+                "display": UserDisplay(preferences),
                 "error": str(exc),
             },
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -101,6 +119,8 @@ def tank_detail(
     current_user: AuthenticatedUser,
 ):
     service = TankService(SqlAlchemyTankRepository(db))
+    preferences = preferences_for_user(db, current_user)
+    display = UserDisplay(preferences)
     tank = service.get_tank_detail(current_user.id, tank_id)
     if tank is None:
         return RedirectResponse("/tanks", status_code=status.HTTP_303_SEE_OTHER)
@@ -112,9 +132,11 @@ def tank_detail(
             "title": tank.name,
             "active_nav": "tanks",
             "current_user": current_user,
+            "preferences": preferences,
+            "display": display,
             "tank": tank,
-            "water_metrics": WATER_METRICS,
-            "chart_payload": _chart_payload(tank.chart_series),
+            "water_metrics": display.visible_water_items(WATER_METRICS),
+            "chart_payload": _chart_payload(display.visible_water_items(tank.chart_series)),
             "error": None,
         },
     )
@@ -163,6 +185,12 @@ async def update_targets(
         raw_targets = {}
         for metric in WATER_METRICS:
             metric_key = metric.key.value
+            if (
+                f"{metric_key}_min" not in form
+                and f"{metric_key}_max" not in form
+                and f"{metric_key}_unit" not in form
+            ):
+                continue
             raw_targets[metric_key] = (
                 _optional_decimal(_form_text(form, f"{metric_key}_min")),
                 _optional_decimal(_form_text(form, f"{metric_key}_max")),

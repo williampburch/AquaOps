@@ -8,7 +8,12 @@ class FakeDashboardRepository:
     def __init__(self) -> None:
         self.seen_user_id: int | None = None
 
-    def get_snapshot(self, user_id: int | None) -> DashboardSnapshot:
+    def get_snapshot(
+        self,
+        user_id: int | None,
+        reminder_window_days: int = 14,
+        plant_care_mode: str = "auto",
+    ) -> DashboardSnapshot:
         self.seen_user_id = user_id
         return DashboardSnapshot(
             tank_count=1,

@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.application.dashboard.service import DashboardService
 from app.core.config import get_settings
 from app.infrastructure.repositories.dashboard import SqlAlchemyDashboardRepository
-from app.web.dependencies import CurrentUser, get_db
+from app.web.dependencies import CurrentUser, get_db, preferences_for_user
+from app.web.presentation import UserDisplay
 
 router = APIRouter(tags=["dashboard"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
@@ -24,7 +25,12 @@ def dashboard(
     current_user: CurrentUser,
 ):
     service = DashboardService(SqlAlchemyDashboardRepository(db))
-    snapshot = service.get_dashboard(current_user.id if current_user else None)
+    preferences = preferences_for_user(db, current_user)
+    snapshot = service.get_dashboard(
+        current_user.id if current_user else None,
+        preferences.reminder_window_days,
+        preferences.plant_care_mode,
+    )
     return templates.TemplateResponse(
         request,
         "dashboard/index.html",
@@ -32,6 +38,8 @@ def dashboard(
             "title": "Dashboard",
             "active_nav": "dashboard",
             "current_user": current_user,
+            "preferences": preferences,
+            "display": UserDisplay(preferences),
             "snapshot": snapshot,
         },
     )

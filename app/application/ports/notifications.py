@@ -21,8 +21,14 @@ class NotificationSnapshot:
     due_today_count: int
     upcoming_count: int
     items: list[NotificationItem]
+    plant_care_active: bool = False
 
 
 class NotificationReadRepository(Protocol):
-    def get_snapshot(self, user_id: int) -> NotificationSnapshot:
+    def get_snapshot(
+        self,
+        user_id: int,
+        window_days: int = 14,
+        plant_care_mode: str = "auto",
+    ) -> NotificationSnapshot:
         """Return open reminders and alert-style notifications for a user."""

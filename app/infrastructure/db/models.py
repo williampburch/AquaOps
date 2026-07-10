@@ -45,8 +45,35 @@ class UserModel(TimestampMixin, Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    preferences: Mapped[UserPreferenceModel | None] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
     tanks: Mapped[list[TankModel]] = relationship(back_populates="user")
     events: Mapped[list[EventModel]] = relationship(back_populates="user")
+
+
+class UserPreferenceModel(TimestampMixin, Base):
+    __tablename__ = "user_preferences"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    unit_system: Mapped[str] = mapped_column(String(20), default="us")
+    volume_unit: Mapped[str] = mapped_column(String(20), default="gallon")
+    temperature_unit: Mapped[str] = mapped_column(String(8), default="F")
+    date_format: Mapped[str] = mapped_column(String(20), default="mdy")
+    dashboard_density: Mapped[str] = mapped_column(String(20), default="comfortable")
+    advanced_mode: Mapped[bool] = mapped_column(Boolean, default=False)
+    reminder_window_days: Mapped[int] = mapped_column(Integer, default=14)
+    enable_livestock: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_plants: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_reports: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_notifications: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_advanced_water: Mapped[bool] = mapped_column(Boolean, default=True)
+    plant_care_mode: Mapped[str] = mapped_column(String(20), default="auto")
+
+    user: Mapped[UserModel] = relationship(back_populates="preferences")
 
 
 class SessionModel(Base):

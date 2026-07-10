@@ -1,34 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="ops-hero">
-    <div class="ops-hero-copy">
-      <span class="hero-kicker">Live aquarium command center</span>
-      <h2>Today</h2>
-      <p>Monitor readings, upcoming care, and the latest tank activity.</p>
-      <div class="hero-actions">
-        {% if current_user %}
-          <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
-          <a class="btn btn-outline-light btn-sm" href="/notifications">Care queue</a>
-        {% else %}
-          <a class="btn btn-primary btn-sm" href="/register">Create account</a>
-          <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
-        {% endif %}
-      </div>
+  {% set visible_measurements = display.visible_water_items(snapshot.latest_measurements) %}
+  <section class="workspace-strip ops-console">
+    <div>
+      <strong>Operations Dashboard</strong>
+      <span>{{ current_user.username if current_user else "Demo workspace" }} · {{ preferences.unit_system|upper }} units · {{ preferences.dashboard_density|title }}</span>
     </div>
-    <div class="ops-hero-panel" aria-label="Aquarium status summary">
-      <div>
+    <div class="console-metrics" aria-label="Aquarium status summary">
+      <span>
         <span>Open reminders</span>
         <strong>{{ snapshot.upcoming_reminders|length }}</strong>
-      </div>
-      <div>
+      </span>
+      <span>
         <span>Latest readings</span>
         <strong>{{ snapshot.latest_measurements|length }}</strong>
-      </div>
-      <div>
+      </span>
+      <span>
         <span>Recent events</span>
         <strong>{{ snapshot.recent_events|length }}</strong>
-      </div>
+      </span>
+    </div>
+    <div class="command-actions">
+      {% if current_user %}
+        <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
+        {% if display.module_enabled("notifications") %}
+          <a class="btn btn-outline-light btn-sm" href="/notifications">Care queue</a>
+        {% endif %}
+      {% else %}
+        <a class="btn btn-primary btn-sm" href="/register">Create account</a>
+        <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
+      {% endif %}
     </div>
   </section>
 
@@ -43,16 +45,20 @@
       <strong class="metric-value">{{ snapshot.event_count }}</strong>
       <span class="metric-action">Open events</span>
     </a>
-    <a class="metric-card metric-link" href="/livestock">
-      <span class="metric-label">Livestock</span>
-      <strong class="metric-value">{{ snapshot.livestock_count }}</strong>
-      <span class="metric-action">View species</span>
-    </a>
-    <a class="metric-card metric-link" href="/plants">
-      <span class="metric-label">Plants</span>
-      <strong class="metric-value">{{ snapshot.plant_count }}</strong>
-      <span class="metric-action">View species</span>
-    </a>
+    {% if display.module_enabled("livestock") %}
+      <a class="metric-card metric-link" href="/livestock">
+        <span class="metric-label">Livestock</span>
+        <strong class="metric-value">{{ snapshot.livestock_count }}</strong>
+        <span class="metric-action">View species</span>
+      </a>
+    {% endif %}
+    {% if display.module_enabled("plants") %}
+      <a class="metric-card metric-link" href="/plants">
+        <span class="metric-label">Plants</span>
+        <strong class="metric-value">{{ snapshot.plant_count }}</strong>
+        <span class="metric-action">View species</span>
+      </a>
+    {% endif %}
   </section>
 
   <section class="content-grid mt-4">
@@ -67,7 +73,7 @@
               <span class="event-pill">{{ event.event_type.replace("_", " ") }}</span>
               <div>
                 <h3>{{ event.title }}</h3>
-                <p>{{ event.tank_name or "No tank" }} · {{ event.occurred_at.strftime("%b %-d, %Y") }}</p>
+                <p>{{ event.tank_name or "No tank" }} · {{ display.format_date(event.occurred_at) }}</p>
               </div>
             </div>
           {% endfor %}
@@ -75,7 +81,11 @@
       {% else %}
         <div class="empty-state">
           <strong>No events yet</strong>
-          <span>Water tests, feedings, maintenance, fertilizer, notes, and photos will land here.</span>
+          {% if snapshot.plant_care_active %}
+            <span>Water tests, feedings, maintenance, fertilizer, notes, and photos will land here.</span>
+          {% else %}
+            <span>Water tests, feedings, maintenance, notes, and photos will land here.</span>
+          {% endif %}
         </div>
       {% endif %}
     </div>
@@ -92,14 +102,18 @@
                 <strong>{{ reminder.title }}</strong>
                 <span>{{ reminder.tank_name or "No tank" }}</span>
               </div>
-              <time>{{ reminder.due_at.strftime("%b %-d") }}</time>
+              <time>{{ display.format_date(reminder.due_at, include_year=false) }}</time>
             </div>
           {% endfor %}
         </div>
       {% else %}
         <div class="empty-state">
           <strong>No reminders due</strong>
-          <span>Fertilizer and root-tab schedules will appear here.</span>
+          {% if snapshot.plant_care_active %}
+            <span>Care schedules, fertilizer, and root tabs will appear here.</span>
+          {% else %}
+            <span>Care schedules will appear here when reminders are open.</span>
+          {% endif %}
         </div>
       {% endif %}
     </div>
@@ -109,9 +123,9 @@
     <div class="panel-heading">
       <h2>Latest Water Parameters</h2>
     </div>
-    {% if snapshot.latest_measurements %}
+    {% if visible_measurements %}
       <div class="parameter-grid">
-        {% for measurement in snapshot.latest_measurements %}
+        {% for measurement in visible_measurements %}
           <div class="parameter-cell">
             <span>{{ measurement.metric_key.replace("_", " ") }}</span>
             <strong>{{ measurement.value }} {{ measurement.unit }}</strong>
@@ -120,12 +134,20 @@
       </div>
     {% else %}
       <div class="parameter-grid">
-        {% for metric in ["Ammonia", "Nitrite", "Nitrate", "pH", "Temperature", "KH", "GH", "TDS"] %}
+        {% for metric in ["Ammonia", "Nitrite", "Nitrate", "pH", "Temperature"] %}
           <div class="parameter-cell muted">
             <span>{{ metric }}</span>
             <strong>--</strong>
           </div>
         {% endfor %}
+        {% if display.module_enabled("advanced_water") %}
+          {% for metric in ["KH", "GH", "TDS"] %}
+            <div class="parameter-cell muted">
+              <span>{{ metric }}</span>
+              <strong>--</strong>
+            </div>
+          {% endfor %}
+        {% endif %}
       </div>
     {% endif %}
   </section>

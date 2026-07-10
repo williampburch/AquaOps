@@ -43,8 +43,17 @@ class ReportsSnapshot:
 
 
 class ActivityReadRepository(Protocol):
-    def list_recent_events(self, user_id: int, limit: int = 50) -> list[ActivityEvent]:
+    def list_recent_events(
+        self,
+        user_id: int,
+        limit: int = 50,
+        plant_care_mode: str = "auto",
+    ) -> list[ActivityEvent]:
         """Return recent timeline events for a user."""
 
-    def get_reports_snapshot(self, user_id: int) -> ReportsSnapshot:
+    def get_reports_snapshot(
+        self,
+        user_id: int,
+        plant_care_mode: str = "auto",
+    ) -> ReportsSnapshot:
         """Return report summary data for a user."""

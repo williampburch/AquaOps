@@ -58,6 +58,7 @@ def test_dashboard_renders_public_empty_state(client: TestClient) -> None:
     assert "AquaOps" in response.text
     assert "No events yet" in response.text
     assert "Latest Water Parameters" in response.text
+    assert "fertilizer" not in response.text.lower()
 
 
 def test_register_creates_session_cookie(client: TestClient) -> None:
@@ -227,6 +228,76 @@ def test_notifications_and_settings_pages_render(client: TestClient) -> None:
     assert settings_response.status_code == 200
     assert "Automation Control" in settings_response.text
     assert "Water Alerts" in settings_response.text
+    assert "Plant Care" in settings_response.text
+
+
+def test_settings_preferences_affect_new_tank_units(client: TestClient) -> None:
+    _register(client)
+
+    response = client.post(
+        "/settings",
+        data={
+            "unit_system": "metric",
+            "volume_unit": "liter",
+            "temperature_unit": "C",
+            "date_format": "iso",
+            "dashboard_density": "compact",
+            "reminder_window_days": "21",
+            "enable_livestock": "on",
+            "enable_plants": "on",
+            "enable_reports": "on",
+            "enable_notifications": "on",
+            "enable_advanced_water": "on",
+            "plant_care_mode": "auto",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+
+    create_response = client.post(
+        "/tanks",
+        data={
+            "name": "Metric Display",
+            "tank_type": "planted",
+            "volume": "120",
+        },
+        follow_redirects=False,
+    )
+
+    assert create_response.status_code == 303
+
+    detail = client.get("/tanks/1")
+    assert "120.0 L" in detail.text
+    assert "METRIC" in detail.text
+    assert 'value="C"' in detail.text
+
+
+def test_feature_modules_can_be_hidden_from_dashboard(client: TestClient) -> None:
+    _register(client)
+
+    client.post(
+        "/settings",
+        data={
+            "unit_system": "us",
+            "volume_unit": "gallon",
+            "temperature_unit": "F",
+            "date_format": "mdy",
+            "dashboard_density": "comfortable",
+            "reminder_window_days": "14",
+            "plant_care_mode": "off",
+        },
+    )
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert 'href="/tanks"' in response.text
+    assert 'href="/events"' in response.text
+    assert 'href="/reports"' not in response.text
+    assert 'href="/livestock"' not in response.text
+    assert 'href="/plants"' not in response.text
+    assert 'href="/notifications"' not in response.text
 
 
 def test_target_range_status_flags_high_reading(client: TestClient) -> None:

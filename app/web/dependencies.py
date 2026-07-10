@@ -11,8 +11,10 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings, get_settings
 from app.core.security import generate_session_token, hash_session_token
 from app.core.time import utc_now
+from app.domain.preferences import DEFAULT_PREFERENCES, UserPreferences
 from app.infrastructure.db.models import SessionModel, UserModel
 from app.infrastructure.db.session import get_session
+from app.infrastructure.repositories.preferences import SqlAlchemyUserPreferenceRepository
 
 
 def get_db() -> Generator[Session]:
@@ -74,3 +76,9 @@ def require_current_user(current_user: CurrentUser) -> UserModel:
 
 
 AuthenticatedUser = Annotated[UserModel, Depends(require_current_user)]
+
+
+def preferences_for_user(db: Session, user: UserModel | None) -> UserPreferences:
+    if user is None:
+        return DEFAULT_PREFERENCES
+    return SqlAlchemyUserPreferenceRepository(db).get_for_user(user.id)

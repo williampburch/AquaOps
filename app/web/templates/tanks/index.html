@@ -16,11 +16,11 @@
           <span class="metric-label">{{ tank.tank_type }}</span>
           <strong>{{ tank.name }}</strong>
           <div class="tile-meta">
-            <span>{{ tank.volume_liters or "--" }} L</span>
+            <span>{{ display.format_volume(tank.volume_liters) }}</span>
             <span>{{ tank.event_count }} events</span>
           </div>
           {% if tank.latest_event_at %}
-            <small>Last event {{ tank.latest_event_at.strftime("%b %-d, %Y") }}</small>
+            <small>Last event {{ display.format_date(tank.latest_event_at) }}</small>
           {% else %}
             <small>No events yet</small>
           {% endif %}
