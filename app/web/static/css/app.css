@@ -1238,6 +1238,86 @@ body::after {
   gap: 1rem;
 }
 
+.quick-action-grid,
+.quick-log-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.quick-action-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quick-log-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.quick-action-card {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 14%, var(--aqua-panel-soft)), var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 28%, var(--aqua-border));
+  border-radius: 8px;
+  color: var(--aqua-text);
+  display: grid;
+  gap: 0.25rem;
+  min-height: 110px;
+  padding: 0.9rem;
+  text-decoration: none;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.quick-action-card:hover {
+  border-color: color-mix(in srgb, var(--aqua-brand-teal) 62%, var(--aqua-border));
+  box-shadow: var(--aqua-shadow);
+  color: var(--aqua-text);
+  transform: translateY(-2px);
+}
+
+.quick-action-card span,
+.quick-action-card small {
+  color: var(--aqua-text-muted);
+}
+
+.quick-action-card strong {
+  font-size: 1.05rem;
+}
+
+.maintenance-config-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.maintenance-config-card {
+  align-content: start;
+  background: var(--aqua-panel-soft);
+  border: 1px solid var(--aqua-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 138px;
+  padding: 0.85rem;
+}
+
+.maintenance-config-card strong,
+.maintenance-config-card small {
+  display: block;
+}
+
+.maintenance-config-card small {
+  color: var(--aqua-text-muted);
+  font-size: 0.78rem;
+  margin-top: 0.18rem;
+}
+
+.maintenance-config-card .input-group {
+  grid-column: 1 / -1;
+}
+
 .form-grid,
 .water-test-grid {
   display: grid;
@@ -1436,6 +1516,24 @@ body::after {
 .notification-meta {
   text-align: right;
   white-space: nowrap;
+}
+
+.notification-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+.snooze-form {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.snooze-form .form-select {
+  min-width: 5.6rem;
 }
 
 .settings-grid {
@@ -1885,6 +1983,9 @@ body::after {
   .content-grid,
   .insight-grid,
   .inventory-summary,
+  .maintenance-config-grid,
+  .quick-action-grid,
+  .quick-log-grid,
   .ops-console,
   .ops-hero,
   .preference-grid,
@@ -1939,6 +2040,9 @@ body::after {
   .ops-hero,
   .parameter-grid,
   .form-grid,
+  .maintenance-config-grid,
+  .quick-action-grid,
+  .quick-log-grid,
   .water-test-grid,
   .chart-grid,
   .insight-grid,
@@ -1960,6 +2064,7 @@ body::after {
   .activity-meta,
   .console-metrics,
   .inventory-tanks,
+  .notification-actions,
   .notification-meta {
     justify-content: flex-start;
     text-align: left;

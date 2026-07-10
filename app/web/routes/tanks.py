@@ -12,10 +12,17 @@ from sqlalchemy.orm import Session
 
 from app.application.inventory.service import InventoryService
 from app.application.ports.inventory import LivestockCreate, PlantCreate
-from app.application.ports.tanks import TankCreate
+from app.application.ports.tanks import (
+    FeedingLog,
+    MaintenanceConfigUpdate,
+    MaintenanceLog,
+    NoteLog,
+    TankCreate,
+)
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
+from app.domain.enums import MaintenanceType
 from app.domain.preferences import volume_to_liters
 from app.domain.water import WATER_METRICS
 from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
@@ -141,6 +148,10 @@ def tank_detail(
             "display": display,
             "tank": tank,
             "water_metrics": display.visible_water_items(WATER_METRICS),
+            "maintenance_types": [
+                (maintenance_type.value, maintenance_type.value.replace("_", " ").title())
+                for maintenance_type in MaintenanceType
+            ],
             "chart_payload": _chart_payload(display.visible_water_items(tank.chart_series)),
             "livestock_catalog": inventory_service.list_livestock_catalog(),
             "plant_catalog": inventory_service.list_plant_catalog(),
@@ -177,6 +188,84 @@ async def log_water_test(
 
     if event_id is None:
         return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/feedings")
+async def log_feeding(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    service = TankService(SqlAlchemyTankRepository(db))
+    with suppress(ValueError):
+        service.log_feeding(
+            current_user.id,
+            tank_id,
+            FeedingLog(
+                occurred_at=_optional_datetime(_form_text(form, "occurred_at")) or utc_now(),
+                food_name=_form_text(form, "food_name") or "",
+                amount=_optional_decimal(_form_text(form, "amount")),
+                unit=_form_text(form, "unit"),
+                target_livestock=_form_text(form, "target_livestock"),
+                notes=_form_text(form, "notes"),
+            ),
+        )
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/maintenance")
+async def log_maintenance(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    service = TankService(SqlAlchemyTankRepository(db))
+    preferences = preferences_for_user(db, current_user)
+    volume = _optional_decimal(_form_text(form, "volume_changed"))
+    volume_liters = (
+        volume_to_liters(volume, preferences.volume_unit) if volume is not None else None
+    )
+    with suppress(ValueError):
+        service.log_maintenance(
+            current_user.id,
+            tank_id,
+            MaintenanceLog(
+                occurred_at=_optional_datetime(_form_text(form, "occurred_at")) or utc_now(),
+                maintenance_type=_form_text(form, "maintenance_type")
+                or MaintenanceType.WATER_CHANGE.value,
+                duration_minutes=_optional_int(_form_text(form, "duration_minutes")),
+                volume_changed_liters=volume_liters,
+                equipment_name=_form_text(form, "equipment_name"),
+                notes=_form_text(form, "notes"),
+            ),
+        )
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/notes")
+async def log_note(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    service = TankService(SqlAlchemyTankRepository(db))
+    with suppress(ValueError):
+        service.log_note(
+            current_user.id,
+            tank_id,
+            NoteLog(
+                occurred_at=_optional_datetime(_form_text(form, "occurred_at")) or utc_now(),
+                title=_form_text(form, "title") or "",
+                notes=_form_text(form, "notes"),
+            ),
+        )
     return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -259,6 +348,30 @@ async def update_targets(
         service.update_targets(current_user.id, tank_id, raw_targets)
     except ValueError:
         pass
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/maintenance-configs")
+async def update_maintenance_configs(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    configs = []
+    for key in ("water_change", "feeding", "filter_cleaning", "fertilizer"):
+        configs.append(
+            MaintenanceConfigUpdate(
+                config_type=key,
+                enabled=f"{key}_enabled" in form,
+                interval_days=_optional_int(_form_text(form, f"{key}_interval_days")),
+            )
+        )
+
+    service = TankService(SqlAlchemyTankRepository(db))
+    with suppress(ValueError):
+        service.update_maintenance_configs(current_user.id, tank_id, configs)
     return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 

@@ -20,6 +20,48 @@ class TankCreate:
 
 
 @dataclass(frozen=True)
+class FeedingLog:
+    occurred_at: datetime
+    food_name: str
+    amount: Decimal | None = None
+    unit: str | None = None
+    target_livestock: str | None = None
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
+class MaintenanceLog:
+    occurred_at: datetime
+    maintenance_type: str
+    duration_minutes: int | None = None
+    volume_changed_liters: Decimal | None = None
+    equipment_name: str | None = None
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
+class NoteLog:
+    occurred_at: datetime
+    title: str
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
+class MaintenanceConfig:
+    config_type: str
+    label: str
+    enabled: bool
+    interval_days: int | None
+
+
+@dataclass(frozen=True)
+class MaintenanceConfigUpdate:
+    config_type: str
+    enabled: bool
+    interval_days: int | None
+
+
+@dataclass(frozen=True)
 class TankSummary:
     id: int
     name: str
@@ -86,6 +128,7 @@ class TankDetail:
     latest_readings: list[ParameterReading]
     chart_series: list[ChartSeries]
     recent_events: list[TankEvent]
+    maintenance_configs: list[MaintenanceConfig]
 
 
 class TankRepository(Protocol):
@@ -115,3 +158,20 @@ class TankRepository(Protocol):
         notes: str | None,
     ) -> int | None:
         """Log a water test as a generic event."""
+
+    def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
+        """Log a feeding as a generic event with feeding details."""
+
+    def log_maintenance(self, user_id: int, tank_id: int, data: MaintenanceLog) -> int | None:
+        """Log maintenance as a generic event with maintenance details."""
+
+    def log_note(self, user_id: int, tank_id: int, data: NoteLog) -> int | None:
+        """Log a note or observation as a generic event."""
+
+    def update_maintenance_configs(
+        self,
+        user_id: int,
+        tank_id: int,
+        configs: list[MaintenanceConfigUpdate],
+    ) -> bool:
+        """Persist recurring maintenance configs for a tank."""

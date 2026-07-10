@@ -7,8 +7,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.application.dashboard.service import DashboardService
+from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.infrastructure.repositories.dashboard import SqlAlchemyDashboardRepository
+from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import CurrentUser, get_db, preferences_for_user
 from app.web.presentation import UserDisplay
 
@@ -31,6 +33,11 @@ def dashboard(
         preferences.reminder_window_days,
         preferences.plant_care_mode,
     )
+    tanks = (
+        TankService(SqlAlchemyTankRepository(db)).list_tanks(current_user.id)
+        if current_user
+        else []
+    )
     return templates.TemplateResponse(
         request,
         "dashboard/index.html",
@@ -41,5 +48,6 @@ def dashboard(
             "preferences": preferences,
             "display": UserDisplay(preferences),
             "snapshot": snapshot,
+            "tanks": tanks,
         },
     )

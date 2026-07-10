@@ -32,3 +32,9 @@ class NotificationReadRepository(Protocol):
         plant_care_mode: str = "auto",
     ) -> NotificationSnapshot:
         """Return open reminders and alert-style notifications for a user."""
+
+    def complete_reminder(self, user_id: int, reminder_id: int) -> bool:
+        """Mark an open reminder complete."""
+
+    def snooze_reminder(self, user_id: int, reminder_id: int, days: int) -> bool:
+        """Move a reminder due date forward by a small number of days."""

@@ -58,6 +58,33 @@ class SqlAlchemyNotificationRepository:
             plant_care_active=include_plant_care,
         )
 
+    def complete_reminder(self, user_id: int, reminder_id: int) -> bool:
+        reminder = self._open_reminder(user_id, reminder_id)
+        if reminder is None:
+            return False
+        reminder.completed_at = utc_now()
+        self.session.commit()
+        return True
+
+    def snooze_reminder(self, user_id: int, reminder_id: int, days: int) -> bool:
+        reminder = self._open_reminder(user_id, reminder_id)
+        if reminder is None:
+            return False
+        snoozed_until = utc_now() + timedelta(days=days)
+        reminder.snoozed_until = snoozed_until
+        reminder.due_at = snoozed_until
+        self.session.commit()
+        return True
+
+    def _open_reminder(self, user_id: int, reminder_id: int) -> ReminderModel | None:
+        return self.session.execute(
+            select(ReminderModel).where(
+                ReminderModel.id == reminder_id,
+                ReminderModel.user_id == user_id,
+                ReminderModel.completed_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
     def _status(self, due_at, now) -> str:
         if due_at.date() < now.date():
             return "overdue"

@@ -42,9 +42,22 @@
               <strong>{{ item.title }}</strong>
               <span>{{ item.reminder_type.replace("_", " ")|title }} · {{ item.tank_name or "No tank" }}</span>
             </div>
-            <div class="notification-meta">
-              <span>{{ item.status.replace("_", " ")|title }}</span>
-              <time>{{ display.format_date(item.due_at) }}</time>
+            <div class="notification-actions">
+              <div class="notification-meta">
+                <span>{{ item.status.replace("_", " ")|title }}</span>
+                <time>{{ display.format_date(item.due_at) }}</time>
+              </div>
+              <form method="post" action="/notifications/{{ item.id }}/complete">
+                <button class="btn btn-primary btn-sm" type="submit">Complete</button>
+              </form>
+              <form class="snooze-form" method="post" action="/notifications/{{ item.id }}/snooze">
+                <select class="form-select form-select-sm" name="days" aria-label="Snooze duration">
+                  <option value="1">1 day</option>
+                  <option value="3">3 days</option>
+                  <option value="7">7 days</option>
+                </select>
+                <button class="btn btn-outline-light btn-sm" type="submit">Snooze</button>
+              </form>
             </div>
           </article>
         {% endfor %}

@@ -117,6 +117,10 @@ class TankModel(TimestampMixin, Base):
         back_populates="tank",
         cascade="all, delete-orphan",
     )
+    maintenance_configs: Mapped[list[TankMaintenanceConfigModel]] = relationship(
+        back_populates="tank",
+        cascade="all, delete-orphan",
+    )
     events: Mapped[list[EventModel]] = relationship(back_populates="tank")
 
 
@@ -134,6 +138,21 @@ class TankParameterTargetModel(TimestampMixin, Base):
     unit: Mapped[str] = mapped_column(String(24))
 
     tank: Mapped[TankModel] = relationship(back_populates="parameter_targets")
+
+
+class TankMaintenanceConfigModel(TimestampMixin, Base):
+    __tablename__ = "tank_maintenance_configs"
+    __table_args__ = (
+        UniqueConstraint("tank_id", "config_type", name="uq_tank_maintenance_config_type"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
+    config_type: Mapped[str] = mapped_column(String(80), index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    interval_days: Mapped[int | None] = mapped_column(Integer)
+
+    tank: Mapped[TankModel] = relationship(back_populates="maintenance_configs")
 
 
 class SpeciesCatalogModel(TimestampMixin, Base):

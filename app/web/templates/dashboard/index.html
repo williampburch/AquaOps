@@ -66,6 +66,23 @@
     {% endif %}
   </section>
 
+  {% if current_user and tanks %}
+    <section class="panel mt-4">
+      <div class="panel-heading">
+        <h2>Quick Log</h2>
+      </div>
+      <div class="quick-action-grid">
+        {% for tank in tanks[:4] %}
+          <a class="quick-action-card" href="/tanks/{{ tank.id }}#quick-log">
+            <span>{{ tank.name }}</span>
+            <strong>Log care</strong>
+            <small>Feeding, maintenance, notes, or water tests</small>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
   <section class="content-grid mt-4">
     <div class="panel">
       <div class="panel-heading">

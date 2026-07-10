@@ -178,3 +178,61 @@ def test_notification_repository_can_force_plant_care_off_for_planted_tank(
 
     assert snapshot.plant_care_active is False
     assert [item.title for item in snapshot.items] == ["Water change"]
+
+
+def test_notification_repository_completes_reminder(session: Session) -> None:
+    now = utc_now()
+    user = UserModel(
+        email="complete@example.com",
+        username="complete",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Display Tank", tank_type="freshwater")
+    session.add_all([user, tank])
+    session.flush()
+    reminder = ReminderModel(
+        user_id=user.id,
+        tank_id=tank.id,
+        reminder_type="water_change",
+        title="Water change",
+        due_at=now,
+    )
+    session.add(reminder)
+    session.commit()
+
+    repository = SqlAlchemyNotificationRepository(session)
+
+    assert repository.complete_reminder(user.id, reminder.id) is True
+
+    snapshot = repository.get_snapshot(user.id)
+    assert snapshot.items == []
+
+
+def test_notification_repository_snoozes_reminder(session: Session) -> None:
+    now = utc_now()
+    user = UserModel(
+        email="snooze@example.com",
+        username="snooze",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Display Tank", tank_type="freshwater")
+    session.add_all([user, tank])
+    session.flush()
+    reminder = ReminderModel(
+        user_id=user.id,
+        tank_id=tank.id,
+        reminder_type="feeding",
+        title="Feed fish",
+        due_at=now,
+    )
+    session.add(reminder)
+    session.commit()
+
+    repository = SqlAlchemyNotificationRepository(session)
+
+    assert repository.snooze_reminder(user.id, reminder.id, 3) is True
+
+    session.refresh(reminder)
+    assert reminder.snoozed_until is not None
+    assert reminder.due_at == reminder.snoozed_until
+    assert reminder.due_at.date() > now.date()

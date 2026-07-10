@@ -4,7 +4,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from app.application.ports.tanks import ParameterTarget, TankCreate, TankRepository
+from app.application.ports.tanks import (
+    FeedingLog,
+    MaintenanceConfigUpdate,
+    MaintenanceLog,
+    NoteLog,
+    ParameterTarget,
+    TankCreate,
+    TankRepository,
+)
+from app.domain.enums import MaintenanceType
+from app.domain.maintenance import MAINTENANCE_CONFIG_LABELS
 from app.domain.water import FRESHWATER_BEGINNER_TARGETS, WATER_METRIC_BY_KEY, metric_label
 
 
@@ -64,6 +74,42 @@ class TankService:
             measurements=filtered_measurements,
             notes=notes,
         )
+
+    def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
+        if not data.food_name.strip():
+            raise ValueError("Food name is required")
+        return self.repository.log_feeding(user_id, tank_id, data)
+
+    def log_maintenance(self, user_id: int, tank_id: int, data: MaintenanceLog) -> int | None:
+        allowed_types = {maintenance_type.value for maintenance_type in MaintenanceType}
+        if data.maintenance_type not in allowed_types:
+            raise ValueError("Maintenance type is not supported")
+        if data.duration_minutes is not None and data.duration_minutes < 0:
+            raise ValueError("Duration cannot be negative")
+        if data.volume_changed_liters is not None and data.volume_changed_liters < 0:
+            raise ValueError("Water change volume cannot be negative")
+        return self.repository.log_maintenance(user_id, tank_id, data)
+
+    def log_note(self, user_id: int, tank_id: int, data: NoteLog) -> int | None:
+        if not data.title.strip() and not (data.notes or "").strip():
+            raise ValueError("A note title or body is required")
+        return self.repository.log_note(user_id, tank_id, data)
+
+    def update_maintenance_configs(
+        self,
+        user_id: int,
+        tank_id: int,
+        configs: list[MaintenanceConfigUpdate],
+    ) -> bool:
+        allowed_types = set(MAINTENANCE_CONFIG_LABELS)
+        normalized = []
+        for config in configs:
+            if config.config_type not in allowed_types:
+                continue
+            if config.interval_days is not None and config.interval_days < 1:
+                raise ValueError("Maintenance intervals must be at least one day")
+            normalized.append(config)
+        return self.repository.update_maintenance_configs(user_id, tank_id, normalized)
 
     def default_targets(self) -> list[ParameterTarget]:
         return [

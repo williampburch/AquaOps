@@ -38,6 +38,15 @@
 - Livestock inventory grouped by species and quantity
 - Plant inventory grouped by species and quantity
 - Notifications page for open reminders
+- Reminder completion and snoozing from the care queue
+- Quick logging for feedings, maintenance, water changes, and observations from
+  tank detail pages
+- Dashboard quick links into tank-level care logging
+- Tank-level maintenance schedule configs for water changes, feeding, filter
+  cleaning, and fertilizer
+- Schedule-based reminder refresh after matching care logs
+- Nitrate-based water change recommendations using tank target ranges and a
+  noise buffer
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -53,11 +62,10 @@ as detailed as it needs to be.
 ## Next: Daily Usefulness
 
 - Quick log actions from dashboard and tank detail pages
-- Water change log flow
-- Feeding log flow
-- Maintenance log flow
-- Notes and observations log flow
-- Reminder completion and snoozing
+- More polished water change log flow with recurring schedule context
+- More polished feeding log flow with reusable foods and livestock targeting
+- More polished maintenance log flow with task-specific fields
+- More polished notes and observations log flow
 - Livestock edit/archive workflows
 - Plant edit/remove/archive workflows
 - Fast data entry with minimal required fields
@@ -65,21 +73,18 @@ as detailed as it needs to be.
 
 ## Next: Tank-Specific Maintenance Config
 
-- Custom water change cadence such as every X days per tank
-- Custom feeding, fertilization, filter cleaning, trimming, root-tab, and CO2
-  check cadences per tank
-- Reminder generation from the tank's configured maintenance rules
-- Ability to pause, skip, snooze, or complete generated maintenance reminders
+- Custom trimming, root-tab, and CO2 check cadences per tank
+- Expanded reminder generation from all configured maintenance rules
+- Ability to pause or skip generated maintenance reminders
 - Maintenance configs that respect enabled modules, so fertilizer reminders only
   appear for tanks using planted care workflows
-- Tank-specific recommendation rules based on water test results and target
-  ranges
-- Nitrate-driven water change suggestions when readings rise meaningfully above
-  the tank's configured maximum
-- Parameter-specific guidance that treats ammonia and nitrite differently from
-  nitrate, avoiding simplistic "water change for every elevated value" behavior
-- Safe threshold buffers and severity levels so tiny test variance does not
-  create noisy recommendations
+- Additional tank-specific recommendation rules based on water test results and
+  target ranges
+- More parameter-specific guidance that treats ammonia and nitrite differently
+  from nitrate, avoiding simplistic "water change for every elevated value"
+  behavior
+- More configurable threshold buffers and severity levels so tiny test variance
+  does not create noisy recommendations
 - Recommendation history showing why a reminder or suggestion appeared
 
 ## Next: Configurable Care Modes

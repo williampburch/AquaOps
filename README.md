@@ -126,16 +126,19 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Species catalog: built-in starter database for common fish, invertebrates, and plants, with custom-entry fallback
 - Inventory: add livestock and plants from tank detail pages, then view grouped summaries with quantity totals
 - Reports: event mix and nitrate trend charts
-- Notifications: open reminder queue with overdue, due today, and upcoming buckets
+- Notifications: open reminder queue with overdue, due today, and upcoming buckets, plus completion and snoozing
+- Quick logging: tank-level feedings, maintenance, water changes, and observations
+- Maintenance schedules: per-tank reminder cadences for water changes, feeding, filter cleaning, and fertilizer
+- Recommendations: nitrate-based water change suggestions from tank-specific target ranges
 - Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
 - Plant Care mode: `Auto`, `On`, or `Off` filtering for fertilizer, root-tab, and plant-care noise
 - Demo data: realistic fictional tanks and event history for screenshots and review
 
 ## Roadmap
 
-The next product phase is daily usefulness: faster logging from the dashboard and tank
-pages, better reminder completion flows, and edit/archive workflows for livestock and
-plants. From there, the roadmap expands into configurable care modes, reusable care
-schedule templates, planted tank workflows, observation/problem tracking, richer catalog
+The next product phase continues daily usefulness: polished task-specific logging,
+edit/archive workflows for livestock and plants, richer maintenance automation, and
+configurable care modes. From there, the roadmap expands into reusable care schedule
+templates, planted tank workflows, observation/problem tracking, richer catalog
 intelligence, exports, and production hardening. See [docs/roadmap.md](docs/roadmap.md)
 for the full staged direction and product principles.

@@ -174,6 +174,131 @@ def test_log_water_test_updates_latest_readings_and_charts(client: TestClient) -
     assert "First full test" not in detail.text
 
 
+def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    feeding_response = client.post(
+        "/tanks/1/feedings",
+        data={
+            "occurred_at": "2026-07-09T09:00",
+            "food_name": "Community flakes",
+            "amount": "1",
+            "unit": "pinch",
+            "target_livestock": "Community",
+            "notes": "Everyone ate quickly",
+        },
+        follow_redirects=False,
+    )
+    maintenance_response = client.post(
+        "/tanks/1/maintenance",
+        data={
+            "occurred_at": "2026-07-09T10:00",
+            "maintenance_type": "water_change",
+            "volume_changed": "10",
+            "duration_minutes": "20",
+            "notes": "Routine weekly change",
+        },
+        follow_redirects=False,
+    )
+    note_response = client.post(
+        "/tanks/1/notes",
+        data={
+            "occurred_at": "2026-07-09T11:00",
+            "title": "New growth",
+            "notes": "Crypts pushing new leaves",
+        },
+        follow_redirects=False,
+    )
+
+    assert feeding_response.status_code == 303
+    assert maintenance_response.status_code == 303
+    assert note_response.status_code == 303
+
+    events = client.get("/events")
+    assert "Fed Community flakes" in events.text
+    assert "Water Change" in events.text
+    assert "New growth" in events.text
+    assert "Crypts pushing new leaves" in events.text
+
+
+def test_tank_schedules_generate_next_care_reminder(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    detail = client.get("/tanks/1")
+    assert "Maintenance Schedules" in detail.text
+
+    config_response = client.post(
+        "/tanks/1/maintenance-configs",
+        data={
+            "water_change_enabled": "on",
+            "water_change_interval_days": "7",
+            "feeding_interval_days": "1",
+            "filter_cleaning_interval_days": "30",
+            "fertilizer_interval_days": "7",
+        },
+        follow_redirects=False,
+    )
+    maintenance_response = client.post(
+        "/tanks/1/maintenance",
+        data={
+            "occurred_at": "2026-07-09T10:00",
+            "maintenance_type": "water_change",
+            "volume_changed": "10",
+        },
+        follow_redirects=False,
+    )
+
+    assert config_response.status_code == 303
+    assert maintenance_response.status_code == 303
+
+    notifications = client.get("/notifications")
+    assert "Water Change due" in notifications.text
+    assert "Jul 16, 2026" in notifications.text
+
+
+def test_high_nitrate_recommends_water_change_without_ammonia_noise(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    client.post(
+        "/tanks/1/targets",
+        data={
+            "ammonia_min": "0",
+            "ammonia_max": "0",
+            "ammonia_unit": "ppm",
+            "nitrate_min": "0",
+            "nitrate_max": "20",
+            "nitrate_unit": "ppm",
+        },
+    )
+    client.post(
+        "/tanks/1/water-tests",
+        data={
+            "occurred_at": "2026-07-09T08:30",
+            "ammonia": "0.25",
+        },
+    )
+
+    ammonia_notifications = client.get("/notifications")
+    assert "Water change recommended" not in ammonia_notifications.text
+
+    client.post(
+        "/tanks/1/water-tests",
+        data={
+            "occurred_at": "2026-07-09T09:30",
+            "nitrate": "25",
+        },
+    )
+
+    nitrate_notifications = client.get("/notifications")
+    assert "Water change recommended" in nitrate_notifications.text
+    assert "nitrate 25" in nitrate_notifications.text
+
+
 def test_events_page_renders_recent_activity(client: TestClient) -> None:
     _register(client)
     _create_tank(client)

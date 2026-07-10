@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -10,6 +10,11 @@ from sqlalchemy.orm import Session
 from app.application.ports.tanks import (
     ChartPoint,
     ChartSeries,
+    FeedingLog,
+    MaintenanceConfig,
+    MaintenanceConfigUpdate,
+    MaintenanceLog,
+    NoteLog,
     ParameterReading,
     ParameterTarget,
     TankCreate,
@@ -17,7 +22,12 @@ from app.application.ports.tanks import (
     TankEvent,
     TankSummary,
 )
+from app.core.time import utc_now
 from app.domain.enums import EventType
+from app.domain.maintenance import (
+    MAINTENANCE_CONFIG_DEFAULT_INTERVALS,
+    MAINTENANCE_CONFIG_LABELS,
+)
 from app.domain.water import (
     FRESHWATER_BEGINNER_TARGETS,
     WATER_METRIC_BY_KEY,
@@ -27,6 +37,10 @@ from app.domain.water import (
 from app.infrastructure.db.models import (
     EventMeasurementModel,
     EventModel,
+    FeedingEventDetailModel,
+    MaintenanceEventDetailModel,
+    ReminderModel,
+    TankMaintenanceConfigModel,
     TankModel,
     TankParameterTargetModel,
 )
@@ -85,6 +99,7 @@ class SqlAlchemyTankRepository:
             return None
 
         self._ensure_default_targets(tank.id)
+        self._ensure_default_maintenance_configs(tank.id)
         self.session.commit()
         targets = self._targets_for_tank(tank.id)
 
@@ -102,6 +117,7 @@ class SqlAlchemyTankRepository:
             latest_readings=self._latest_readings(tank.id, targets),
             chart_series=self._chart_series(tank.id),
             recent_events=self._recent_events(tank.id),
+            maintenance_configs=self._maintenance_configs_for_tank(tank.id),
         )
 
     def update_targets(
@@ -135,6 +151,41 @@ class SqlAlchemyTankRepository:
                 model.min_value = target.min_value
                 model.max_value = target.max_value
                 model.unit = target.unit
+
+        self.session.commit()
+        return True
+
+    def update_maintenance_configs(
+        self,
+        user_id: int,
+        tank_id: int,
+        configs: list[MaintenanceConfigUpdate],
+    ) -> bool:
+        tank = self._get_owned_tank(user_id, tank_id)
+        if tank is None:
+            return False
+
+        existing = {
+            config.config_type: config
+            for config in self.session.scalars(
+                select(TankMaintenanceConfigModel).where(
+                    TankMaintenanceConfigModel.tank_id == tank_id
+                )
+            )
+        }
+        for config in configs:
+            model = existing.get(config.config_type)
+            if model is None:
+                model = TankMaintenanceConfigModel(
+                    tank_id=tank_id,
+                    config_type=config.config_type,
+                    enabled=config.enabled,
+                    interval_days=config.interval_days,
+                )
+                self.session.add(model)
+            else:
+                model.enabled = config.enabled
+                model.interval_days = config.interval_days
 
         self.session.commit()
         return True
@@ -175,6 +226,98 @@ class SqlAlchemyTankRepository:
                 )
             )
 
+        self._create_nitrate_recommendation(user_id, tank_id, event.id, measurements)
+        self.session.commit()
+        return event.id
+
+    def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
+        tank = self._get_owned_tank(user_id, tank_id)
+        if tank is None:
+            return None
+
+        event = EventModel(
+            user_id=user_id,
+            tank_id=tank_id,
+            event_type=EventType.FEEDING.value,
+            title=f"Fed {data.food_name.strip()}",
+            notes=data.notes or "",
+            occurred_at=data.occurred_at,
+            metadata_json={},
+        )
+        self.session.add(event)
+        self.session.flush()
+        self.session.add(
+            FeedingEventDetailModel(
+                event_id=event.id,
+                food_name=data.food_name.strip(),
+                amount=data.amount,
+                unit=data.unit,
+                target_livestock=data.target_livestock,
+            )
+        )
+        self._refresh_scheduled_reminder(
+            user_id=user_id,
+            tank_id=tank_id,
+            source_event_id=event.id,
+            config_type="feeding",
+            title="Feeding",
+            occurred_at=data.occurred_at,
+        )
+        self.session.commit()
+        return event.id
+
+    def log_maintenance(self, user_id: int, tank_id: int, data: MaintenanceLog) -> int | None:
+        tank = self._get_owned_tank(user_id, tank_id)
+        if tank is None:
+            return None
+
+        event = EventModel(
+            user_id=user_id,
+            tank_id=tank_id,
+            event_type=EventType.MAINTENANCE.value,
+            title=_maintenance_title(data.maintenance_type),
+            notes=data.notes or "",
+            occurred_at=data.occurred_at,
+            metadata_json={},
+        )
+        self.session.add(event)
+        self.session.flush()
+        self.session.add(
+            MaintenanceEventDetailModel(
+                event_id=event.id,
+                maintenance_type=data.maintenance_type,
+                duration_minutes=data.duration_minutes,
+                volume_changed_liters=data.volume_changed_liters,
+                equipment_name=data.equipment_name,
+            )
+        )
+        self._refresh_scheduled_reminder(
+            user_id=user_id,
+            tank_id=tank_id,
+            source_event_id=event.id,
+            config_type=data.maintenance_type,
+            title=_maintenance_title(data.maintenance_type),
+            occurred_at=data.occurred_at,
+        )
+        self.session.commit()
+        return event.id
+
+    def log_note(self, user_id: int, tank_id: int, data: NoteLog) -> int | None:
+        tank = self._get_owned_tank(user_id, tank_id)
+        if tank is None:
+            return None
+
+        title = data.title.strip() or "Observation"
+        event = EventModel(
+            user_id=user_id,
+            tank_id=tank_id,
+            event_type=EventType.NOTE.value,
+            title=title,
+            notes=data.notes or "",
+            occurred_at=data.occurred_at,
+            metadata_json={},
+        )
+        self.session.add(event)
         self.session.commit()
         return event.id
 
@@ -218,6 +361,45 @@ class SqlAlchemyTankRepository:
                         unit=target.unit,
                     )
                 )
+
+    def _ensure_default_maintenance_configs(self, tank_id: int) -> None:
+        existing_types = set(
+            self.session.scalars(
+                select(TankMaintenanceConfigModel.config_type).where(
+                    TankMaintenanceConfigModel.tank_id == tank_id
+                )
+            )
+        )
+        for config_type, interval_days in MAINTENANCE_CONFIG_DEFAULT_INTERVALS.items():
+            if config_type not in existing_types:
+                self.session.add(
+                    TankMaintenanceConfigModel(
+                        tank_id=tank_id,
+                        config_type=config_type,
+                        enabled=False,
+                        interval_days=interval_days,
+                    )
+                )
+
+    def _maintenance_configs_for_tank(self, tank_id: int) -> list[MaintenanceConfig]:
+        configs_by_type = {
+            config.config_type: config
+            for config in self.session.scalars(
+                select(TankMaintenanceConfigModel)
+                .where(TankMaintenanceConfigModel.tank_id == tank_id)
+                .order_by(TankMaintenanceConfigModel.config_type.asc())
+            )
+        }
+        return [
+            MaintenanceConfig(
+                config_type=config_type,
+                label=label,
+                enabled=bool(configs_by_type[config_type].enabled),
+                interval_days=configs_by_type[config_type].interval_days,
+            )
+            for config_type, label in MAINTENANCE_CONFIG_LABELS.items()
+            if config_type in configs_by_type
+        ]
 
     def _targets_for_tank(self, tank_id: int) -> list[ParameterTarget]:
         targets_by_key = {
@@ -338,6 +520,108 @@ class SqlAlchemyTankRepository:
             for event in self.session.scalars(statement)
         ]
 
+    def _refresh_scheduled_reminder(
+        self,
+        user_id: int,
+        tank_id: int,
+        source_event_id: int,
+        config_type: str,
+        title: str,
+        occurred_at: datetime,
+    ) -> None:
+        config = self.session.execute(
+            select(TankMaintenanceConfigModel).where(
+                TankMaintenanceConfigModel.tank_id == tank_id,
+                TankMaintenanceConfigModel.config_type == config_type,
+                TankMaintenanceConfigModel.enabled.is_(True),
+            )
+        ).scalar_one_or_none()
+        if config is None or not config.interval_days:
+            return
+
+        due_at = occurred_at + timedelta(days=config.interval_days)
+        reminder = self._open_reminder(user_id, tank_id, config_type)
+        reminder_title = f"{title} due"
+        if reminder is None:
+            self.session.add(
+                ReminderModel(
+                    user_id=user_id,
+                    tank_id=tank_id,
+                    source_event_id=source_event_id,
+                    reminder_type=config_type,
+                    title=reminder_title,
+                    due_at=due_at,
+                )
+            )
+        else:
+            reminder.source_event_id = source_event_id
+            reminder.title = reminder_title
+            reminder.due_at = due_at
+            reminder.snoozed_until = None
+
+    def _create_nitrate_recommendation(
+        self,
+        user_id: int,
+        tank_id: int,
+        source_event_id: int,
+        measurements: dict[str, Decimal],
+    ) -> None:
+        nitrate = measurements.get("nitrate")
+        if nitrate is None:
+            return
+
+        target = self.session.execute(
+            select(TankParameterTargetModel).where(
+                TankParameterTargetModel.tank_id == tank_id,
+                TankParameterTargetModel.metric_key == "nitrate",
+            )
+        ).scalar_one_or_none()
+        if target is None or target.max_value is None:
+            return
+
+        threshold = target.max_value * Decimal("1.20")
+        if nitrate < threshold:
+            return
+
+        reminder_type = "water_change_recommendation"
+        reminder = self._open_reminder(user_id, tank_id, reminder_type)
+        title = (
+            f"Water change recommended: nitrate {_format_decimal(nitrate)} "
+            f"{target.unit} above {_format_decimal(target.max_value)} {target.unit}"
+        )
+        due_at = utc_now()
+        if reminder is None:
+            self.session.add(
+                ReminderModel(
+                    user_id=user_id,
+                    tank_id=tank_id,
+                    source_event_id=source_event_id,
+                    reminder_type=reminder_type,
+                    title=title,
+                    due_at=due_at,
+                )
+            )
+        else:
+            reminder.source_event_id = source_event_id
+            reminder.title = title
+            reminder.due_at = due_at
+            reminder.snoozed_until = None
+
+    def _open_reminder(
+        self,
+        user_id: int,
+        tank_id: int,
+        reminder_type: str,
+    ) -> ReminderModel | None:
+        return self.session.execute(
+            select(ReminderModel).where(
+                ReminderModel.user_id == user_id,
+                ReminderModel.tank_id == tank_id,
+                ReminderModel.reminder_type == reminder_type,
+                ReminderModel.completed_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
 
 def _classify_reading(value: Decimal, target: ParameterTarget | None) -> str:
     if target is None:
@@ -347,3 +631,11 @@ def _classify_reading(value: Decimal, target: ParameterTarget | None) -> str:
     if target.max_value is not None and value > target.max_value:
         return "high"
     return "ok"
+
+
+def _maintenance_title(maintenance_type: str) -> str:
+    return maintenance_type.replace("_", " ").title()
+
+
+def _format_decimal(value: Decimal) -> str:
+    return format(value.normalize(), "f")
