@@ -41,6 +41,9 @@
             <div>
               <strong>{{ item.title }}</strong>
               <span>{{ item.reminder_type.replace("_", " ")|title }} · {{ item.tank_name or "No tank" }}</span>
+              {% if item.reason %}
+                <small class="notification-reason">{{ item.reason }}</small>
+              {% endif %}
             </div>
             <div class="notification-actions">
               <div class="notification-meta">

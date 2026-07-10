@@ -52,6 +52,9 @@ class MaintenanceConfig:
     label: str
     enabled: bool
     interval_days: int | None
+    last_completed_at: datetime | None = None
+    next_due_at: datetime | None = None
+    status: str = "off"
 
 
 @dataclass(frozen=True)

@@ -322,7 +322,7 @@
             <label class="maintenance-config-card" for="{{ config.config_type }}_enabled">
               <span>
                 <strong>{{ config.label }}</strong>
-                <small>Repeat every</small>
+                <small>{{ config.status.replace("_", " ")|title }}</small>
               </span>
               <input
                 class="form-check-input"
@@ -340,6 +340,10 @@
                   value="{{ config.interval_days or '' }}"
                 />
                 <span class="input-group-text">days</span>
+              </div>
+              <div class="maintenance-config-meta">
+                <span>Last: {{ display.format_date(config.last_completed_at, include_year=false) }}</span>
+                <span>Next: {{ display.format_date(config.next_due_at, include_year=false) }}</span>
               </div>
             </label>
           {% endif %}

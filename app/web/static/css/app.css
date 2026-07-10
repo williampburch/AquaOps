@@ -1318,6 +1318,14 @@ body::after {
   grid-column: 1 / -1;
 }
 
+.maintenance-config-meta {
+  color: var(--aqua-text-muted);
+  display: grid;
+  font-size: 0.78rem;
+  gap: 0.16rem;
+  grid-column: 1 / -1;
+}
+
 .form-grid,
 .water-test-grid {
   display: grid;
@@ -1506,11 +1514,16 @@ body::after {
 }
 
 .notification-row span,
+.notification-row small,
 .notification-row time {
   color: var(--aqua-text-muted);
   display: block;
   font-size: 0.84rem;
   margin-top: 0.15rem;
+}
+
+.notification-reason {
+  max-width: 34rem;
 }
 
 .notification-meta {

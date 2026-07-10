@@ -47,6 +47,8 @@
 - Schedule-based reminder refresh after matching care logs
 - Nitrate-based water change recommendations using tank target ranges and a
   noise buffer
+- Care queue explanations for scheduled reminders and nitrate recommendations
+- Maintenance schedule status showing last logged care and next due dates
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -85,7 +87,7 @@ as detailed as it needs to be.
   behavior
 - More configurable threshold buffers and severity levels so tiny test variance
   does not create noisy recommendations
-- Recommendation history showing why a reminder or suggestion appeared
+- Deeper recommendation history beyond the current care queue explanation
 
 ## Next: Configurable Care Modes
 

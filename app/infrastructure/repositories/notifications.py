@@ -7,7 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.application.ports.notifications import NotificationItem, NotificationSnapshot
 from app.core.time import utc_now
-from app.infrastructure.db.models import ReminderModel, TankModel
+from app.domain.maintenance import MAINTENANCE_CONFIG_LABELS
+from app.infrastructure.db.models import (
+    EventMeasurementModel,
+    EventModel,
+    ReminderModel,
+    TankModel,
+    TankParameterTargetModel,
+)
 from app.infrastructure.repositories.feature_flags import (
     filter_plant_care_reminders,
     plant_care_is_active,
@@ -47,6 +54,7 @@ class SqlAlchemyNotificationRepository:
                 due_at=reminder.due_at,
                 tank_name=tank_name,
                 status=self._status(reminder.due_at, now),
+                reason=self._reason(reminder),
             )
             for reminder, tank_name in self.session.execute(statement).all()
         ]
@@ -91,3 +99,52 @@ class SqlAlchemyNotificationRepository:
         if due_at.date() == now.date():
             return "due_today"
         return "upcoming"
+
+    def _reason(self, reminder: ReminderModel) -> str | None:
+        if reminder.reminder_type == "water_change_recommendation":
+            return self._nitrate_reason(reminder)
+
+        label = MAINTENANCE_CONFIG_LABELS.get(reminder.reminder_type)
+        if label is None:
+            return None
+
+        event = self._source_event(reminder)
+        if event is None:
+            return f"Generated from the {label.lower()} schedule."
+        return (
+            f"Generated from the {label.lower()} schedule after "
+            f"{event.title} on {event.occurred_at.date().isoformat()}."
+        )
+
+    def _nitrate_reason(self, reminder: ReminderModel) -> str | None:
+        if reminder.source_event_id is None or reminder.tank_id is None:
+            return "Generated after a nitrate reading exceeded this tank's target range."
+
+        nitrate = self.session.execute(
+            select(EventMeasurementModel).where(
+                EventMeasurementModel.event_id == reminder.source_event_id,
+                EventMeasurementModel.metric_key == "nitrate",
+            )
+        ).scalar_one_or_none()
+        target = self.session.execute(
+            select(TankParameterTargetModel).where(
+                TankParameterTargetModel.tank_id == reminder.tank_id,
+                TankParameterTargetModel.metric_key == "nitrate",
+            )
+        ).scalar_one_or_none()
+        if nitrate is None or target is None or target.max_value is None:
+            return "Generated after a nitrate reading exceeded this tank's target range."
+
+        return (
+            f"Nitrate was {_format_decimal(nitrate.value)} {nitrate.unit}, above "
+            f"target max {_format_decimal(target.max_value)} {target.unit}."
+        )
+
+    def _source_event(self, reminder: ReminderModel) -> EventModel | None:
+        if reminder.source_event_id is None:
+            return None
+        return self.session.get(EventModel, reminder.source_event_id)
+
+
+def _format_decimal(value) -> str:
+    return format(value.normalize(), "f")

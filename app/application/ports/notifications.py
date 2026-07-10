@@ -13,6 +13,7 @@ class NotificationItem:
     due_at: datetime
     tank_name: str | None
     status: str
+    reason: str | None = None
 
 
 @dataclass(frozen=True)

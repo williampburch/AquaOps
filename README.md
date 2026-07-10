@@ -129,7 +129,7 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Notifications: open reminder queue with overdue, due today, and upcoming buckets, plus completion and snoozing
 - Quick logging: tank-level feedings, maintenance, water changes, and observations
 - Maintenance schedules: per-tank reminder cadences for water changes, feeding, filter cleaning, and fertilizer
-- Recommendations: nitrate-based water change suggestions from tank-specific target ranges
+- Recommendations: nitrate-based water change suggestions from tank-specific target ranges, with care queue explanations
 - Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
 - Plant Care mode: `Auto`, `On`, or `Off` filtering for fertilizer, root-tab, and plant-care noise
 - Demo data: realistic fictional tanks and event history for screenshots and review

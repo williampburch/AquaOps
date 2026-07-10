@@ -396,10 +396,63 @@ class SqlAlchemyTankRepository:
                 label=label,
                 enabled=bool(configs_by_type[config_type].enabled),
                 interval_days=configs_by_type[config_type].interval_days,
+                last_completed_at=self._last_completed_for_config(tank_id, config_type),
+                next_due_at=self._next_due_for_config(tank_id, config_type),
+                status=self._maintenance_status(configs_by_type[config_type]),
             )
             for config_type, label in MAINTENANCE_CONFIG_LABELS.items()
             if config_type in configs_by_type
         ]
+
+    def _last_completed_for_config(self, tank_id: int, config_type: str) -> datetime | None:
+        if config_type == "feeding":
+            return self.session.scalar(
+                select(func.max(EventModel.occurred_at)).where(
+                    EventModel.tank_id == tank_id,
+                    EventModel.event_type == EventType.FEEDING.value,
+                )
+            )
+        if config_type == "fertilizer":
+            return self.session.scalar(
+                select(func.max(EventModel.occurred_at)).where(
+                    EventModel.tank_id == tank_id,
+                    EventModel.event_type == EventType.FERTILIZER.value,
+                )
+            )
+        return self.session.scalar(
+            select(func.max(EventModel.occurred_at))
+            .join(
+                MaintenanceEventDetailModel,
+                MaintenanceEventDetailModel.event_id == EventModel.id,
+            )
+            .where(
+                EventModel.tank_id == tank_id,
+                EventModel.event_type == EventType.MAINTENANCE.value,
+                MaintenanceEventDetailModel.maintenance_type == config_type,
+            )
+        )
+
+    def _next_due_for_config(self, tank_id: int, config_type: str) -> datetime | None:
+        return self.session.scalar(
+            select(func.min(ReminderModel.due_at)).where(
+                ReminderModel.tank_id == tank_id,
+                ReminderModel.reminder_type == config_type,
+                ReminderModel.completed_at.is_(None),
+            )
+        )
+
+    def _maintenance_status(self, config: TankMaintenanceConfigModel) -> str:
+        if not config.enabled:
+            return "off"
+        due_at = self._next_due_for_config(config.tank_id, config.config_type)
+        if due_at is None:
+            return "waiting"
+        today = utc_now().date()
+        if due_at.date() < today:
+            return "overdue"
+        if due_at.date() == today:
+            return "due_today"
+        return "upcoming"
 
     def _targets_for_tank(self, tank_id: int) -> list[ParameterTarget]:
         targets_by_key = {

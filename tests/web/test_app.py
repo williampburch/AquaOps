@@ -256,6 +256,12 @@ def test_tank_schedules_generate_next_care_reminder(client: TestClient) -> None:
     notifications = client.get("/notifications")
     assert "Water Change due" in notifications.text
     assert "Jul 16, 2026" in notifications.text
+    assert "Generated from the water changes schedule" in notifications.text
+
+    detail = client.get("/tanks/1")
+    assert "Upcoming" in detail.text
+    assert "Last: Jul 9" in detail.text
+    assert "Next: Jul 16" in detail.text
 
 
 def test_high_nitrate_recommends_water_change_without_ammonia_noise(
@@ -297,6 +303,7 @@ def test_high_nitrate_recommends_water_change_without_ammonia_noise(
     nitrate_notifications = client.get("/notifications")
     assert "Water change recommended" in nitrate_notifications.text
     assert "nitrate 25" in nitrate_notifications.text
+    assert "Nitrate was 25 ppm, above target max 20 ppm." in nitrate_notifications.text
 
 
 def test_events_page_renders_recent_activity(client: TestClient) -> None:
