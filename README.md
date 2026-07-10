@@ -133,8 +133,9 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 
 ## Roadmap
 
-The next implementation phases are edit/archive workflows for livestock and plants,
-broader event entry forms, maintenance and feeding logs, fertilizer/root-tab workflows
-inside the configurable Plant Care module, species compatibility and catalog enrichment,
-notification completion/snoozing, photo timelines, CSRF protection, and production
-hardening.
+The next product phase is daily usefulness: faster logging from the dashboard and tank
+pages, better reminder completion flows, and edit/archive workflows for livestock and
+plants. From there, the roadmap expands into configurable care modes, reusable care
+schedule templates, planted tank workflows, observation/problem tracking, richer catalog
+intelligence, exports, and production hardening. See [docs/roadmap.md](docs/roadmap.md)
+for the full staged direction and product principles.

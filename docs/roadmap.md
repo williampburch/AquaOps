@@ -1,5 +1,17 @@
 # Roadmap
 
+## Product Principles
+
+- Fast common workflows
+- Optional depth when a tank needs it
+- Tank-level configuration instead of one-size-fits-all behavior
+- User-level preferences for defaults and display choices
+- Data ownership through exportable, reviewable history
+- Clear history over time for livestock, plants, care, and problems
+- Beginner-friendly defaults with sensible presets
+- Power-user extensibility without forcing complexity on everyone
+- No unnecessary complexity in the default experience
+
 ## Completed Foundation
 
 - Project structure and clean architecture layers
@@ -29,16 +41,108 @@
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
-## Next: Core Data Entry
+## Product Direction
 
-- Livestock edit/archive screens
-- Plant edit/remove screens
-- Generic event entry flow
-- Maintenance log UI
-- Feeding log UI
-- Notes UI
+AquaOps is a personal app first: a useful hobbyist tool with portfolio-quality
+engineering and an expandable foundation. The goal is not to split the product
+into separate apps for simple and advanced aquarium keepers. It should stay one
+configurable app with smart care modules, tank-level setup choices, user-level
+preferences, and progressive disclosure so each workspace can feel as simple or
+as detailed as it needs to be.
 
-## Next: Species Catalog Intelligence
+## Next: Daily Usefulness
+
+- Quick log actions from dashboard and tank detail pages
+- Water change log flow
+- Feeding log flow
+- Maintenance log flow
+- Notes and observations log flow
+- Reminder completion and snoozing
+- Livestock edit/archive workflows
+- Plant edit/remove/archive workflows
+- Fast data entry with minimal required fields
+- Optional detail fields for users who want deeper tracking
+
+## Next: Tank-Specific Maintenance Config
+
+- Custom water change cadence such as every X days per tank
+- Custom feeding, fertilization, filter cleaning, trimming, root-tab, and CO2
+  check cadences per tank
+- Reminder generation from the tank's configured maintenance rules
+- Ability to pause, skip, snooze, or complete generated maintenance reminders
+- Maintenance configs that respect enabled modules, so fertilizer reminders only
+  appear for tanks using planted care workflows
+- Tank-specific recommendation rules based on water test results and target
+  ranges
+- Nitrate-driven water change suggestions when readings rise meaningfully above
+  the tank's configured maximum
+- Parameter-specific guidance that treats ammonia and nitrite differently from
+  nitrate, avoiding simplistic "water change for every elevated value" behavior
+- Safe threshold buffers and severity levels so tiny test variance does not
+  create noisy recommendations
+- Recommendation history showing why a reminder or suggestion appeared
+
+## Next: Configurable Care Modes
+
+- Setup wizard after account creation
+- Tank setup wizard when creating a tank
+- Preset care profiles for common aquarium styles
+- Custom mode for users who want complete control
+- Tank-level module configuration
+- User-level default preferences
+- Dashboard density options
+- Feature and module toggles
+- Progressive disclosure so simple users are not overwhelmed
+
+Suggested care profiles:
+
+- Simple Care
+- Water Testing
+- Planted Tank
+- High-Tech Planted
+- Breeder / Grow-Out
+- Quarantine
+- Custom
+
+## Next: Care Schedule Templates
+
+- Weekly water change template
+- Feeding schedule template
+- Filter cleaning schedule template
+- Water testing schedule while cycling
+- Fertilizer dosing schedule
+- Root tab replacement schedule
+- Plant trimming schedule
+- CO2 check schedule
+- Custom recurring care templates
+- Templates that create editable tank-specific maintenance configs instead of
+  rigid global schedules
+
+## Next: Planted Tank Workflows
+
+- Fertilizer product management
+- Flourish-style liquid fertilizer dosing
+- Root tab placement and location tracking
+- Root tab next-due calculation
+- CO2 notes and schedule tracking
+- Lighting schedule and intensity notes
+- Plant trimming logs
+- Algae observations
+- Plant health notes
+- Plant growth and photo timeline
+
+## Next: Observations and Problem Tracking
+
+- General observations such as cloudy water, algae, fish flashing, hiding,
+  spawning behavior, plant melt, new growth, snail eggs, unusual behavior, or
+  water clarity changes
+- Problem and issue records for algae outbreaks, illness, livestock loss,
+  cloudy water, ammonia spikes, and parameter swings
+- Ability to attach water tests, maintenance events, notes, and photos to a
+  problem record
+- Ability to close or resolve a problem while keeping full history
+
+## Later: Species Catalog Intelligence
 
 - Searchable catalog management screens
 - Species aliases for alternate common names
@@ -46,25 +150,29 @@
 - Compatibility hints for temperature, pH, tank size, and social group needs
 - CSV import/export for custom catalog rows
 
-## Next: Fertilizer and Reminders
+## Later: Intelligence and Guidance
 
-- Built-in fertilizer product management
-- Custom fertilizer products
-- Dose logging UI
-- Root-tab location tracking
-- Automatic next-due calculation in user workflows
-- Reminder completion and snoozing
-- Configurable care schedules for feeding, water changes, filter cleaning, trimming, and dosing
+- Water parameter alerts after test entry
+- Trend warnings
+- Tank-specific alert thresholds
+- Tank-specific maintenance suggestions after water tests
+- Recommendation logic that considers parameter type, configured target range,
+  severity, and recent maintenance history
+- Species compatibility hints
+- Temperature, pH, tank-size, and social-group checks from catalog data
+- Care suggestions based on recent events and water tests
+- "What changed before this problem?" style historical correlation
 
-## Next: Alerts and Automation
+## Later: Sharing, Export, and Data Ownership
 
-- Configurable water-parameter alert thresholds
-- Alert generation after water tests
-- Notification badges/counts
-- More granular module presets by tank type
-- Account-level admin controls beyond personal workspace preferences
+- CSV export
+- Printable tank history
+- Shareable read-only tank snapshot
+- Backup and restore workflows
+- Photo timeline export
+- Optional public portfolio or demo tank page
 
-## Next: Photos and Richer Reports
+## Later: Photos and Richer Reports
 
 - Local photo uploads
 - Photo timeline
