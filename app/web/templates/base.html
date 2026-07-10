@@ -25,6 +25,65 @@
   </head>
   <body class="{{ display.density_class if display is defined else 'density-comfortable' }}">
     {% set prefs = preferences if preferences is defined else none %}
+    <header class="mobile-appbar">
+      <a class="mobile-brand" href="/" aria-label="AquaOps dashboard">
+        <img class="brand-mark" src="{{ url_for('static', path='/brand/aquaops-app-icon.png') }}" alt="" aria-hidden="true" />
+      </a>
+      <div class="mobile-title">
+        <span>AquaOps</span>
+        <strong>{{ title }}</strong>
+      </div>
+      <div class="mobile-appbar-actions">
+        {% if current_user and (prefs is none or prefs.enable_notifications) %}
+          <a class="icon-button notification-button {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications" title="Notifications" aria-label="Notifications">
+            <span class="notification-dot" aria-hidden="true"></span>
+          </a>
+        {% endif %}
+        <button class="icon-button menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavigation" aria-controls="mobileNavigation" aria-label="Open navigation">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="offcanvas offcanvas-end mobile-nav-drawer" tabindex="-1" id="mobileNavigation" aria-labelledby="mobileNavigationLabel">
+      <div class="offcanvas-header">
+        <div class="mobile-drawer-brand">
+          <img class="brand-mark" src="{{ url_for('static', path='/brand/aquaops-app-icon.png') }}" alt="" aria-hidden="true" />
+          <div>
+            <h2 id="mobileNavigationLabel">AquaOps</h2>
+            <span>{{ current_user.username if current_user else "Guest mode" }}</span>
+          </div>
+        </div>
+        <button class="btn-close" type="button" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <nav class="offcanvas-body mobile-drawer-nav" aria-label="Mobile navigation">
+        <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">Dashboard</a>
+        <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">Aquariums</a>
+        <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">Events</a>
+        {% if prefs is none or prefs.enable_livestock %}
+          <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">Livestock</a>
+        {% endif %}
+        {% if prefs is none or prefs.enable_plants %}
+          <a class="nav-link {{ 'active' if active_nav == 'plants' else '' }}" href="/plants">Plants</a>
+        {% endif %}
+        {% if prefs is none or prefs.enable_reports %}
+          <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="/reports">Reports</a>
+        {% endif %}
+        {% if prefs is none or prefs.enable_notifications %}
+          <a class="nav-link {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications">Care Queue</a>
+        {% endif %}
+        <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">Settings</a>
+        {% if current_user %}
+          <form method="post" action="/logout">
+            <button class="btn btn-outline-light w-100" type="submit">Sign out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-outline-light w-100" href="/login">Sign in</a>
+          <a class="btn btn-primary w-100" href="/register">Create account</a>
+        {% endif %}
+      </nav>
+    </div>
+
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="/" aria-label="AquaOps dashboard">
@@ -117,6 +176,25 @@
         {% block content %}{% endblock %}
       </main>
     </div>
+
+    <nav class="mobile-tabbar" aria-label="Primary mobile navigation">
+      <a class="mobile-tab {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">
+        <span class="nav-glyph nav-glyph-dashboard" aria-hidden="true"></span>
+        <strong>Home</strong>
+      </a>
+      <a class="mobile-tab {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">
+        <span class="nav-glyph nav-glyph-tanks" aria-hidden="true"></span>
+        <strong>Tanks</strong>
+      </a>
+      <a class="mobile-tab {{ 'active' if active_nav == 'events' else '' }}" href="/events">
+        <span class="nav-glyph nav-glyph-events" aria-hidden="true"></span>
+        <strong>Events</strong>
+      </a>
+      <a class="mobile-tab {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">
+        <span class="nav-glyph nav-glyph-settings" aria-hidden="true"></span>
+        <strong>Settings</strong>
+      </a>
+    </nav>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       (() => {

@@ -39,6 +39,29 @@
     </div>
   </section>
 
+  {% if current_user and tanks %}
+    <section class="panel quick-log-panel mt-4">
+      <div class="panel-heading">
+        <h2>Quick Log</h2>
+      </div>
+      <div class="quick-action-grid">
+        {% for tank in tanks[:4] %}
+          <a class="quick-action-card" href="/tanks/{{ tank.id }}#quick-log">
+            <span>{{ tank.name }}</span>
+            <strong>Log care</strong>
+            <small>Water test, water change, feeding, or note</small>
+            <span class="quick-action-links">
+              <em>Test</em>
+              <em>Change</em>
+              <em>Feed</em>
+              <em>Note</em>
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
   <section class="stats-grid">
     <a class="metric-card metric-link" href="/tanks">
       <span class="metric-label">Tanks</span>
@@ -65,23 +88,6 @@
       </a>
     {% endif %}
   </section>
-
-  {% if current_user and tanks %}
-    <section class="panel mt-4">
-      <div class="panel-heading">
-        <h2>Quick Log</h2>
-      </div>
-      <div class="quick-action-grid">
-        {% for tank in tanks[:4] %}
-          <a class="quick-action-card" href="/tanks/{{ tank.id }}#quick-log">
-            <span>{{ tank.name }}</span>
-            <strong>Log care</strong>
-            <small>Feeding, maintenance, notes, or water tests</small>
-          </a>
-        {% endfor %}
-      </div>
-    </section>
-  {% endif %}
 
   <section class="content-grid mt-4">
     <div class="panel">

@@ -97,6 +97,11 @@ body::after {
   content: none;
 }
 
+.mobile-appbar,
+.mobile-tabbar {
+  display: none;
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -516,6 +521,30 @@ body::after {
   border-color: color-mix(in srgb, var(--aqua-accent) 48%, var(--aqua-border));
   color: var(--aqua-text);
   transform: translateY(-1px);
+}
+
+.menu-button span,
+.menu-button::before,
+.menu-button::after {
+  background: currentcolor;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  width: 1rem;
+}
+
+.menu-button span {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.menu-button::before {
+  top: 0.75rem;
+}
+
+.menu-button::after {
+  bottom: 0.75rem;
 }
 
 .notification-button::before {
@@ -1285,6 +1314,24 @@ body::after {
   font-size: 1.05rem;
 }
 
+.quick-action-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.quick-action-links em {
+  background: color-mix(in srgb, var(--aqua-brand-teal) 12%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 28%, var(--aqua-border));
+  border-radius: 999px;
+  color: var(--aqua-text);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 760;
+  padding: 0.18rem 0.46rem;
+}
+
 .maintenance-config-grid {
   display: grid;
   gap: 0.8rem;
@@ -2021,13 +2068,136 @@ body::after {
 }
 
 @media (max-width: 640px) {
+  body {
+    padding: 4.35rem 0 5.1rem;
+  }
+
   .main-panel {
-    padding: 1rem;
+    padding: 0.8rem;
+  }
+
+  .mobile-appbar {
+    align-items: center;
+    backdrop-filter: blur(20px);
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--aqua-panel) 90%, transparent), var(--aqua-glass));
+    border-bottom: 1px solid var(--aqua-border);
+    box-shadow: var(--aqua-shadow);
+    display: flex;
+    gap: 0.7rem;
+    inset: 0 0 auto;
+    min-height: 4.1rem;
+    padding: 0.55rem 0.75rem;
+    position: fixed;
+    z-index: 60;
+  }
+
+  .mobile-brand .brand-mark {
+    border-radius: 10px;
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  .mobile-title {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mobile-title span {
+    color: var(--aqua-accent-strong);
+    font-size: 0.72rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .mobile-title strong {
+    color: var(--aqua-text);
+    font-size: 1rem;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-appbar-actions {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .mobile-nav-drawer {
+    background: var(--aqua-panel);
+    color: var(--aqua-text);
+  }
+
+  .mobile-drawer-brand {
+    align-items: center;
+    display: flex;
+    gap: 0.7rem;
+  }
+
+  .mobile-drawer-brand h2 {
+    font-size: 1.15rem;
+    font-weight: 850;
+    margin: 0;
+  }
+
+  .mobile-drawer-brand span {
+    color: var(--aqua-text-muted);
+    font-size: 0.82rem;
+  }
+
+  .mobile-drawer-nav {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .mobile-tabbar {
+    align-items: center;
+    backdrop-filter: blur(20px);
+    background: var(--aqua-glass);
+    border-top: 1px solid var(--aqua-border);
+    box-shadow: 0 -14px 34px rgb(8 29 45 / 10%);
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    inset: auto 0 0;
+    min-height: 4.65rem;
+    padding: 0.45rem 0.55rem calc(0.45rem + env(safe-area-inset-bottom));
+    position: fixed;
+    z-index: 60;
+  }
+
+  .mobile-tab {
+    align-items: center;
+    border-radius: 8px;
+    color: var(--aqua-text-muted);
+    display: grid;
+    font-size: 0.72rem;
+    font-weight: 800;
+    gap: 0.18rem;
+    justify-items: center;
+    min-height: 3.25rem;
+    padding: 0.28rem;
+    text-decoration: none;
+  }
+
+  .mobile-tab .nav-glyph {
+    height: 1.35rem;
+    width: 1.35rem;
+  }
+
+  .mobile-tab.active {
+    background: color-mix(in srgb, var(--aqua-brand-teal) 12%, transparent);
+    color: var(--aqua-accent-strong);
   }
 
   .topbar,
-  .topbar-actions,
-  .ops-hero,
+  .sidebar {
+    display: none;
+  }
+
   .ops-console,
   .workspace-strip,
   .command-strip,
@@ -2037,20 +2207,8 @@ body::after {
     flex-direction: column;
   }
 
-  .sidebar {
-    align-items: flex-start;
-    flex-direction: column;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  .sidebar .nav {
-    width: 100%;
-  }
-
   .stats-grid,
   .content-grid,
-  .ops-hero,
   .parameter-grid,
   .form-grid,
   .maintenance-config-grid,
@@ -2065,6 +2223,76 @@ body::after {
   .module-grid,
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ops-hero {
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+    margin-bottom: 0.8rem;
+    min-height: 0;
+    padding: 1rem;
+  }
+
+  .ops-hero::before {
+    opacity: 0.48;
+  }
+
+  .ops-hero::after,
+  .hero-status-pill,
+  .hero-kicker,
+  .hero-brand-mark {
+    display: none;
+  }
+
+  .ops-hero h2 {
+    font-size: 2.35rem;
+    line-height: 0.98;
+    max-width: 11ch;
+  }
+
+  .ops-hero p {
+    font-size: 0.88rem;
+    margin-top: 0.55rem;
+  }
+
+  .hero-actions {
+    margin-top: 0.75rem;
+  }
+
+  .ops-hero-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .ops-hero-panel div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 4.6rem;
+    padding: 0.65rem;
+  }
+
+  .ops-hero-panel span {
+    font-size: 0.72rem;
+  }
+
+  .ops-hero-panel strong {
+    font-size: 1.2rem;
+  }
+
+  .quick-log-panel {
+    margin-top: 0.8rem !important;
+  }
+
+  .quick-action-card {
+    min-height: auto;
+    padding: 0.85rem;
+  }
+
+  .metric-card {
+    min-height: 108px;
+    padding: 0.9rem 0.85rem 0.9rem 4.2rem;
   }
 
   .activity-row,
@@ -2087,30 +2315,6 @@ body::after {
   .settings-card {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .sidebar-status {
-    display: none;
-  }
-
-  .brand {
-    margin-bottom: 0;
-  }
-
-  .brand small {
-    max-width: none;
-  }
-
-  .sidebar .nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .topbar {
-    position: static;
-  }
-
-  .ops-hero-panel {
-    width: 100%;
   }
 
   .target-row {
