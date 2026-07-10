@@ -72,7 +72,15 @@ After creating an account, the current app supports:
 - `/livestock` inventory summary grouped by species
 - `/plants` inventory summary grouped by species
 - `/notifications` open reminder queue
-- `/settings` automation and feature-module foundation
+- `/settings` persisted workspace preferences for units, dates, dashboard density, modules, and Plant Care mode
+
+The settings flow stores per-user preferences in `user_preferences`. Volumes remain
+canonical in liters in the database, while the UI can display and accept either gallons or
+liters. New tank target presets honor the user's preferred temperature unit.
+
+Feature modules can be simplified per workspace. Plant Care supports `Auto`, `On`, and
+`Off`; in auto mode, fertilizer and root-tab reminders stay hidden until the app detects
+active plants, a planted tank, or fertilizer history.
 
 Some domain tables already exist before full UI workflows do. Maintenance, fertilizer,
 feeding, media, and reminder detail models are present, while complete user-facing CRUD

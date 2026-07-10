@@ -27,7 +27,7 @@ flowchart LR
 
 - `app.web`: HTTP routes, browser dependencies, templates, static assets
 - `app.application`: use cases and read/write service orchestration
-- `app.domain`: event types, measurement keys, reminder rules, framework-free data types
+- `app.domain`: event types, measurement keys, reminder rules, user preference rules, framework-free data types
 - `app.infrastructure`: SQLAlchemy models, repositories, auth/session persistence, storage
 - `alembic`: schema migrations
 - `tests`: unit, application, and web tests
@@ -53,6 +53,18 @@ Water parameters are interpreted through `tank_parameter_targets`, not global co
 Each tank can carry its own acceptable ranges for ammonia, nitrite, nitrate, pH,
 temperature, KH, GH, and TDS. The dashboard and tank detail pages can then classify
 readings against the tank's actual goals.
+
+## Preferences and Feature Filtering
+
+Per-user workspace preferences live in `user_preferences`. The domain keeps canonical
+values stable where it matters, such as tank volume in liters, while presentation helpers
+convert display values for gallons/liters, Fahrenheit/Celsius defaults, and date formats.
+
+Feature module settings are consumed at the route and repository boundaries. Plant Care is
+modeled as `Auto`, `On`, or `Off`; auto mode enables fertilizer/root-tab surfaces only
+when plants, planted tanks, or fertilizer history indicate that the workflow is relevant.
+This keeps reminders, dashboard events, reports, and notification queues quiet for users
+who do not need plant-care operations.
 
 ## Authentication
 

@@ -7,6 +7,7 @@
 - SQLAlchemy ORM and Alembic migrations
 - Local bcrypt authentication and server-side sessions
 - Dashboard shell with responsive light, dark, and system themes
+- Enterprise-style shell and settings surface with compact/comfortable density
 - Docker, Docker Compose, and CI
 - Demo seed command for portfolio review
 
@@ -22,7 +23,8 @@
 - Read-only livestock inventory grouped by species and quantity
 - Read-only plant inventory grouped by species and quantity
 - Notifications page for open reminders
-- Settings/automation foundation for future schedules, alerts, and feature modules
+- Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
+- Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
 ## Next: Core Data Entry
 
@@ -48,8 +50,8 @@
 - Configurable water-parameter alert thresholds
 - Alert generation after water tests
 - Notification badges/counts
-- Feature module toggles
-- Admin/settings persistence
+- More granular module presets by tank type
+- Account-level admin controls beyond personal workspace preferences
 
 ## Next: Photos and Richer Reports
 

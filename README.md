@@ -11,8 +11,8 @@ a clean, maintainable Python web application.
 This repository contains a publishable, working foundation:
 
 - Layered FastAPI application structure with web, application, domain, and infrastructure boundaries
-- SQLAlchemy ORM models for users, sessions, tanks, livestock, plants, generic events, event details, media, and reminders
-- Alembic migration environment with an initial schema migration
+- SQLAlchemy ORM models for users, preferences, sessions, tanks, livestock, plants, generic events, event details, media, and reminders
+- Alembic migration environment with schema revisions for initial tables, tank targets, and user preferences
 - Local bcrypt authentication with hashed server-side session tokens
 - Tank creation, tank detail, and tank-specific water parameter targets
 - Water test logging through the generic event model
@@ -20,8 +20,9 @@ This repository contains a publishable, working foundation:
 - Activity stream page powered by the generic event table
 - Reports page with event mix and nitrate trend charts
 - Read-only livestock and plant inventory pages grouped by species with quantity totals
-- Notifications page for open reminders and a settings/automation foundation
-- Responsive UI with persisted light, dark, and system theme choices
+- Notifications page for open reminders with configurable due-soon windows and plant-care filtering
+- Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior
+- Responsive enterprise-style UI with persisted light, dark, and system theme choices
 - Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - Example Nginx reverse proxy config for hosting behind a domain
@@ -119,11 +120,13 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Inventory summaries: livestock and plants grouped by species with quantity totals
 - Reports: event mix and nitrate trend charts
 - Notifications: open reminder queue with overdue, due today, and upcoming buckets
-- Automation foundation: settings page for future schedules, alerts, and feature modules
+- Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
+- Plant Care mode: `Auto`, `On`, or `Off` filtering for fertilizer, root-tab, and plant-care noise
 - Demo data: realistic fictional tanks and event history for screenshots and review
 
 ## Roadmap
 
 The next implementation phases are CRUD screens for livestock and plants, broader event
-entry forms, maintenance and feeding logs, fertilizer/root-tab workflows, notification
-completion/snoozing, photo timelines, CSRF protection, and production hardening.
+entry forms, maintenance and feeding logs, fertilizer/root-tab workflows inside the
+configurable Plant Care module, notification completion/snoozing, photo timelines, CSRF
+protection, and production hardening.

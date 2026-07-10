@@ -3,6 +3,7 @@
 ```mermaid
 erDiagram
   USERS ||--o{ SESSIONS : has
+  USERS ||--o| USER_PREFERENCES : configures
   USERS ||--o{ TANKS : owns
   USERS ||--o{ EVENTS : creates
   USERS ||--o{ MEDIA_ASSETS : uploads
@@ -28,6 +29,7 @@ erDiagram
 ## Core Tables
 
 - `users`: login identity and account ownership
+- `user_preferences`: per-user unit display, date format, dashboard density, notification window, feature modules, and Plant Care mode
 - `sessions`: hashed server-side session tokens
 - `tanks`: aquariums owned by a user
 - `livestock`: fish, shrimp, snails, and other aquatic animals
