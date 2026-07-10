@@ -753,11 +753,11 @@ body::after {
 }
 
 .hero-brand-mark .brand-mark {
+  border-radius: 28px;
   filter: drop-shadow(0 24px 48px rgb(0 0 0 / 30%));
-  height: clamp(11rem, 20vw, 17rem);
-  opacity: 0.78;
-  transform: scale(1.03);
-  width: clamp(11rem, 20vw, 17rem);
+  height: clamp(10rem, 18vw, 15rem);
+  opacity: 0.92;
+  width: clamp(10rem, 18vw, 15rem);
 }
 
 .ops-hero-panel div {
