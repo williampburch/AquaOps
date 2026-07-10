@@ -49,6 +49,8 @@
   noise buffer
 - Care queue explanations for scheduled reminders and nitrate recommendations
 - Maintenance schedule status showing last logged care and next due dates
+- Mobile app shell with a compact top bar, bottom tab navigation, and mobile
+  dashboard quick-log priority
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -63,7 +65,8 @@ as detailed as it needs to be.
 
 ## Next: Daily Usefulness
 
-- Quick log actions from dashboard and tank detail pages
+- Universal quick-log flow for Water Change, Feeding, Water Test, Maintenance,
+  Dose, Observation, Photo, Livestock Change, and Plant Change
 - Dropdown-first inputs with free-text fallback for repeated values such as
   foods, units, livestock targets, maintenance equipment, fertilizer products,
   observation tags, and common notes
@@ -71,9 +74,19 @@ as detailed as it needs to be.
   choices without blocking custom text
 - Ability to promote repeated custom entries into reusable user-owned options
 - More polished water change log flow with recurring schedule context
+- Water change optional details for conditioner, substrate vacuum, glass
+  cleaning, filter cleaning, temperature match, TDS before/after, and nitrate
+  before/after
 - More polished feeding log flow with reusable foods and livestock targeting
+- Feeding shortcuts such as "fed today" and "skipped feeding" with optional
+  reason
 - More polished maintenance log flow with task-specific fields
 - More polished notes and observations log flow
+- Photo logging in the same quick-log system
+- Livestock change flow for deaths, rehomes, moves, quantity adjustments, and
+  acquisitions
+- Plant change flow for removals, moves, trims, melt, propagation, and root-tab
+  placement context
 - Livestock edit/archive workflows
 - Plant edit/remove/archive workflows
 - Fast data entry with minimal required fields
@@ -99,6 +112,8 @@ as detailed as it needs to be.
 
 - Setup wizard after account creation
 - Tank setup wizard when creating a tank
+- Hobby-style setup questions for tank type, plants, fertilizer, CO2,
+  reminders, units, and desired tracking detail
 - Preset care profiles for common aquarium styles
 - Custom mode for users who want complete control
 - Tank-level module configuration
@@ -120,9 +135,14 @@ Suggested care profiles:
 ## Next: Care Schedule Templates
 
 - Weekly water change template
+- Daily feeding template
+- Weekly fasting day template
 - Feeding schedule template
 - Filter cleaning schedule template
+- Prefilter sponge cleaning template
+- Canister cleaning template
 - Water testing schedule while cycling
+- Weekly nitrate testing template
 - Fertilizer dosing schedule
 - Root tab replacement schedule
 - Plant trimming schedule
@@ -168,6 +188,9 @@ Suggested care profiles:
 ## Later: Intelligence and Guidance
 
 - Water parameter alerts after test entry
+- Configurable alerts for ammonia, nitrite, nitrate, pH, temperature, TDS, KH,
+  and GH
+- Beginner-friendly alert defaults focused on high-risk issues
 - Trend warnings
 - Tank-specific alert thresholds
 - Tank-specific maintenance suggestions after water tests
