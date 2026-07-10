@@ -136,9 +136,10 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 
 ## Roadmap
 
-The next product phase continues daily usefulness: polished task-specific logging,
-edit/archive workflows for livestock and plants, richer maintenance automation, and
-configurable care modes. From there, the roadmap expands into reusable care schedule
-templates, planted tank workflows, observation/problem tracking, richer catalog
-intelligence, exports, and production hardening. See [docs/roadmap.md](docs/roadmap.md)
-for the full staged direction and product principles.
+The next product phase continues daily usefulness: dropdown-first task logging with
+free-text fallback, edit/archive workflows for livestock and plants, richer maintenance
+automation, and configurable care modes. From there, the roadmap expands into reusable
+care schedule templates, planted tank workflows, observation/problem tracking, richer
+catalog intelligence, exports, and production hardening. See
+[docs/roadmap.md](docs/roadmap.md) for the full staged direction and product
+principles.

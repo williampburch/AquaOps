@@ -64,6 +64,12 @@ as detailed as it needs to be.
 ## Next: Daily Usefulness
 
 - Quick log actions from dashboard and tank detail pages
+- Dropdown-first inputs with free-text fallback for repeated values such as
+  foods, units, livestock targets, maintenance equipment, fertilizer products,
+  observation tags, and common notes
+- Recently used values per user/tank so frequent entries become one-click
+  choices without blocking custom text
+- Ability to promote repeated custom entries into reusable user-owned options
 - More polished water change log flow with recurring schedule context
 - More polished feeding log flow with reusable foods and livestock targeting
 - More polished maintenance log flow with task-specific fields
@@ -156,6 +162,8 @@ Suggested care profiles:
 - External taxonomy or care-source enrichment
 - Compatibility hints for temperature, pH, tank size, and social group needs
 - CSV import/export for custom catalog rows
+- Shared input catalogs for reusable foods, equipment, fertilizer products,
+  observation tags, and other common logging values
 
 ## Later: Intelligence and Guidance
 
