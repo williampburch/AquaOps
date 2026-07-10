@@ -201,10 +201,20 @@ script before relying on the app for critical history.
 From `/opt/aquaops`:
 
 ```bash
-git pull
-docker compose build
-docker compose run --rm web alembic upgrade head
-docker compose up -d
+scripts/deploy-container.sh
+```
+
+The deploy script fetches `origin/main`, fast-forwards the local checkout, rebuilds the
+`web` image, runs Alembic migrations, restarts the container, and prints `docker compose ps`.
+It refuses to run when tracked files have local changes unless `--force-dirty` is supplied.
+Untracked reference files, such as local mockups under `assets/`, do not block deployment.
+
+Useful options:
+
+```bash
+scripts/deploy-container.sh --branch main
+scripts/deploy-container.sh --skip-build
+scripts/deploy-container.sh --skip-migrations
 docker compose logs -f web
 ```
 

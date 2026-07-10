@@ -81,6 +81,12 @@ make migrate
 make seed-demo
 ```
 
+Deploy an existing Docker Compose host from the repo directory:
+
+```bash
+scripts/deploy-container.sh
+```
+
 ## Demo Login
 
 Create or refresh a portfolio-friendly demo account:
