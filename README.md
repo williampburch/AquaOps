@@ -66,7 +66,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app will be available at <http://127.0.0.1:8000>. SQLite data and uploaded media are
+The app will be available at <http://127.0.0.1:8010>. SQLite data and uploaded media are
 stored in Docker volumes. The Compose file binds the app to `127.0.0.1` so it can sit
 behind Nginx without exposing Uvicorn directly to the public internet.
 

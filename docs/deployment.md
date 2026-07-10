@@ -66,17 +66,17 @@ The Compose file binds Uvicorn to localhost only:
 
 ```yaml
 ports:
-  - "127.0.0.1:8000:8000"
-```
-
-If another site already uses port `8000`, change only the host-side port:
-
-```yaml
-ports:
   - "127.0.0.1:8010:8000"
 ```
 
-Then proxy Nginx to the same port, for example `http://127.0.0.1:8010`.
+If another site already uses port `8010`, change only the host-side port:
+
+```yaml
+ports:
+  - "127.0.0.1:8020:8000"
+```
+
+Then proxy Nginx to the same port, for example `http://127.0.0.1:8020`.
 
 ## 4. Run Migrations
 
@@ -96,7 +96,7 @@ docker compose logs -f web
 Check the app locally from the VM:
 
 ```bash
-curl -f http://127.0.0.1:8000/health
+curl -f http://127.0.0.1:8010/health
 ```
 
 Use your chosen host port if you changed it in Compose.
@@ -128,13 +128,13 @@ server {
     client_max_body_size 25m;
 
     location /static/ {
-        proxy_pass http://127.0.0.1:8000/static/;
+        proxy_pass http://127.0.0.1:8010/static/;
         expires 7d;
         add_header Cache-Control "public";
     }
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:8010;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
