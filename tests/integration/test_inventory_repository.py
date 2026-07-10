@@ -7,10 +7,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.application.ports.inventory import LivestockCreate, PlantCreate
 from app.core.security import hash_password
 from app.infrastructure.db import models  # noqa: F401
 from app.infrastructure.db.base import Base
-from app.infrastructure.db.models import LivestockModel, PlantModel, TankModel, UserModel
+from app.infrastructure.db.models import (
+    LivestockModel,
+    PlantModel,
+    SpeciesCatalogModel,
+    TankModel,
+    UserModel,
+)
 from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
 
 
@@ -98,3 +105,79 @@ def test_inventory_repository_groups_species_and_sums_quantities(session: Sessio
     assert plants.summary.species_count == 2
     assert plants.groups[0].common_name == "Java Fern"
     assert plants.groups[0].quantity == 5
+
+
+def test_inventory_repository_adds_entries_from_catalog(session: Session) -> None:
+    user = UserModel(
+        email="catalog@example.com",
+        username="catalog",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Display Tank", tank_type="planted")
+    fish = SpeciesCatalogModel(
+        category="fish",
+        common_name="Neon Tetra",
+        scientific_name="Paracheirodon innesi",
+        care_level="beginner",
+        social_group_min=6,
+        source="test",
+        is_builtin=True,
+        external_refs={},
+    )
+    plant = SpeciesCatalogModel(
+        category="plant",
+        common_name="Java Fern",
+        scientific_name="Microsorum pteropus",
+        care_level="beginner",
+        light_requirement="low",
+        source="test",
+        is_builtin=True,
+        external_refs={},
+    )
+    session.add_all([user, tank, fish, plant])
+    session.commit()
+
+    repository = SqlAlchemyInventoryRepository(session)
+    livestock_catalog = repository.list_catalog(("fish", "invertebrate"))
+    plant_catalog = repository.list_catalog(("plant",))
+
+    assert livestock_catalog[0].common_name == "Neon Tetra"
+    assert livestock_catalog[0].detail == "Beginner - Group 6+"
+    assert plant_catalog[0].detail == "Beginner - Low light"
+
+    livestock_id = repository.add_livestock(
+        user.id,
+        LivestockCreate(
+            tank_id=tank.id,
+            catalog_entry_id=fish.id,
+            common_name=None,
+            species=None,
+            quantity=8,
+            sex=None,
+            notes=None,
+            acquired_on=None,
+        ),
+    )
+    plant_id = repository.add_plant(
+        user.id,
+        PlantCreate(
+            tank_id=tank.id,
+            catalog_entry_id=plant.id,
+            common_name=None,
+            species=None,
+            quantity=2,
+            notes=None,
+            planted_on=None,
+        ),
+    )
+
+    assert livestock_id is not None
+    assert plant_id is not None
+    livestock = session.get(LivestockModel, livestock_id)
+    stored_plant = session.get(PlantModel, plant_id)
+    assert livestock.common_name == "Neon Tetra"
+    assert livestock.species == "Paracheirodon innesi"
+    assert livestock.species_catalog_id == fish.id
+    assert stored_plant.common_name == "Java Fern"
+    assert stored_plant.species == "Microsorum pteropus"
+    assert stored_plant.species_catalog_id == plant.id

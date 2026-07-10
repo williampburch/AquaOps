@@ -1,55 +1,61 @@
 :root,
 [data-bs-theme="light"] {
-  --aqua-bg: #f4f7f9;
-  --aqua-sidebar: #ffffff;
-  --aqua-sidebar-border: #dce3ea;
+  --aqua-bg: #f3f7fa;
+  --aqua-sidebar: #071c2f;
+  --aqua-sidebar-border: #123a4a;
   --aqua-panel: #ffffff;
-  --aqua-panel-soft: #f6f8fb;
+  --aqua-panel-soft: #f5f9fb;
   --aqua-panel-raised: #ffffff;
-  --aqua-glass: rgb(255 255 255 / 94%);
-  --aqua-border: #d8e0e8;
-  --aqua-text: #141a21;
-  --aqua-text-muted: #647180;
-  --aqua-accent: #13a47e;
-  --aqua-accent-strong: #08775f;
-  --aqua-blue: #2563eb;
+  --aqua-glass: rgb(255 255 255 / 88%);
+  --aqua-border: #d9e5ec;
+  --aqua-text: #0d2433;
+  --aqua-text-muted: #607080;
+  --aqua-accent: #00bcd4;
+  --aqua-accent-strong: #0598a8;
+  --aqua-blue: #0077b8;
   --aqua-warning: #b7791f;
   --aqua-danger: #d92d20;
-  --aqua-ink: #0c1117;
-  --aqua-lime: #8cc63f;
-  --aqua-coral: #d85f3f;
-  --aqua-river: #2f8ed8;
-  --aqua-tealwash: #d8f1eb;
+  --aqua-ink: #071720;
+  --aqua-lime: #26c6a4;
+  --aqua-coral: #e46f4f;
+  --aqua-river: #24d7e6;
+  --aqua-tealwash: #dff8f7;
   --aqua-sand: #d9b76e;
-  --aqua-shadow: 0 10px 24px rgb(20 32 44 / 7%);
-  --aqua-shadow-strong: 0 18px 42px rgb(20 32 44 / 13%);
-  --aqua-control-bg: #f1f4f7;
+  --aqua-brand-navy: #081d2d;
+  --aqua-brand-teal: #00bcd4;
+  --aqua-brand-mint: #26c6a4;
+  --aqua-shadow: 0 14px 34px rgb(8 29 45 / 8%);
+  --aqua-shadow-strong: 0 22px 54px rgb(8 29 45 / 16%);
+  --aqua-control-bg: #edf4f7;
   --aqua-input-bg: #ffffff;
-  --aqua-chart-grid: rgb(99 117 134 / 18%);
+  --aqua-chart-grid: rgb(96 112 128 / 18%);
 }
 
 [data-bs-theme="dark"] {
-  --aqua-bg: #061117;
-  --aqua-sidebar: #0c1318;
-  --aqua-sidebar-border: #202a35;
-  --aqua-panel: #10161d;
-  --aqua-panel-soft: #132127;
-  --aqua-panel-raised: #18262e;
-  --aqua-glass: rgb(16 22 29 / 78%);
-  --aqua-border: #26323e;
+  --aqua-bg: #06141d;
+  --aqua-sidebar: #061421;
+  --aqua-sidebar-border: #123545;
+  --aqua-panel: #0d1f2b;
+  --aqua-panel-soft: #102b38;
+  --aqua-panel-raised: #143342;
+  --aqua-glass: rgb(9 27 39 / 84%);
+  --aqua-border: #234554;
   --aqua-text: #f4f8fb;
-  --aqua-text-muted: #9aa8b3;
-  --aqua-accent: #3be6bd;
-  --aqua-accent-strong: #28cfa8;
-  --aqua-blue: #57a9ff;
+  --aqua-text-muted: #9fb3bf;
+  --aqua-accent: #28e0ef;
+  --aqua-accent-strong: #62f0f2;
+  --aqua-blue: #66d4ff;
   --aqua-warning: #f2c96e;
   --aqua-danger: #ff7688;
   --aqua-ink: #040a0d;
-  --aqua-lime: #ddff79;
+  --aqua-lime: #45e5bd;
   --aqua-coral: #ff936d;
   --aqua-river: #66d4ff;
-  --aqua-tealwash: #1d5c57;
+  --aqua-tealwash: #123b43;
   --aqua-sand: #9c7a43;
+  --aqua-brand-navy: #081d2d;
+  --aqua-brand-teal: #28e0ef;
+  --aqua-brand-mint: #45e5bd;
   --aqua-shadow: 0 18px 44px rgb(0 0 0 / 28%);
   --aqua-shadow-strong: 0 30px 80px rgb(0 0 0 / 42%);
   --aqua-control-bg: #0d131a;
@@ -66,14 +72,18 @@ body {
 
 body::before {
   background:
-    linear-gradient(color-mix(in srgb, var(--aqua-border) 36%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--aqua-border) 36%, transparent) 1px, transparent 1px),
-    linear-gradient(180deg, color-mix(in srgb, var(--aqua-tealwash) 18%, transparent), transparent 42%),
-    linear-gradient(90deg, color-mix(in srgb, var(--aqua-river) 14%, transparent), transparent 44%);
-  background-size: 44px 44px;
+    linear-gradient(160deg, color-mix(in srgb, var(--aqua-brand-teal) 16%, transparent), transparent 34%),
+    linear-gradient(20deg, color-mix(in srgb, var(--aqua-brand-mint) 10%, transparent), transparent 42%),
+    linear-gradient(color-mix(in srgb, var(--aqua-border) 32%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--aqua-border) 32%, transparent) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    48px 48px,
+    48px 48px;
   content: "";
   inset: 0;
-  opacity: 0.28;
+  opacity: 0.38;
   pointer-events: none;
   position: fixed;
   z-index: -1;
@@ -91,10 +101,14 @@ body::after {
 
 .sidebar {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--aqua-sidebar) 92%, transparent), var(--aqua-sidebar));
+    linear-gradient(180deg, color-mix(in srgb, var(--aqua-sidebar) 84%, #0f5a66), var(--aqua-sidebar) 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 16%, transparent), transparent 42%);
   border-right: 1px solid var(--aqua-sidebar-border);
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--aqua-river) 10%, transparent);
-  padding: 1.1rem;
+  box-shadow:
+    inset -1px 0 0 color-mix(in srgb, var(--aqua-river) 18%, transparent),
+    20px 0 52px rgb(8 29 45 / 8%);
+  color: #eefcff;
+  padding: 1.15rem;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -103,43 +117,112 @@ body::after {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.78rem;
-  color: var(--aqua-text);
+  gap: 0.8rem;
+  color: #f4feff;
   font-weight: 700;
   text-decoration: none;
-  margin-bottom: 1rem;
-  min-height: 3rem;
+  margin-bottom: 1.2rem;
+  min-height: 3.25rem;
 }
 
 .brand small {
-  color: var(--aqua-text-muted);
+  color: rgb(244 254 255 / 66%);
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  margin-top: -0.1rem;
+  line-height: 1.2;
+  margin-top: 0.05rem;
+  max-width: 11rem;
 }
 
 .brand-mark {
-  background:
-    linear-gradient(135deg, var(--aqua-accent), var(--aqua-blue));
-  border: 1px solid color-mix(in srgb, var(--aqua-accent) 48%, var(--aqua-border));
+  background: linear-gradient(145deg, #08314c, #061826 72%);
+  border: 1px solid rgb(102 212 255 / 38%);
   border-radius: 8px;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--aqua-accent) 16%, transparent);
-  height: 2rem;
-  width: 2rem;
+  box-shadow:
+    0 0 0 4px rgb(0 188 212 / 14%),
+    0 14px 32px rgb(0 0 0 / 28%);
+  flex: 0 0 auto;
+  height: 2.55rem;
+  position: relative;
+  width: 2.55rem;
+}
+
+.brand-word {
+  color: #f8fcff;
+  display: block;
+  font-size: 1.16rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.brand-word span {
+  color: var(--aqua-brand-teal);
+}
+
+.logo-drop {
+  overflow: hidden;
+}
+
+.logo-drop::before {
+  border: 3px solid var(--aqua-brand-teal);
+  border-bottom-color: color-mix(in srgb, var(--aqua-brand-mint) 82%, white);
+  border-radius: 999px 999px 999px 12px;
+  content: "";
+  height: 1.34rem;
+  left: 0.55rem;
+  position: absolute;
+  top: 0.42rem;
+  transform: rotate(45deg);
+  width: 1.34rem;
+}
+
+.logo-drop::after {
+  border: 2px solid color-mix(in srgb, var(--aqua-brand-teal) 78%, white);
+  border-left: 0;
+  border-top: 0;
+  border-radius: 0 0 999px;
+  content: "";
+  height: 1.2rem;
+  position: absolute;
+  right: 0.37rem;
+  top: 0.38rem;
+  width: 1.2rem;
+}
+
+.logo-wave {
+  background:
+    linear-gradient(90deg, transparent 0 12%, var(--aqua-brand-teal) 12% 28%, transparent 28% 38%, var(--aqua-brand-mint) 38% 54%, transparent 54% 64%, var(--aqua-brand-teal) 64% 82%, transparent 82%);
+  border-radius: 999px;
+  bottom: 0.86rem;
+  height: 0.18rem;
+  left: 0.55rem;
+  position: absolute;
+  width: 1.45rem;
+}
+
+.logo-bars {
+  border-bottom: 0.26rem solid var(--aqua-brand-teal);
+  border-left: 0.18rem solid var(--aqua-brand-mint);
+  border-right: 0.18rem solid var(--aqua-river);
+  bottom: 0.42rem;
+  height: 0.65rem;
+  left: 0.82rem;
+  position: absolute;
+  width: 0.78rem;
 }
 
 .sidebar-status {
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--aqua-river) 12%, var(--aqua-panel-soft)), var(--aqua-panel-soft));
-  border: 1px solid color-mix(in srgb, var(--aqua-river) 26%, var(--aqua-border));
+    linear-gradient(135deg, rgb(40 224 239 / 14%), rgb(255 255 255 / 6%));
+  border: 1px solid rgb(102 212 255 / 20%);
   border-radius: 8px;
   margin-bottom: 1rem;
   padding: 0.7rem;
 }
 
 .sidebar-status span {
-  color: var(--aqua-text-muted);
+  color: rgb(244 254 255 / 58%);
   display: block;
   font-size: 0.72rem;
   font-weight: 800;
@@ -147,6 +230,7 @@ body::after {
 }
 
 .sidebar-status strong {
+  color: #f4feff;
   display: block;
   font-size: 0.92rem;
   margin-top: 0.15rem;
@@ -154,7 +238,7 @@ body::after {
 
 .nav-link {
   align-items: center;
-  color: var(--aqua-text-muted);
+  color: rgb(244 254 255 / 68%);
   display: flex;
   gap: 0.65rem;
   border-radius: 8px;
@@ -171,9 +255,9 @@ body::after {
 
 .nav-link.active,
 .nav-link:hover {
-  color: var(--aqua-text);
-  background: var(--aqua-panel);
-  box-shadow: 0 10px 26px rgb(0 0 0 / 7%);
+  color: #ffffff;
+  background: rgb(255 255 255 / 9%);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 18%);
 }
 
 .nav-link:hover {
@@ -181,7 +265,7 @@ body::after {
 }
 
 .nav-link.active::after {
-  background: linear-gradient(180deg, var(--aqua-accent), var(--aqua-blue));
+  background: linear-gradient(180deg, var(--aqua-brand-teal), var(--aqua-brand-mint));
   border-radius: 999px;
   content: "";
   inset: 0.55rem auto 0.55rem 0;
@@ -190,8 +274,8 @@ body::after {
 }
 
 .nav-glyph {
-  background: color-mix(in srgb, var(--aqua-accent) 14%, var(--aqua-panel-soft));
-  border: 1px solid color-mix(in srgb, var(--aqua-accent) 24%, var(--aqua-border));
+  background: rgb(40 224 239 / 12%);
+  border: 1px solid rgb(102 212 255 / 22%);
   border-radius: 6px;
   height: 1.28rem;
   position: relative;
@@ -199,17 +283,92 @@ body::after {
 }
 
 .nav-glyph::after {
-  background: currentcolor;
-  border-radius: 999px;
+  background: var(--aqua-brand-teal);
+  border-radius: 2px;
   content: "";
-  height: 0.38rem;
-  inset: 0.36rem;
-  opacity: 0.65;
+  height: 0.52rem;
+  inset: auto 0.34rem 0.28rem;
+  opacity: 0.9;
   position: absolute;
 }
 
+.nav-glyph-dashboard::before,
+.nav-glyph-reports::before {
+  border-bottom: 2px solid var(--aqua-brand-mint);
+  border-left: 2px solid var(--aqua-brand-mint);
+  content: "";
+  height: 0.56rem;
+  left: 0.3rem;
+  position: absolute;
+  top: 0.28rem;
+  transform: skewX(-15deg);
+  width: 0.68rem;
+}
+
+.nav-glyph-tanks::before {
+  border: 2px solid var(--aqua-brand-mint);
+  border-top: 0;
+  border-radius: 0 0 999px 999px;
+  content: "";
+  height: 0.54rem;
+  left: 0.27rem;
+  position: absolute;
+  top: 0.36rem;
+  width: 0.72rem;
+}
+
+.nav-glyph-events::before {
+  background: var(--aqua-brand-mint);
+  border-radius: 999px;
+  box-shadow:
+    0.36rem 0.18rem 0 var(--aqua-brand-teal),
+    0 0.46rem 0 var(--aqua-river);
+  content: "";
+  height: 0.22rem;
+  left: 0.32rem;
+  position: absolute;
+  top: 0.25rem;
+  width: 0.22rem;
+}
+
+.nav-glyph-livestock::before {
+  border: 2px solid var(--aqua-brand-mint);
+  border-left: 0;
+  border-radius: 999px;
+  content: "";
+  height: 0.48rem;
+  left: 0.28rem;
+  position: absolute;
+  top: 0.3rem;
+  width: 0.78rem;
+}
+
+.nav-glyph-plants::before {
+  border: 2px solid var(--aqua-brand-mint);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 999px;
+  content: "";
+  height: 0.62rem;
+  left: 0.42rem;
+  position: absolute;
+  top: 0.22rem;
+  transform: rotate(-30deg);
+  width: 0.48rem;
+}
+
+.nav-glyph-settings::before {
+  border: 2px solid var(--aqua-brand-mint);
+  border-radius: 999px;
+  content: "";
+  height: 0.64rem;
+  left: 0.31rem;
+  position: absolute;
+  top: 0.31rem;
+  width: 0.64rem;
+}
+
 .main-panel {
-  padding: 1.25rem clamp(1rem, 2vw, 2rem) 2rem;
+  padding: 1.15rem clamp(1rem, 2vw, 2rem) 2rem;
 }
 
 .topbar {
@@ -218,7 +377,8 @@ body::after {
   gap: 1rem;
   align-items: center;
   backdrop-filter: blur(22px);
-  background: var(--aqua-glass);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--aqua-panel) 88%, transparent), var(--aqua-glass));
   border: 1px solid var(--aqua-border);
   border-radius: 8px;
   box-shadow: var(--aqua-shadow);
@@ -227,6 +387,15 @@ body::after {
   position: sticky;
   top: 1rem;
   z-index: 10;
+}
+
+.topbar::before {
+  background: linear-gradient(180deg, var(--aqua-brand-teal), var(--aqua-brand-mint));
+  border-radius: 999px;
+  content: "";
+  inset: 0.78rem auto 0.78rem 0;
+  position: absolute;
+  width: 4px;
 }
 
 .topbar-actions {
@@ -403,8 +572,9 @@ body::after {
 .ops-hero {
   align-items: stretch;
   background:
-    linear-gradient(135deg, #081a21 0%, #0a2f39 34%, #10344a 64%, #1e4a36 100%);
-  border: 1px solid color-mix(in srgb, var(--aqua-accent) 24%, var(--aqua-border));
+    linear-gradient(100deg, rgb(5 20 34 / 88%) 0 42%, rgb(5 54 76 / 72%) 66%, rgb(6 84 88 / 78%) 100%),
+    linear-gradient(160deg, #081d2d 0%, #083752 48%, #075967 100%);
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 34%, var(--aqua-border));
   border-radius: 8px;
   box-shadow: var(--aqua-shadow-strong);
   color: #f8fbff;
@@ -419,9 +589,9 @@ body::after {
 
 .ops-hero::before {
   background:
-    radial-gradient(circle at 14% 22%, color-mix(in srgb, var(--aqua-river) 30%, transparent), transparent 20%),
-    linear-gradient(115deg, color-mix(in srgb, var(--aqua-lime) 16%, transparent), transparent 42%),
-    linear-gradient(180deg, transparent, color-mix(in srgb, var(--aqua-accent) 18%, transparent));
+    linear-gradient(110deg, transparent 0 52%, rgb(255 255 255 / 7%) 52% 53%, transparent 53%),
+    linear-gradient(156deg, transparent 0 60%, rgb(38 198 164 / 16%) 60% 62%, transparent 62%),
+    repeating-linear-gradient(170deg, transparent 0 30px, rgb(102 212 255 / 8%) 31px 32px, transparent 33px 80px);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -430,7 +600,7 @@ body::after {
 
 .ops-hero::after {
   background:
-    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--aqua-river) 16%, transparent) 18%, transparent 38%, color-mix(in srgb, var(--aqua-lime) 10%, transparent) 64%, transparent 100%);
+    linear-gradient(90deg, transparent 0%, rgb(40 224 239 / 22%) 18%, transparent 36%, rgb(38 198 164 / 16%) 66%, transparent 100%);
   content: "";
   inset: auto 0 0;
   height: 38%;
@@ -446,7 +616,7 @@ body::after {
 }
 
 .hero-kicker {
-  color: var(--aqua-lime);
+  color: color-mix(in srgb, var(--aqua-brand-teal) 82%, white);
   display: block;
   font-size: 0.76rem;
   font-weight: 900;
@@ -456,9 +626,9 @@ body::after {
 }
 
 .ops-hero h2 {
-  font-size: clamp(2.1rem, 1.35rem + 3vw, 4.2rem);
+  font-size: clamp(2rem, 1.35rem + 2.6vw, 3.8rem);
   font-weight: 900;
-  line-height: 0.95;
+  line-height: 0.98;
   margin: 0;
 }
 
@@ -484,8 +654,8 @@ body::after {
 
 .ops-hero-panel div {
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 5%));
-  border: 1px solid rgb(255 255 255 / 16%);
+    linear-gradient(135deg, rgb(255 255 255 / 13%), rgb(255 255 255 / 6%));
+  border: 1px solid rgb(102 212 255 / 20%);
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
@@ -499,7 +669,7 @@ body::after {
 }
 
 .ops-hero-panel strong {
-  color: var(--aqua-lime);
+  color: color-mix(in srgb, var(--aqua-brand-teal) 72%, white);
   font-size: 1.35rem;
   line-height: 1;
 }
@@ -552,7 +722,7 @@ body::after {
 .panel,
 .auth-panel {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--aqua-panel-raised) 92%, transparent), var(--aqua-panel));
+    linear-gradient(180deg, color-mix(in srgb, var(--aqua-panel-raised) 94%, transparent), var(--aqua-panel));
   border: 1px solid var(--aqua-border);
   border-radius: 8px;
   box-shadow: var(--aqua-shadow);
@@ -586,7 +756,7 @@ body::after {
 }
 
 .metric-card::before {
-  background: linear-gradient(90deg, var(--aqua-accent), var(--aqua-lime));
+  background: linear-gradient(90deg, var(--aqua-brand-teal), var(--aqua-brand-mint));
   content: "";
   height: 3px;
   inset: 0 0 auto;
@@ -594,7 +764,7 @@ body::after {
 }
 
 .metric-card:nth-child(2)::before {
-  background: linear-gradient(90deg, var(--aqua-blue), var(--aqua-accent));
+  background: linear-gradient(90deg, var(--aqua-blue), var(--aqua-brand-teal));
 }
 
 .metric-card:nth-child(3)::before {
@@ -602,7 +772,7 @@ body::after {
 }
 
 .metric-card:nth-child(4)::before {
-  background: linear-gradient(90deg, var(--aqua-danger), var(--aqua-blue));
+  background: linear-gradient(90deg, var(--aqua-coral), var(--aqua-blue));
 }
 
 .metric-label {
@@ -623,7 +793,7 @@ body::after {
 
 .metric-action {
   bottom: 1rem;
-  color: var(--aqua-blue);
+  color: var(--aqua-accent-strong);
   font-size: 0.78rem;
   font-weight: 800;
   position: absolute;
@@ -652,12 +822,14 @@ body::after {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
+  min-height: 1.75rem;
 }
 
 .panel-heading h2,
 .auth-panel h2 {
+  color: var(--aqua-text);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 780;
   margin: 0;
 }
 
@@ -673,7 +845,8 @@ body::after {
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
-  background: var(--aqua-panel-soft);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--aqua-panel-soft) 92%, transparent), var(--aqua-panel-soft));
   border: 1px solid var(--aqua-border);
   border-radius: 8px;
   padding: 0.78rem;
@@ -712,10 +885,10 @@ body::after {
 
 .event-pill {
   min-width: 96px;
-  background: color-mix(in srgb, var(--aqua-river) 12%, var(--aqua-panel));
-  border: 1px solid color-mix(in srgb, var(--aqua-river) 26%, var(--aqua-border));
+  background: color-mix(in srgb, var(--aqua-brand-teal) 12%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 30%, var(--aqua-border));
   border-radius: 999px;
-  color: var(--aqua-blue);
+  color: var(--aqua-accent-strong);
   font-size: 0.78rem;
   padding: 0.25rem 0.55rem;
   text-align: center;
@@ -811,7 +984,8 @@ body::after {
 }
 
 .parameter-cell {
-  background: var(--aqua-panel-soft);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--aqua-panel-soft) 94%, transparent), var(--aqua-panel-soft));
   border: 1px solid var(--aqua-border);
   border-radius: 8px;
   min-height: 74px;
@@ -852,7 +1026,7 @@ body::after {
 }
 
 .status-ok {
-  border-color: color-mix(in srgb, var(--aqua-accent) 55%, var(--aqua-border));
+  border-color: color-mix(in srgb, var(--aqua-brand-mint) 55%, var(--aqua-border));
 }
 
 .status-low,
@@ -890,7 +1064,7 @@ body::after {
 }
 
 .tank-tile:hover {
-  border-color: color-mix(in srgb, var(--aqua-accent) 58%, var(--aqua-border));
+  border-color: color-mix(in srgb, var(--aqua-brand-teal) 58%, var(--aqua-border));
   box-shadow: var(--aqua-shadow-strong);
   transform: translateY(-2px);
 }
@@ -982,7 +1156,7 @@ body::after {
 }
 
 .insight-card::before {
-  background: linear-gradient(90deg, var(--aqua-accent), var(--aqua-blue));
+  background: linear-gradient(90deg, var(--aqua-brand-teal), var(--aqua-blue));
   content: "";
   height: 3px;
   inset: 0 0 auto;
@@ -1464,23 +1638,59 @@ body::after {
 
 .auth-panel {
   max-width: 420px;
-  padding: 1.25rem;
+  padding: 1.35rem;
   width: 100%;
 }
 
+.auth-brand {
+  align-items: center;
+  border-bottom: 1px solid var(--aqua-border);
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+.auth-brand strong {
+  color: var(--aqua-text);
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.auth-brand strong span {
+  color: var(--aqua-accent-strong);
+}
+
+.auth-brand small {
+  color: var(--aqua-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.18rem;
+}
+
 .btn-primary {
-  --bs-btn-bg: var(--aqua-accent-strong);
-  --bs-btn-border-color: var(--aqua-accent-strong);
-  --bs-btn-hover-bg: var(--aqua-accent);
-  --bs-btn-hover-border-color: var(--aqua-accent);
+  --bs-btn-bg: var(--aqua-brand-teal);
+  --bs-btn-border-color: var(--aqua-brand-teal);
+  --bs-btn-color: #05202d;
+  --bs-btn-hover-bg: var(--aqua-brand-mint);
+  --bs-btn-hover-border-color: var(--aqua-brand-mint);
+  --bs-btn-hover-color: #05202d;
+  --bs-btn-active-bg: var(--aqua-accent-strong);
+  --bs-btn-active-border-color: var(--aqua-accent-strong);
+  --bs-btn-active-color: #05202d;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--aqua-brand-teal) 24%, transparent);
+  font-weight: 760;
 }
 
 .btn-outline-light {
   --bs-btn-color: var(--aqua-text);
   --bs-btn-border-color: var(--aqua-border);
-  --bs-btn-hover-bg: var(--aqua-panel-soft);
-  --bs-btn-hover-border-color: var(--aqua-border);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--aqua-brand-teal) 10%, var(--aqua-panel-soft));
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--aqua-brand-teal) 36%, var(--aqua-border));
   --bs-btn-hover-color: var(--aqua-text);
+  font-weight: 720;
 }
 
 .form-control,
@@ -1488,7 +1698,14 @@ body::after {
 .input-group-text {
   background-color: var(--aqua-input-bg);
   border-color: var(--aqua-border);
+  border-radius: 8px;
   color: var(--aqua-text);
+}
+
+.form-label {
+  color: var(--aqua-text);
+  font-size: 0.84rem;
+  font-weight: 720;
 }
 
 .form-control:focus,
@@ -1509,6 +1726,15 @@ body::after {
     border-right: 0;
     height: auto;
     position: static;
+  }
+
+  .sidebar .nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .nav-link {
+    min-height: 2.5rem;
   }
 
   .stats-grid,
@@ -1588,6 +1814,18 @@ body::after {
 
   .sidebar-status {
     display: none;
+  }
+
+  .brand {
+    margin-bottom: 0.85rem;
+  }
+
+  .brand small {
+    max-width: none;
+  }
+
+  .sidebar .nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .topbar {

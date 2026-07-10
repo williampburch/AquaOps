@@ -25,11 +25,14 @@
     {% set prefs = preferences if preferences is defined else none %}
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
+        <a class="brand" href="/" aria-label="AquaOps dashboard">
+          <span class="brand-mark logo-drop" aria-hidden="true">
+            <span class="logo-wave"></span>
+            <span class="logo-bars"></span>
+          </span>
           <span>
-            AquaOps
-            <small>aquarium tracker</small>
+            <span class="brand-word">Aqua<span>Ops</span></span>
+            <small>Aquarium Tracking &amp; Operations</small>
           </span>
         </a>
         <div class="sidebar-status">
@@ -38,37 +41,37 @@
         </div>
         <nav class="nav flex-column gap-1">
           <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">
-            <span class="nav-glyph" aria-hidden="true"></span>
+            <span class="nav-glyph nav-glyph-dashboard" aria-hidden="true"></span>
             Dashboard
           </a>
           <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">
-            <span class="nav-glyph" aria-hidden="true"></span>
+            <span class="nav-glyph nav-glyph-tanks" aria-hidden="true"></span>
             Tanks
           </a>
           <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">
-            <span class="nav-glyph" aria-hidden="true"></span>
+            <span class="nav-glyph nav-glyph-events" aria-hidden="true"></span>
             Events
           </a>
           {% if prefs is none or prefs.enable_livestock %}
             <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">
-              <span class="nav-glyph" aria-hidden="true"></span>
+              <span class="nav-glyph nav-glyph-livestock" aria-hidden="true"></span>
               Livestock
             </a>
           {% endif %}
           {% if prefs is none or prefs.enable_plants %}
             <a class="nav-link {{ 'active' if active_nav == 'plants' else '' }}" href="/plants">
-              <span class="nav-glyph" aria-hidden="true"></span>
+              <span class="nav-glyph nav-glyph-plants" aria-hidden="true"></span>
               Plants
             </a>
           {% endif %}
           {% if prefs is none or prefs.enable_reports %}
             <a class="nav-link {{ 'active' if active_nav == 'reports' else '' }}" href="/reports">
-              <span class="nav-glyph" aria-hidden="true"></span>
+              <span class="nav-glyph nav-glyph-reports" aria-hidden="true"></span>
               Reports
             </a>
           {% endif %}
           <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">
-            <span class="nav-glyph" aria-hidden="true"></span>
+            <span class="nav-glyph nav-glyph-settings" aria-hidden="true"></span>
             Settings
           </a>
         </nav>

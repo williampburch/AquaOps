@@ -96,6 +96,98 @@
     </div>
   </section>
 
+  {% if display.module_enabled("livestock") or display.module_enabled("plants") %}
+    <section class="content-grid mt-4">
+      {% if display.module_enabled("livestock") %}
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Add Livestock</h2>
+          </div>
+          <form class="stack-form" method="post" action="/tanks/{{ tank.id }}/livestock">
+            <div>
+              <label class="form-label" for="livestock_catalog">Catalog</label>
+              <select class="form-select" id="livestock_catalog" name="catalog_entry_id">
+                <option value="">Custom livestock</option>
+                {% for entry in livestock_catalog %}
+                  <option value="{{ entry.id }}">
+                    {{ entry.common_name }}{% if entry.scientific_name %} - {{ entry.scientific_name }}{% endif %}{% if entry.detail %} ({{ entry.detail }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="livestock_common_name">Common name</label>
+                <input class="form-control" id="livestock_common_name" name="common_name" type="text" />
+              </div>
+              <div>
+                <label class="form-label" for="livestock_species">Scientific name</label>
+                <input class="form-control" id="livestock_species" name="species" type="text" />
+              </div>
+              <div>
+                <label class="form-label" for="livestock_quantity">Quantity</label>
+                <input class="form-control" id="livestock_quantity" name="quantity" type="number" min="1" value="1" />
+              </div>
+              <div>
+                <label class="form-label" for="acquired_on">Acquired</label>
+                <input class="form-control" id="acquired_on" name="acquired_on" type="date" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="livestock_notes">Notes</label>
+              <textarea class="form-control" id="livestock_notes" name="notes" rows="2"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Add livestock</button>
+          </form>
+        </div>
+      {% endif %}
+
+      {% if display.module_enabled("plants") %}
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Add Plant</h2>
+          </div>
+          <form class="stack-form" method="post" action="/tanks/{{ tank.id }}/plants">
+            <div>
+              <label class="form-label" for="plant_catalog">Catalog</label>
+              <select class="form-select" id="plant_catalog" name="catalog_entry_id">
+                <option value="">Custom plant</option>
+                {% for entry in plant_catalog %}
+                  <option value="{{ entry.id }}">
+                    {{ entry.common_name }}{% if entry.scientific_name %} - {{ entry.scientific_name }}{% endif %}{% if entry.detail %} ({{ entry.detail }}){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="plant_common_name">Common name</label>
+                <input class="form-control" id="plant_common_name" name="common_name" type="text" />
+              </div>
+              <div>
+                <label class="form-label" for="plant_species">Scientific name</label>
+                <input class="form-control" id="plant_species" name="species" type="text" />
+              </div>
+              <div>
+                <label class="form-label" for="plant_quantity">Quantity</label>
+                <input class="form-control" id="plant_quantity" name="quantity" type="number" min="1" value="1" />
+              </div>
+              <div>
+                <label class="form-label" for="planted_on">Planted</label>
+                <input class="form-control" id="planted_on" name="planted_on" type="date" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="plant_notes">Notes</label>
+              <textarea class="form-control" id="plant_notes" name="notes" rows="2"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Add plant</button>
+          </form>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
   <section class="panel mt-4">
     <div class="panel-heading">
       <h2>Water Trends</h2>

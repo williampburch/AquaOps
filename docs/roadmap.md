@@ -8,6 +8,7 @@
 - Local bcrypt authentication and server-side sessions
 - Dashboard shell with responsive light, dark, and system themes
 - Enterprise-style shell and settings surface with compact/comfortable density
+- AquaOps branding system with wordmark treatment, ocean/teal palette, and branded command dashboard
 - Docker, Docker Compose, and CI
 - Demo seed command for portfolio review
 
@@ -20,20 +21,30 @@
 - Dashboard cards linking to detailed views
 - Activity stream page
 - Reports page with event mix and nitrate trend charts
-- Read-only livestock inventory grouped by species and quantity
-- Read-only plant inventory grouped by species and quantity
+- Built-in species catalog seeded with common fish, invertebrates, and plants
+- Catalog-backed livestock and plant add forms with custom-entry fallback
+- Livestock inventory grouped by species and quantity
+- Plant inventory grouped by species and quantity
 - Notifications page for open reminders
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
 ## Next: Core Data Entry
 
-- Livestock create/edit/archive screens
-- Plant create/edit/remove screens
+- Livestock edit/archive screens
+- Plant edit/remove screens
 - Generic event entry flow
 - Maintenance log UI
 - Feeding log UI
 - Notes UI
+
+## Next: Species Catalog Intelligence
+
+- Searchable catalog management screens
+- Species aliases for alternate common names
+- External taxonomy or care-source enrichment
+- Compatibility hints for temperature, pH, tank size, and social group needs
+- CSV import/export for custom catalog rows
 
 ## Next: Fertilizer and Reminders
 

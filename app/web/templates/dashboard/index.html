@@ -2,35 +2,36 @@
 
 {% block content %}
   {% set visible_measurements = display.visible_water_items(snapshot.latest_measurements) %}
-  <section class="workspace-strip ops-console">
-    <div>
-      <strong>Operations Dashboard</strong>
-      <span>{{ current_user.username if current_user else "Demo workspace" }} · {{ preferences.unit_system|upper }} units · {{ preferences.dashboard_density|title }}</span>
+  <section class="ops-hero">
+    <div class="ops-hero-copy">
+      <span class="hero-kicker">AquaOps command center</span>
+      <h2>Track. Optimize. Thrive.</h2>
+      <p>{{ current_user.username if current_user else "Demo workspace" }} workspace · {{ preferences.unit_system|upper }} units · {{ preferences.dashboard_density|title }} density</p>
+      <div class="hero-actions">
+        {% if current_user %}
+          <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
+          {% if display.module_enabled("notifications") %}
+            <a class="btn btn-outline-light btn-sm" href="/notifications">Care queue</a>
+          {% endif %}
+        {% else %}
+          <a class="btn btn-primary btn-sm" href="/register">Create account</a>
+          <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
+        {% endif %}
+      </div>
     </div>
-    <div class="console-metrics" aria-label="Aquarium status summary">
-      <span>
+    <div class="ops-hero-panel" aria-label="Aquarium status summary">
+      <div>
         <span>Open reminders</span>
         <strong>{{ snapshot.upcoming_reminders|length }}</strong>
-      </span>
-      <span>
+      </div>
+      <div>
         <span>Latest readings</span>
         <strong>{{ snapshot.latest_measurements|length }}</strong>
-      </span>
-      <span>
+      </div>
+      <div>
         <span>Recent events</span>
         <strong>{{ snapshot.recent_events|length }}</strong>
-      </span>
-    </div>
-    <div class="command-actions">
-      {% if current_user %}
-        <a class="btn btn-primary btn-sm" href="/tanks/new">New tank</a>
-        {% if display.module_enabled("notifications") %}
-          <a class="btn btn-outline-light btn-sm" href="/notifications">Care queue</a>
-        {% endif %}
-      {% else %}
-        <a class="btn btn-primary btn-sm" href="/register">Create account</a>
-        <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
-      {% endif %}
+      </div>
     </div>
   </section>
 

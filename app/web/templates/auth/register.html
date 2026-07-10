@@ -3,6 +3,16 @@
 {% block content %}
   <section class="auth-layout">
     <form class="auth-panel" method="post" action="/register">
+      <div class="auth-brand">
+        <span class="brand-mark logo-drop" aria-hidden="true">
+          <span class="logo-wave"></span>
+          <span class="logo-bars"></span>
+        </span>
+        <div>
+          <strong>Aqua<span>Ops</span></strong>
+          <small>Aquarium Tracking &amp; Operations</small>
+        </div>
+      </div>
       <h2>Create account</h2>
       {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
@@ -31,4 +41,3 @@
     </form>
   </section>
 {% endblock %}
-

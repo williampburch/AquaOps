@@ -64,11 +64,13 @@ After creating an account, the current app supports:
 
 - Dashboard cards for tanks, events, livestock, and plants
 - Tank creation and tank detail pages
+- Branded AquaOps shell with responsive sidebar navigation, command dashboard, light/dark/system themes, and compact/comfortable density
 - Per-tank water parameter targets
 - Water test logging from a tank detail page
 - Latest readings and per-parameter trend charts
 - `/events` activity stream
 - `/reports` event mix and nitrate trend charts
+- Catalog-backed livestock and plant add forms on tank detail pages
 - `/livestock` inventory summary grouped by species
 - `/plants` inventory summary grouped by species
 - `/notifications` open reminder queue
@@ -81,6 +83,10 @@ liters. New tank target presets honor the user's preferred temperature unit.
 Feature modules can be simplified per workspace. Plant Care supports `Auto`, `On`, and
 `Off`; in auto mode, fertilizer and root-tab reminders stay hidden until the app detects
 active plants, a planted tank, or fertilizer history.
+
+The local species catalog is seeded by Alembic with common freshwater fish,
+invertebrates, and plants. Tank detail forms use that catalog for dropdowns while still
+allowing custom common and scientific names when an entry is not listed.
 
 Some domain tables already exist before full UI workflows do. Maintenance, fertilizer,
 feeding, media, and reminder detail models are present, while complete user-facing CRUD

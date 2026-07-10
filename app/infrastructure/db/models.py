@@ -136,11 +136,68 @@ class TankParameterTargetModel(TimestampMixin, Base):
     tank: Mapped[TankModel] = relationship(back_populates="parameter_targets")
 
 
+class SpeciesCatalogModel(TimestampMixin, Base):
+    __tablename__ = "species_catalog"
+    __table_args__ = (
+        UniqueConstraint("category", "scientific_name", name="uq_species_catalog_category_species"),
+        Index("ix_species_catalog_category_common", "category", "common_name"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    category: Mapped[str] = mapped_column(String(32), index=True)
+    common_name: Mapped[str] = mapped_column(String(120), index=True)
+    scientific_name: Mapped[str | None] = mapped_column(String(160), index=True)
+    family: Mapped[str | None] = mapped_column(String(120))
+    care_level: Mapped[str | None] = mapped_column(String(40))
+    temperament: Mapped[str | None] = mapped_column(String(80))
+    min_tank_liters: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
+    temperature_min_f: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    temperature_max_f: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    ph_min: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
+    ph_max: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
+    social_group_min: Mapped[int | None] = mapped_column(Integer)
+    light_requirement: Mapped[str | None] = mapped_column(String(40))
+    co2_recommended: Mapped[bool] = mapped_column(Boolean, default=False)
+    fertilizer_relevant: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(80), default="builtin")
+    is_builtin: Mapped[bool] = mapped_column(Boolean, default=True)
+    external_refs: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+    aliases: Mapped[list[SpeciesAliasModel]] = relationship(
+        back_populates="catalog_entry",
+        cascade="all, delete-orphan",
+    )
+    livestock: Mapped[list[LivestockModel]] = relationship(back_populates="catalog_entry")
+    plants: Mapped[list[PlantModel]] = relationship(back_populates="catalog_entry")
+
+
+class SpeciesAliasModel(Base):
+    __tablename__ = "species_aliases"
+    __table_args__ = (
+        UniqueConstraint("catalog_entry_id", "alias", name="uq_species_alias_entry_alias"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    catalog_entry_id: Mapped[int] = mapped_column(
+        ForeignKey("species_catalog.id", ondelete="CASCADE"),
+        index=True,
+    )
+    alias: Mapped[str] = mapped_column(String(160), index=True)
+    alias_type: Mapped[str] = mapped_column(String(40), default="common")
+
+    catalog_entry: Mapped[SpeciesCatalogModel] = relationship(back_populates="aliases")
+
+
 class LivestockModel(TimestampMixin, Base):
     __tablename__ = "livestock"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
+    species_catalog_id: Mapped[int | None] = mapped_column(
+        ForeignKey("species_catalog.id", ondelete="SET NULL"),
+        index=True,
+    )
     common_name: Mapped[str] = mapped_column(String(120))
     species: Mapped[str | None] = mapped_column(String(160))
     quantity: Mapped[int] = mapped_column(Integer, default=1)
@@ -150,6 +207,7 @@ class LivestockModel(TimestampMixin, Base):
     retired_on: Mapped[date | None] = mapped_column(Date)
 
     tank: Mapped[TankModel] = relationship(back_populates="livestock")
+    catalog_entry: Mapped[SpeciesCatalogModel | None] = relationship(back_populates="livestock")
 
 
 class PlantModel(TimestampMixin, Base):
@@ -157,6 +215,10 @@ class PlantModel(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
+    species_catalog_id: Mapped[int | None] = mapped_column(
+        ForeignKey("species_catalog.id", ondelete="SET NULL"),
+        index=True,
+    )
     common_name: Mapped[str] = mapped_column(String(120))
     species: Mapped[str | None] = mapped_column(String(160))
     quantity: Mapped[int | None] = mapped_column(Integer)
@@ -165,6 +227,7 @@ class PlantModel(TimestampMixin, Base):
     removed_on: Mapped[date | None] = mapped_column(Date)
 
     tank: Mapped[TankModel] = relationship(back_populates="plants")
+    catalog_entry: Mapped[SpeciesCatalogModel | None] = relationship(back_populates="plants")
 
 
 class EventModel(TimestampMixin, Base):

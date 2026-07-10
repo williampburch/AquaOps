@@ -216,6 +216,45 @@ def test_inventory_pages_render_empty_state(client: TestClient) -> None:
     assert "No plants yet" in plants_response.text
 
 
+def test_tank_detail_adds_custom_livestock_and_plants(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    detail = client.get("/tanks/1")
+    assert "Add Livestock" in detail.text
+    assert "Add Plant" in detail.text
+
+    livestock_response = client.post(
+        "/tanks/1/livestock",
+        data={
+            "common_name": "Ember Tetra",
+            "species": "Hyphessobrycon amandae",
+            "quantity": "9",
+        },
+        follow_redirects=False,
+    )
+    plant_response = client.post(
+        "/tanks/1/plants",
+        data={
+            "common_name": "Java Fern",
+            "species": "Microsorum pteropus",
+            "quantity": "2",
+        },
+        follow_redirects=False,
+    )
+
+    assert livestock_response.status_code == 303
+    assert plant_response.status_code == 303
+
+    livestock = client.get("/livestock")
+    plants = client.get("/plants")
+    assert "Ember Tetra" in livestock.text
+    assert "Hyphessobrycon amandae" in livestock.text
+    assert "9" in livestock.text
+    assert "Java Fern" in plants.text
+    assert "Microsorum pteropus" in plants.text
+
+
 def test_notifications_and_settings_pages_render(client: TestClient) -> None:
     _register(client)
 

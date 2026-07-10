@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
@@ -9,12 +10,15 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.application.inventory.service import InventoryService
+from app.application.ports.inventory import LivestockCreate, PlantCreate
 from app.application.ports.tanks import TankCreate
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
 from app.domain.preferences import volume_to_liters
 from app.domain.water import WATER_METRICS
+from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
 from app.web.presentation import UserDisplay
@@ -119,6 +123,7 @@ def tank_detail(
     current_user: AuthenticatedUser,
 ):
     service = TankService(SqlAlchemyTankRepository(db))
+    inventory_service = InventoryService(SqlAlchemyInventoryRepository(db))
     preferences = preferences_for_user(db, current_user)
     display = UserDisplay(preferences)
     tank = service.get_tank_detail(current_user.id, tank_id)
@@ -137,6 +142,8 @@ def tank_detail(
             "tank": tank,
             "water_metrics": display.visible_water_items(WATER_METRICS),
             "chart_payload": _chart_payload(display.visible_water_items(tank.chart_series)),
+            "livestock_catalog": inventory_service.list_livestock_catalog(),
+            "plant_catalog": inventory_service.list_plant_catalog(),
             "error": None,
         },
     )
@@ -170,6 +177,57 @@ async def log_water_test(
 
     if event_id is None:
         return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/livestock")
+async def add_livestock(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    with suppress(ValueError):
+        service.add_livestock(
+            current_user.id,
+            LivestockCreate(
+                tank_id=tank_id,
+                catalog_entry_id=_optional_int(_form_text(form, "catalog_entry_id")),
+                common_name=_form_text(form, "common_name"),
+                species=_form_text(form, "species"),
+                quantity=_optional_int(_form_text(form, "quantity")) or 1,
+                sex=_form_text(form, "sex"),
+                notes=_form_text(form, "notes"),
+                acquired_on=_optional_date(_form_text(form, "acquired_on")),
+            ),
+        )
+    return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/{tank_id}/plants")
+async def add_plant(
+    tank_id: int,
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    with suppress(ValueError):
+        service.add_plant(
+            current_user.id,
+            PlantCreate(
+                tank_id=tank_id,
+                catalog_entry_id=_optional_int(_form_text(form, "catalog_entry_id")),
+                common_name=_form_text(form, "common_name"),
+                species=_form_text(form, "species"),
+                quantity=_optional_int(_form_text(form, "quantity")),
+                notes=_form_text(form, "notes"),
+                planted_on=_optional_date(_form_text(form, "planted_on")),
+            ),
+        )
     return RedirectResponse(f"/tanks/{tank_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -225,6 +283,12 @@ def _optional_date(value: str | None) -> date | None:
     if value is None:
         return None
     return date.fromisoformat(value)
+
+
+def _optional_int(value: str | None) -> int | None:
+    if value is None:
+        return None
+    return int(value)
 
 
 def _optional_datetime(value: str | None) -> datetime | None:

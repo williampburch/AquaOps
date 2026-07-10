@@ -15,6 +15,10 @@ erDiagram
   TANKS ||--o{ EVENTS : records
   TANKS ||--o{ REMINDERS : schedules
 
+  SPECIES_CATALOG ||--o{ SPECIES_ALIASES : names
+  SPECIES_CATALOG ||--o{ LIVESTOCK : classifies
+  SPECIES_CATALOG ||--o{ PLANTS : classifies
+
   EVENTS ||--o{ EVENT_MEASUREMENTS : has
   EVENTS ||--o| MAINTENANCE_EVENT_DETAILS : describes
   EVENTS ||--o| FERTILIZER_EVENT_DETAILS : describes
@@ -32,8 +36,10 @@ erDiagram
 - `user_preferences`: per-user unit display, date format, dashboard density, notification window, feature modules, and Plant Care mode
 - `sessions`: hashed server-side session tokens
 - `tanks`: aquariums owned by a user
-- `livestock`: fish, shrimp, snails, and other aquatic animals
-- `plants`: aquatic plants per tank
+- `species_catalog`: built-in and future custom species metadata for fish, invertebrates, and plants
+- `species_aliases`: alternate common names or lookup aliases for catalog entries
+- `livestock`: fish, shrimp, snails, and other aquatic animals, optionally linked to catalog entries
+- `plants`: aquatic plants per tank, optionally linked to catalog entries
 - `tank_parameter_targets`: acceptable per-tank ranges for water parameters
 - `events`: generic chronological record
 - `event_measurements`: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS

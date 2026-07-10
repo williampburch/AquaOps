@@ -54,6 +54,18 @@ Each tank can carry its own acceptable ranges for ammonia, nitrite, nitrate, pH,
 temperature, KH, GH, and TDS. The dashboard and tank detail pages can then classify
 readings against the tank's actual goals.
 
+## Species Catalog
+
+The `species_catalog` table is the local starter database for livestock and plants. It
+stores common and scientific names, care level, minimum tank size, temperature and pH
+ranges, social group guidance, plant lighting needs, and source metadata. Livestock and
+plant rows can link back to catalog entries while preserving editable text fields, so a
+user can pick from dropdowns or enter something custom without blocking the workflow.
+
+`species_aliases` provides a future lookup surface for alternate common names and imported
+taxonomy identifiers. External references are stored as structured metadata so the app can
+later enrich the catalog without changing the inventory tables.
+
 ## Preferences and Feature Filtering
 
 Per-user workspace preferences live in `user_preferences`. The domain keeps canonical

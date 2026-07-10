@@ -7,8 +7,11 @@ from app.application.ports.inventory import (
     InventoryGroup,
     InventorySnapshot,
     InventorySummary,
+    LivestockCreate,
+    PlantCreate,
+    SpeciesCatalogEntry,
 )
-from app.infrastructure.db.models import LivestockModel, PlantModel, TankModel
+from app.infrastructure.db.models import LivestockModel, PlantModel, SpeciesCatalogModel, TankModel
 
 
 class SqlAlchemyInventoryRepository:
@@ -32,6 +35,71 @@ class SqlAlchemyInventoryRepository:
             quantity_expression=quantity_expression,
             inactive_column=PlantModel.removed_on,
         )
+
+    def list_catalog(self, categories: tuple[str, ...]) -> list[SpeciesCatalogEntry]:
+        statement = (
+            select(SpeciesCatalogModel)
+            .where(SpeciesCatalogModel.category.in_(categories))
+            .order_by(SpeciesCatalogModel.category.asc(), SpeciesCatalogModel.common_name.asc())
+        )
+        return [
+            SpeciesCatalogEntry(
+                id=entry.id,
+                category=entry.category,
+                common_name=entry.common_name,
+                scientific_name=entry.scientific_name,
+                care_level=entry.care_level,
+                detail=_catalog_detail(entry),
+            )
+            for entry in self.session.scalars(statement)
+        ]
+
+    def add_livestock(self, user_id: int, data: LivestockCreate) -> int | None:
+        if not self._owns_tank(user_id, data.tank_id):
+            return None
+        catalog_entry = self._catalog_entry(data.catalog_entry_id, ("fish", "invertebrate"))
+        common_name = (data.common_name or "").strip() or (
+            catalog_entry.common_name if catalog_entry else ""
+        )
+        if not common_name:
+            raise ValueError("Common name is required")
+        model = LivestockModel(
+            tank_id=data.tank_id,
+            species_catalog_id=catalog_entry.id if catalog_entry else None,
+            common_name=common_name,
+            species=(data.species or "").strip()
+            or (catalog_entry.scientific_name if catalog_entry else None),
+            quantity=data.quantity,
+            sex=data.sex,
+            notes=data.notes,
+            acquired_on=data.acquired_on,
+        )
+        self.session.add(model)
+        self.session.commit()
+        return model.id
+
+    def add_plant(self, user_id: int, data: PlantCreate) -> int | None:
+        if not self._owns_tank(user_id, data.tank_id):
+            return None
+        catalog_entry = self._catalog_entry(data.catalog_entry_id, ("plant",))
+        common_name = (data.common_name or "").strip() or (
+            catalog_entry.common_name if catalog_entry else ""
+        )
+        if not common_name:
+            raise ValueError("Common name is required")
+        model = PlantModel(
+            tank_id=data.tank_id,
+            species_catalog_id=catalog_entry.id if catalog_entry else None,
+            common_name=common_name,
+            species=(data.species or "").strip()
+            or (catalog_entry.scientific_name if catalog_entry else None),
+            quantity=data.quantity,
+            notes=data.notes,
+            planted_on=data.planted_on,
+        )
+        self.session.add(model)
+        self.session.commit()
+        return model.id
 
     def _build_snapshot(
         self,
@@ -108,3 +176,42 @@ class SqlAlchemyInventoryRepository:
         if not tank_names:
             return []
         return sorted(tank_names.split(","))
+
+    def _owns_tank(self, user_id: int, tank_id: int) -> bool:
+        return (
+            self.session.scalar(
+                select(func.count())
+                .select_from(TankModel)
+                .where(
+                    TankModel.id == tank_id,
+                    TankModel.user_id == user_id,
+                    TankModel.archived_at.is_(None),
+                )
+            )
+            or 0
+        ) > 0
+
+    def _catalog_entry(
+        self,
+        catalog_entry_id: int | None,
+        categories: tuple[str, ...],
+    ) -> SpeciesCatalogModel | None:
+        if catalog_entry_id is None:
+            return None
+        return self.session.execute(
+            select(SpeciesCatalogModel).where(
+                SpeciesCatalogModel.id == catalog_entry_id,
+                SpeciesCatalogModel.category.in_(categories),
+            )
+        ).scalar_one_or_none()
+
+
+def _catalog_detail(entry: SpeciesCatalogModel) -> str | None:
+    details = []
+    if entry.care_level:
+        details.append(entry.care_level.title())
+    if entry.category in {"fish", "invertebrate"} and entry.social_group_min:
+        details.append(f"Group {entry.social_group_min}+")
+    if entry.category == "plant" and entry.light_requirement:
+        details.append(f"{entry.light_requirement.title()} light")
+    return " - ".join(details) if details else None

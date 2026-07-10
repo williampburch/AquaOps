@@ -11,18 +11,18 @@ a clean, maintainable Python web application.
 This repository contains a publishable, working foundation:
 
 - Layered FastAPI application structure with web, application, domain, and infrastructure boundaries
-- SQLAlchemy ORM models for users, preferences, sessions, tanks, livestock, plants, generic events, event details, media, and reminders
-- Alembic migration environment with schema revisions for initial tables, tank targets, and user preferences
+- SQLAlchemy ORM models for users, preferences, sessions, tanks, livestock, plants, species catalog data, generic events, event details, media, and reminders
+- Alembic migration environment with schema revisions for initial tables, tank targets, user preferences, and the built-in species catalog
 - Local bcrypt authentication with hashed server-side session tokens
 - Tank creation, tank detail, and tank-specific water parameter targets
 - Water test logging through the generic event model
 - Dashboard metric cards, recent events, reminders, latest readings, and trend charts
 - Activity stream page powered by the generic event table
 - Reports page with event mix and nitrate trend charts
-- Read-only livestock and plant inventory pages grouped by species with quantity totals
+- Catalog-backed livestock and plant entry from tank detail pages, plus inventory summaries grouped by species with quantity totals
 - Notifications page for open reminders with configurable due-soon windows and plant-care filtering
 - Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior
-- Responsive enterprise-style UI with persisted light, dark, and system theme choices
+- Branded enterprise-style UI with AquaOps wordmark, ocean/teal palette, responsive command surfaces, and persisted light, dark, and system theme choices
 - Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - Example Nginx reverse proxy config for hosting behind a domain
@@ -117,7 +117,8 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Water targets: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
 - Water tests: logged as generic `water_test` events with metric rows
 - Activity stream: recent event timeline across all tanks
-- Inventory summaries: livestock and plants grouped by species with quantity totals
+- Species catalog: built-in starter database for common fish, invertebrates, and plants, with custom-entry fallback
+- Inventory: add livestock and plants from tank detail pages, then view grouped summaries with quantity totals
 - Reports: event mix and nitrate trend charts
 - Notifications: open reminder queue with overdue, due today, and upcoming buckets
 - Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
@@ -126,7 +127,8 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 
 ## Roadmap
 
-The next implementation phases are CRUD screens for livestock and plants, broader event
-entry forms, maintenance and feeding logs, fertilizer/root-tab workflows inside the
-configurable Plant Care module, notification completion/snoozing, photo timelines, CSRF
-protection, and production hardening.
+The next implementation phases are edit/archive workflows for livestock and plants,
+broader event entry forms, maintenance and feeding logs, fertilizer/root-tab workflows
+inside the configurable Plant Care module, species compatibility and catalog enrichment,
+notification completion/snoozing, photo timelines, CSRF protection, and production
+hardening.
