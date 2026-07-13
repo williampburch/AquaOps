@@ -10,13 +10,14 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.application.ports.tanks import FeedingLog, MaintenanceLog, NoteLog
+from app.application.ports.tanks import DoseLog, FeedingLog, MaintenanceLog, NoteLog
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
 from app.domain.enums import MaintenanceType
 from app.domain.preferences import volume_from_liters, volume_to_liters
 from app.domain.water import WATER_METRICS
+from app.infrastructure.repositories.feature_flags import plant_care_is_active
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
 from app.web.presentation import UserDisplay
@@ -25,7 +26,14 @@ router = APIRouter(prefix="/quick-log", tags=["quick-log"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
-QUICK_LOG_ACTIONS = {"water_change", "water_test", "maintenance", "feeding", "observation"}
+QUICK_LOG_ACTIONS = {
+    "water_change",
+    "water_test",
+    "maintenance",
+    "feeding",
+    "observation",
+    "dose",
+}
 OBSERVATION_PRESETS = (
     "Behavior change",
     "Health concern",
@@ -368,6 +376,95 @@ async def log_observation(
     return _saved_redirect("observation", tank_id)
 
 
+@router.post("/dose")
+async def log_dose(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        amount = _optional_decimal(values.get("dose_amount"))
+        if amount is None:
+            raise ValueError("Dose amount is required")
+        event_id = service.log_dose(
+            current_user.id,
+            tank_id,
+            DoseLog(
+                occurred_at=_optional_datetime(values.get("occurred_at")) or utc_now(),
+                product_name=values.get("product_name", ""),
+                dose_amount=amount,
+                dose_unit=values.get("dose_unit", ""),
+                location=values.get("location") or None,
+                notes=values.get("notes") or None,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="dose",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("dose", tank_id)
+
+
+@router.post("/dose/repeat")
+async def repeat_dose(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        context = service.get_quick_log_context(current_user.id, tank_id)
+        if context is None or context.last_dose is None:
+            raise ValueError("Log a fertilizer dose first before using repeat last dose.")
+        previous = context.last_dose
+        event_id = service.log_dose(
+            current_user.id,
+            tank_id,
+            DoseLog(
+                occurred_at=utc_now(),
+                product_name=previous.product_name,
+                dose_amount=previous.dose_amount,
+                dose_unit=previous.dose_unit,
+                location=previous.location,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="dose",
+            tank_id=tank_id,
+            error=str(exc),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("dose", tank_id)
+
+
 def _render_quick_log(
     request: Request,
     db: Session,
@@ -441,6 +538,11 @@ def _render_quick_log(
                 quick_context.recent_observation_titles if quick_context else []
             ),
             "observation_presets": OBSERVATION_PRESETS,
+            "last_dose": quick_context.last_dose if quick_context else None,
+            "recent_dose_products": (quick_context.recent_dose_products if quick_context else []),
+            "recent_dose_locations": (quick_context.recent_dose_locations if quick_context else []),
+            "dose_enabled": preferences.enable_plants
+            and plant_care_is_active(db, current_user.id, preferences.plant_care_mode),
             "maintenance_types": [
                 (item.value, item.value.replace("_", " ").title())
                 for item in MaintenanceType

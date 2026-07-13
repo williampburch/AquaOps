@@ -1394,7 +1394,7 @@ body::after {
 .quick-log-actions {
   display: grid;
   gap: 0.65rem;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
 }
 
 .quick-log-action {
@@ -1457,6 +1457,11 @@ body::after {
 .observation-icon {
   background: linear-gradient(145deg, var(--aqua-blue), var(--aqua-brand-mint));
   border-radius: 50% 50% 48% 52% / 54% 46% 54% 46%;
+}
+
+.dose-icon {
+  background: linear-gradient(145deg, #ad7cff, var(--aqua-blue));
+  border-radius: 50% 45% 55% 50% / 64% 64% 36% 36%;
 }
 
 .observation-presets {
@@ -2858,7 +2863,7 @@ body::after {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .quick-log-action.observation-action {
+  .quick-log-actions:not(.has-dose) .quick-log-action.observation-action {
     grid-column: 1 / -1;
     min-height: 72px;
   }

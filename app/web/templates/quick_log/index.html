@@ -27,7 +27,7 @@
     {% endif %}
 
     {% if tanks %}
-      <nav class="quick-log-actions" aria-label="Quick log action">
+      <nav class="quick-log-actions {{ 'has-dose' if dose_enabled or action == 'dose' else '' }}" aria-label="Quick log action">
         <a class="quick-log-action {{ 'active' if action == 'water_change' else '' }}" href="/quick-log?action=water_change&amp;tank_id={{ selected_tank_id }}">
           <span class="quick-log-action-icon water-change-icon" aria-hidden="true"></span>
           <strong>Water Change</strong>
@@ -53,6 +53,13 @@
           <strong>Observation</strong>
           <small>Behavior and health</small>
         </a>
+        {% if dose_enabled or action == "dose" %}
+          <a class="quick-log-action {{ 'active' if action == 'dose' else '' }}" href="/quick-log?action=dose&amp;tank_id={{ selected_tank_id }}">
+            <span class="quick-log-action-icon dose-icon" aria-hidden="true"></span>
+            <strong>Dose</strong>
+            <small>Plant care</small>
+          </a>
+        {% endif %}
       </nav>
 
       <section class="panel quick-log-form-panel">
@@ -340,7 +347,7 @@
               <button class="btn btn-outline-secondary" type="submit">Record skipped feeding</button>
             </form>
           </details>
-        {% else %}
+        {% elif action == "observation" %}
           <div class="quick-log-heading">
             <div>
               <span>Tank journal</span>
@@ -387,6 +394,82 @@
               </div>
             </details>
             <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save observation</button>
+          </form>
+        {% else %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Plant care</span>
+              <h3>Fertilizer Dose</h3>
+            </div>
+            <small>Log liquid fertilizer or supplements.</small>
+          </div>
+          {% if last_dose %}
+            <form class="repeat-feeding-card" method="post" action="/quick-log/dose/repeat">
+              <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+              <div>
+                <span>Last dose</span>
+                <strong>{{ last_dose.product_name }}</strong>
+                <small>{{ last_dose.dose_amount }} {{ last_dose.dose_unit }}{% if last_dose.location %} · {{ last_dose.location }}{% endif %}</small>
+              </div>
+              <button class="btn btn-primary" type="submit">Repeat now</button>
+            </form>
+          {% endif %}
+          <form class="stack-form" method="post" action="/quick-log/dose">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <div>
+              <label class="form-label" for="dose_product_name">Product</label>
+              <input class="form-control form-control-lg" id="dose_product_name" name="product_name" type="text" list="recent_dose_products" required placeholder="Easy Green, Flourish, iron" value="{{ form_values.get('product_name', '') }}" />
+              {% if recent_dose_products %}
+                <datalist id="recent_dose_products">
+                  {% for product_name in recent_dose_products %}<option value="{{ product_name }}"></option>{% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Recent products</span>
+                  {% for product_name in recent_dose_products %}
+                    <button class="recent-value-button" type="button" data-dose-product="{{ product_name }}">{{ product_name }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="dose_amount">Amount</label>
+                <input class="form-control form-control-lg" id="dose_amount" name="dose_amount" type="number" inputmode="decimal" min="0.001" step="0.001" required value="{{ form_values.get('dose_amount', '') }}" />
+              </div>
+              <div>
+                <label class="form-label" for="dose_unit">Unit</label>
+                <input class="form-control form-control-lg" id="dose_unit" name="dose_unit" type="text" required placeholder="mL, pump, capful" value="{{ form_values.get('dose_unit', '') }}" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="dose_location">Location <span class="optional-label">Optional</span></label>
+              <input class="form-control form-control-lg" id="dose_location" name="location" type="text" list="recent_dose_locations" placeholder="Water column, left side, plant group" value="{{ form_values.get('location', '') }}" />
+              {% if recent_dose_locations %}
+                <datalist id="recent_dose_locations">
+                  {% for location in recent_dose_locations %}<option value="{{ location }}"></option>{% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Recent locations</span>
+                  {% for location in recent_dose_locations %}
+                    <button class="recent-value-button" type="button" data-dose-location="{{ location }}">{{ location }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <details class="quick-log-details">
+              <summary>Add date or notes</summary>
+              <div class="quick-log-details-body">
+                <div>
+                  <label class="form-label" for="dose_occurred_at">Date and time</label>
+                  <input class="form-control" id="dose_occurred_at" name="occurred_at" type="datetime-local" value="{{ form_values.get('occurred_at', '') }}" />
+                </div>
+                <div>
+                  <label class="form-label" for="dose_notes">Notes</label>
+                  <textarea class="form-control" id="dose_notes" name="notes" rows="3">{{ form_values.get('notes', '') }}</textarea>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save dose</button>
           </form>
         {% endif %}
       </section>
@@ -457,6 +540,16 @@
         if (button.classList.contains("observation-preset")) {
           button.classList.add("active");
         }
+      });
+    });
+    document.querySelectorAll("[data-dose-product]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("dose_product_name").value = button.dataset.doseProduct;
+      });
+    });
+    document.querySelectorAll("[data-dose-location]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("dose_location").value = button.dataset.doseLocation;
       });
     });
   </script>

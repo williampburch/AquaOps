@@ -89,6 +89,9 @@ changes, observations, and photos on one timeline.
   repeat-last feeding, and skipped feeding history with an optional reason
 - Observation Quick Log with behavior, health, algae, plant growth, water
   clarity, and spawning presets, recently used titles, and optional detail
+- Fertilizer Dose Quick Log with automatically reusable user-owned products,
+  recent locations, structured amount and unit history, and one-tap repeat-last
+  dosing
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -120,13 +123,10 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 ## Next: Daily Usefulness
 
 - Extend the Quick Log flow beyond Water Change, Water Test, Feeding,
-  Observation, and Maintenance to Dose, Photo, Livestock Change, and Plant
-  Change
+  Observation, Dose, and Maintenance to Photo, Livestock Change, and Plant Change
 - Dropdown-first inputs with free-text fallback for repeated values such as
-  foods, units, livestock targets, maintenance equipment, fertilizer products,
-  and common notes
-- Expand recently used values to feeding units, fertilizer products, and common
-  notes
+  foods, units, livestock targets, maintenance equipment, and common notes
+- Expand recently used values to feeding units and common notes
 - Ability to promote repeated custom entries into reusable user-owned options
 - Extend water change details with reusable conditioner choices plus TDS and
   nitrate before/after readings
@@ -201,7 +201,6 @@ Suggested care profiles:
 ## Next: Planted Tank Workflows
 
 - Fertilizer product management
-- Flourish-style liquid fertilizer dosing
 - Root tab placement and location tracking
 - Root tab next-due calculation
 - CO2 notes and schedule tracking

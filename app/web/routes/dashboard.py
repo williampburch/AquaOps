@@ -10,6 +10,7 @@ from app.application.dashboard.service import DashboardService
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.infrastructure.repositories.dashboard import SqlAlchemyDashboardRepository
+from app.infrastructure.repositories.feature_flags import plant_care_is_active
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import CurrentUser, get_db, preferences_for_user
 from app.web.presentation import UserDisplay
@@ -38,6 +39,11 @@ def dashboard(
         if current_user
         else []
     )
+    dose_enabled = bool(
+        current_user
+        and preferences.enable_plants
+        and plant_care_is_active(db, current_user.id, preferences.plant_care_mode)
+    )
     return templates.TemplateResponse(
         request,
         "dashboard/index.html",
@@ -49,5 +55,6 @@ def dashboard(
             "display": UserDisplay(preferences),
             "snapshot": snapshot,
             "tanks": tanks,
+            "dose_enabled": dose_enabled,
         },
     )

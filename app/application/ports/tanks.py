@@ -49,6 +49,16 @@ class NoteLog:
 
 
 @dataclass(frozen=True)
+class DoseLog:
+    occurred_at: datetime
+    product_name: str
+    dose_amount: Decimal
+    dose_unit: str
+    location: str | None = None
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
 class MaintenanceConfig:
     config_type: str
     label: str
@@ -75,6 +85,14 @@ class RecentFeeding:
 
 
 @dataclass(frozen=True)
+class RecentDose:
+    product_name: str
+    dose_amount: Decimal
+    dose_unit: str
+    location: str | None
+
+
+@dataclass(frozen=True)
 class QuickLogContext:
     last_water_change_liters: Decimal | None
     recent_equipment_names: list[str]
@@ -82,6 +100,9 @@ class QuickLogContext:
     recent_food_names: list[str]
     recent_feeding_targets: list[str]
     recent_observation_titles: list[str]
+    last_dose: RecentDose | None
+    recent_dose_products: list[str]
+    recent_dose_locations: list[str]
 
 
 @dataclass(frozen=True)
@@ -190,6 +211,9 @@ class TankRepository(Protocol):
 
     def log_note(self, user_id: int, tank_id: int, data: NoteLog) -> int | None:
         """Log a note or observation as a generic event."""
+
+    def log_dose(self, user_id: int, tank_id: int, data: DoseLog) -> int | None:
+        """Log a fertilizer dose with a reusable user-owned product."""
 
     def update_maintenance_configs(
         self,

@@ -403,6 +403,68 @@ def test_quick_log_observation_requires_a_title_or_details(client: TestClient) -
     assert "A note title or body is required" in response.text
 
 
+def test_quick_log_dose_reuses_product_location_and_last_amount(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    saved = client.post(
+        "/quick-log/dose",
+        data={
+            "tank_id": "1",
+            "product_name": "Easy Green",
+            "dose_amount": "2.5",
+            "dose_unit": "mL",
+            "location": "Water column",
+            "notes": "After water change",
+        },
+        follow_redirects=False,
+    )
+    assert saved.status_code == 303
+
+    dose = client.get("/quick-log?action=dose&tank_id=1")
+    assert 'data-dose-product="Easy Green"' in dose.text
+    assert 'data-dose-location="Water column"' in dose.text
+    assert "2.500 mL" in dose.text
+    assert "Repeat now" in dose.text
+
+    second_tank = client.post(
+        "/tanks",
+        data={"name": "Shrimp Tank", "tank_type": "planted", "volume_liters": "20"},
+        follow_redirects=False,
+    )
+    assert second_tank.status_code == 303
+    other_tank_dose = client.get("/quick-log?action=dose&tank_id=2")
+    assert 'data-dose-product="Easy Green"' in other_tank_dose.text
+
+    repeated = client.post(
+        "/quick-log/dose/repeat",
+        data={"tank_id": "1"},
+        follow_redirects=False,
+    )
+    assert repeated.status_code == 303
+    events = client.get("/events")
+    assert events.text.count("Dosed Easy Green") == 2
+
+
+def test_quick_log_dose_validates_required_amount_and_unit(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    missing_amount = client.post(
+        "/quick-log/dose",
+        data={"tank_id": "1", "product_name": "Flourish", "dose_unit": "mL"},
+    )
+    assert missing_amount.status_code == 400
+    assert "Dose amount is required" in missing_amount.text
+
+    missing_unit = client.post(
+        "/quick-log/dose",
+        data={"tank_id": "1", "product_name": "Flourish", "dose_amount": "1"},
+    )
+    assert missing_unit.status_code == 400
+    assert "Dose unit is required" in missing_unit.text
+
+
 def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestClient) -> None:
     dashboard = client.get("/")
     response = client.get("/static/css/app.css")

@@ -4,6 +4,8 @@ from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from decimal import Decimal
+from hashlib import sha256
+from itertools import chain
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -11,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.application.ports.tanks import (
     ChartPoint,
     ChartSeries,
+    DoseLog,
     FeedingLog,
     MaintenanceConfig,
     MaintenanceConfigUpdate,
@@ -19,6 +22,7 @@ from app.application.ports.tanks import (
     ParameterReading,
     ParameterTarget,
     QuickLogContext,
+    RecentDose,
     RecentFeeding,
     TankCreate,
     TankDetail,
@@ -41,6 +45,8 @@ from app.infrastructure.db.models import (
     EventMeasurementModel,
     EventModel,
     FeedingEventDetailModel,
+    FertilizerEventDetailModel,
+    FertilizerProductModel,
     MaintenanceEventDetailModel,
     ReminderModel,
     TankMaintenanceConfigModel,
@@ -298,6 +304,38 @@ class SqlAlchemyTankRepository:
             .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
             .limit(20)
         )
+        dose_rows = list(
+            self.session.execute(
+                select(FertilizerEventDetailModel, FertilizerProductModel)
+                .join(EventModel, EventModel.id == FertilizerEventDetailModel.event_id)
+                .join(
+                    FertilizerProductModel,
+                    FertilizerProductModel.id == FertilizerEventDetailModel.product_id,
+                )
+                .where(
+                    EventModel.user_id == user_id,
+                    EventModel.tank_id == tank_id,
+                )
+                .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+                .limit(20)
+            )
+        )
+        last_dose = (
+            RecentDose(
+                product_name=dose_rows[0][1].name,
+                dose_amount=dose_rows[0][0].dose_amount,
+                dose_unit=dose_rows[0][0].dose_unit,
+                location=dose_rows[0][0].location,
+            )
+            if dose_rows
+            else None
+        )
+        available_dose_products = self.session.scalars(
+            select(FertilizerProductModel.name)
+            .where(FertilizerProductModel.user_id == user_id)
+            .order_by(FertilizerProductModel.updated_at.desc())
+            .limit(20)
+        )
         return QuickLogContext(
             last_water_change_liters=last_water_change_liters,
             recent_equipment_names=recent_equipment,
@@ -305,6 +343,14 @@ class SqlAlchemyTankRepository:
             recent_food_names=_recent_distinct(item.food_name for item in feedings),
             recent_feeding_targets=_recent_distinct(item.target_livestock for item in feedings),
             recent_observation_titles=_recent_distinct(observation_titles),
+            last_dose=last_dose,
+            recent_dose_products=_recent_distinct(
+                chain(
+                    (product.name for _, product in dose_rows),
+                    available_dose_products,
+                )
+            ),
+            recent_dose_locations=_recent_distinct(detail.location for detail, _ in dose_rows),
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
@@ -397,6 +443,67 @@ class SqlAlchemyTankRepository:
             metadata_json={},
         )
         self.session.add(event)
+        self.session.commit()
+        return event.id
+
+    def log_dose(self, user_id: int, tank_id: int, data: DoseLog) -> int | None:
+        tank = self._get_owned_tank(user_id, tank_id)
+        if tank is None:
+            return None
+
+        product_name = data.product_name.strip()
+        product = self.session.execute(
+            select(FertilizerProductModel).where(
+                FertilizerProductModel.user_id == user_id,
+                func.lower(FertilizerProductModel.name) == product_name.lower(),
+            )
+        ).scalar_one_or_none()
+        if product is None:
+            product = FertilizerProductModel(
+                user_id=user_id,
+                product_key=_custom_product_key(product_name),
+                name=product_name,
+                default_interval_days=None,
+                default_dose_amount=data.dose_amount,
+                default_dose_unit=data.dose_unit.strip(),
+                is_builtin=False,
+            )
+            self.session.add(product)
+            self.session.flush()
+        else:
+            product.default_dose_amount = data.dose_amount
+            product.default_dose_unit = data.dose_unit.strip()
+
+        event = EventModel(
+            user_id=user_id,
+            tank_id=tank_id,
+            event_type=EventType.FERTILIZER.value,
+            title=f"Dosed {product.name}",
+            notes=data.notes or "",
+            occurred_at=data.occurred_at,
+            metadata_json={},
+        )
+        self.session.add(event)
+        self.session.flush()
+        self.session.add(
+            FertilizerEventDetailModel(
+                event_id=event.id,
+                product_id=product.id,
+                dose_amount=data.dose_amount,
+                dose_unit=data.dose_unit.strip(),
+                location=(data.location or "").strip() or None,
+                next_due_at=None,
+                interval_days_override=None,
+            )
+        )
+        self._refresh_scheduled_reminder(
+            user_id=user_id,
+            tank_id=tank_id,
+            source_event_id=event.id,
+            config_type="fertilizer",
+            title="Fertilizer",
+            occurred_at=data.occurred_at,
+        )
         self.session.commit()
         return event.id
 
@@ -778,6 +885,11 @@ def _recent_distinct(values: Iterable[str | None], limit: int = 5) -> list[str]:
         if len(recent) == limit:
             break
     return recent
+
+
+def _custom_product_key(product_name: str) -> str:
+    digest = sha256(product_name.casefold().encode()).hexdigest()[:16]
+    return f"custom_{digest}"
 
 
 def _format_decimal(value: Decimal) -> str:

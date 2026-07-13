@@ -55,6 +55,9 @@
               <a href="/quick-log?action=water_test&amp;tank_id={{ tank.id }}">Test</a>
               <a href="/quick-log?action=feeding&amp;tank_id={{ tank.id }}">Feed</a>
               <a href="/quick-log?action=observation&amp;tank_id={{ tank.id }}">Observe</a>
+              {% if dose_enabled %}
+                <a href="/quick-log?action=dose&amp;tank_id={{ tank.id }}">Dose</a>
+              {% endif %}
               <a href="/quick-log?action=maintenance&amp;tank_id={{ tank.id }}">Maintain</a>
             </span>
           </article>

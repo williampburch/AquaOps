@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.application.ports.tanks import (
+    DoseLog,
     FeedingLog,
     MaintenanceConfigUpdate,
     MaintenanceLog,
@@ -99,6 +100,15 @@ class TankService:
         if not data.title.strip() and not (data.notes or "").strip():
             raise ValueError("A note title or body is required")
         return self.repository.log_note(user_id, tank_id, data)
+
+    def log_dose(self, user_id: int, tank_id: int, data: DoseLog) -> int | None:
+        if not data.product_name.strip():
+            raise ValueError("Fertilizer product is required")
+        if data.dose_amount <= 0:
+            raise ValueError("Dose amount must be greater than zero")
+        if not data.dose_unit.strip():
+            raise ValueError("Dose unit is required")
+        return self.repository.log_dose(user_id, tank_id, data)
 
     def update_maintenance_configs(
         self,
