@@ -269,6 +269,13 @@ Suggested care profiles:
 
 ## Production Hardening
 
+- GitHub Actions production delivery that builds and publishes immutable images
+  to GHCR, uses protected production environment secrets and optional approval,
+  and leaves the VM responsible only for pulling, backing up, migrating,
+  starting, and health-checking the tested image
+- Hardened pull-only deployment with a single-deploy lock, bounded timeouts,
+  automatic failure diagnostics, retained prior-image rollback, and no image
+  builds on the production VM
 - CSRF protection for all mutating forms
 - Rate limiting on auth routes
 - Backup and restore scripts
