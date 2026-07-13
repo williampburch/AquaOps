@@ -144,6 +144,11 @@ server {
 }
 ```
 
+AquaOps versions the application stylesheet URL from the built file timestamp.
+This allows long-lived browser and Nginx caching while ensuring a new container
+build immediately points browsers to the current CSS instead of a stale mobile
+layout.
+
 Enable the site and reload Nginx:
 
 ```bash

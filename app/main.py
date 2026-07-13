@@ -39,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
     app = FastAPI(title=app_settings.app_name, version="0.1.0", lifespan=lifespan)
     app.state.settings = app_settings
+    app.state.static_version = str((app_settings.static_dir / "css" / "app.css").stat().st_mtime_ns)
 
     app.mount(
         "/static",

@@ -2520,13 +2520,11 @@ body::after {
   }
 
   .hero-brand-mark {
-    min-height: 7rem;
+    display: none;
   }
 
-  .hero-brand-mark .brand-mark {
-    height: clamp(5rem, 12vw, 8rem);
-    max-width: 100%;
-    width: clamp(5rem, 12vw, 8rem);
+  .ops-hero-panel {
+    grid-template-rows: repeat(3, auto);
   }
 
   .parameter-grid {
@@ -2565,19 +2563,19 @@ body::after {
 
   .mobile-brand .brand-mark {
     border-radius: 10px;
-    height: 2.15rem;
+    height: 1.75rem;
     max-height: 100%;
     max-width: 100%;
-    width: 2.15rem;
+    width: 1.75rem;
   }
 
   .mobile-brand {
     align-items: center;
     display: flex;
-    height: 2.4rem;
+    height: 2rem;
     justify-content: center;
     overflow: hidden;
-    width: 2.4rem;
+    width: 2rem;
   }
 
   .mobile-title {

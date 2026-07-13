@@ -304,14 +304,17 @@ def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
 
 
 def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestClient) -> None:
+    dashboard = client.get("/")
     response = client.get("/static/css/app.css")
 
+    assert dashboard.status_code == 200
+    assert "/static/css/app.css?v=" in dashboard.text
     assert response.status_code == 200
     assert ".hero-brand-mark" in response.text
     assert "max-width: 100%" in response.text
     assert "overflow: hidden" in response.text
     assert ".mobile-brand" in response.text
-    assert "height: 2.15rem" in response.text
+    assert "height: 1.75rem" in response.text
 
 
 def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:
