@@ -273,7 +273,7 @@ class SqlAlchemyTankRepository:
             if len(recent_equipment) == 5:
                 break
         feeding_rows = self.session.execute(
-            select(FeedingEventDetailModel)
+            select(FeedingEventDetailModel, EventModel)
             .join(EventModel, EventModel.id == FeedingEventDetailModel.event_id)
             .where(
                 EventModel.user_id == user_id,
@@ -282,14 +282,16 @@ class SqlAlchemyTankRepository:
             )
             .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
             .limit(20)
-        ).scalars()
+        )
         feedings = list(feeding_rows)
+        last_food_names = tuple(_event_food_names(*feedings[0])) if feedings else ()
         last_feeding = (
             RecentFeeding(
-                food_name=feedings[0].food_name,
-                amount=feedings[0].amount,
-                unit=feedings[0].unit,
-                target_livestock=feedings[0].target_livestock,
+                food_name=" + ".join(last_food_names),
+                food_names=last_food_names,
+                amount=feedings[0][0].amount,
+                unit=feedings[0][0].unit,
+                target_livestock=feedings[0][0].target_livestock,
             )
             if feedings
             else None
@@ -340,8 +342,14 @@ class SqlAlchemyTankRepository:
             last_water_change_liters=last_water_change_liters,
             recent_equipment_names=recent_equipment,
             last_feeding=last_feeding,
-            recent_food_names=_recent_distinct(item.food_name for item in feedings),
-            recent_feeding_targets=_recent_distinct(item.target_livestock for item in feedings),
+            recent_food_names=_recent_distinct(
+                food_name
+                for detail, event in feedings
+                for food_name in _event_food_names(detail, event)
+            ),
+            recent_feeding_targets=_recent_distinct(
+                detail.target_livestock for detail, _ in feedings
+            ),
             recent_observation_titles=_recent_distinct(observation_titles),
             last_dose=last_dose,
             recent_dose_products=_recent_distinct(
@@ -358,23 +366,28 @@ class SqlAlchemyTankRepository:
         if tank is None:
             return None
 
-        food_name = data.food_name.strip() if not data.skipped else "Skipped"
+        food_names = _normalized_food_names(data)
+        food_name = " + ".join(food_names) if not data.skipped else "Skipped"
         skip_reason = (data.skip_reason or "").strip()
         event = EventModel(
             user_id=user_id,
             tank_id=tank_id,
             event_type=EventType.FEEDING.value,
-            title="Skipped feeding" if data.skipped else f"Fed {food_name}",
+            title=("Skipped feeding" if data.skipped else _truncate_text(f"Fed {food_name}", 180)),
             notes=(data.notes or skip_reason) if data.skipped else (data.notes or ""),
             occurred_at=data.occurred_at,
-            metadata_json={"skipped": data.skipped, "skip_reason": skip_reason or None},
+            metadata_json={
+                "skipped": data.skipped,
+                "skip_reason": skip_reason or None,
+                "food_names": food_names,
+            },
         )
         self.session.add(event)
         self.session.flush()
         self.session.add(
             FeedingEventDetailModel(
                 event_id=event.id,
-                food_name=food_name,
+                food_name=_truncate_text(food_name, 160),
                 amount=data.amount,
                 unit=data.unit,
                 target_livestock=data.target_livestock,
@@ -885,6 +898,39 @@ def _recent_distinct(values: Iterable[str | None], limit: int = 5) -> list[str]:
         if len(recent) == limit:
             break
     return recent
+
+
+def _normalized_food_names(data: FeedingLog) -> list[str]:
+    values = data.food_names if data.food_names else (data.food_name,)
+    return _unique_names(values)
+
+
+def _event_food_names(
+    detail: FeedingEventDetailModel,
+    event: EventModel,
+) -> list[str]:
+    metadata_foods = (event.metadata_json or {}).get("food_names", [])
+    if isinstance(metadata_foods, list):
+        normalized = _unique_names(metadata_foods)
+        if normalized:
+            return normalized
+    return _unique_names((detail.food_name,))
+
+
+def _unique_names(values: Iterable[object]) -> list[str]:
+    names = []
+    normalized_names = set()
+    for value in values:
+        name = str(value).strip()
+        normalized = name.casefold()
+        if name and normalized not in normalized_names:
+            names.append(name)
+            normalized_names.add(normalized)
+    return names
+
+
+def _truncate_text(value: str, limit: int) -> str:
+    return value if len(value) <= limit else f"{value[: limit - 1]}…"
 
 
 def _custom_product_key(product_name: str) -> str:

@@ -29,6 +29,7 @@ class FeedingLog:
     notes: str | None = None
     skipped: bool = False
     skip_reason: str | None = None
+    food_names: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,6 +80,7 @@ class MaintenanceConfigUpdate:
 @dataclass(frozen=True)
 class RecentFeeding:
     food_name: str
+    food_names: tuple[str, ...]
     amount: Decimal | None
     unit: str | None
     target_livestock: str | None

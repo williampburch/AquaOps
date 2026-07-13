@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
@@ -225,16 +226,21 @@ async def log_feeding(
 
     try:
         tank_id = _required_tank_id(values)
+        food_names = _parse_food_names(
+            values.get("food_names"),
+            values.get("food_name"),
+        )
         event_id = service.log_feeding(
             current_user.id,
             tank_id,
             FeedingLog(
                 occurred_at=_optional_datetime(values.get("occurred_at")) or utc_now(),
-                food_name=values.get("food_name", ""),
+                food_name=food_names[0] if len(food_names) == 1 else "",
                 amount=_optional_decimal(values.get("amount")),
                 unit=values.get("unit") or None,
                 target_livestock=values.get("target_livestock") or None,
                 notes=values.get("notes") or None,
+                food_names=food_names,
             ),
         )
         if event_id is None:
@@ -277,6 +283,7 @@ async def repeat_feeding(
             FeedingLog(
                 occurred_at=utc_now(),
                 food_name=previous.food_name,
+                food_names=previous.food_names,
                 amount=previous.amount,
                 unit=previous.unit,
                 target_livestock=previous.target_livestock,
@@ -614,3 +621,31 @@ def _water_change_notes(values: dict[str, str]) -> str | None:
     if details:
         return ", ".join(details)
     return notes or None
+
+
+def _parse_food_names(
+    serialized_foods: str | None,
+    typed_food: str | None,
+) -> tuple[str, ...]:
+    foods: list[object] = []
+    if serialized_foods:
+        try:
+            decoded = json.loads(serialized_foods)
+        except json.JSONDecodeError:
+            decoded = []
+        if isinstance(decoded, list):
+            foods.extend(decoded)
+    if typed_food:
+        foods.append(typed_food)
+
+    unique = []
+    normalized = set()
+    for food in foods:
+        if not isinstance(food, str):
+            continue
+        name = food.strip()
+        key = name.casefold()
+        if name and key not in normalized:
+            unique.append(name)
+            normalized.add(key)
+    return tuple(unique)

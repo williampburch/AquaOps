@@ -80,8 +80,13 @@ class TankService:
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
-        if not data.skipped and not data.food_name.strip():
+        has_food = bool(data.food_name.strip()) or any(
+            food_name.strip() for food_name in data.food_names
+        )
+        if not data.skipped and not has_food:
             raise ValueError("Food name is required")
+        if any(len(food_name.strip()) > 160 for food_name in (*data.food_names, data.food_name)):
+            raise ValueError("Food names must be 160 characters or fewer")
         if data.amount is not None and data.amount < 0:
             raise ValueError("Feeding amount cannot be negative")
         return self.repository.log_feeding(user_id, tank_id, data)

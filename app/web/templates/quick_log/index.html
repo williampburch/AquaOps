@@ -279,19 +279,25 @@
               <button class="btn btn-primary" type="submit">Repeat now</button>
             </form>
           {% endif %}
-          <form class="stack-form" method="post" action="/quick-log/feeding">
+          <form class="stack-form" id="feeding-form" method="post" action="/quick-log/feeding">
             <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
-            <div>
-              <label class="form-label" for="quick_food_name">Food</label>
-              <input class="form-control form-control-lg" id="quick_food_name" name="food_name" type="text" list="recent_foods" required placeholder="Flakes, pellets, frozen food" value="{{ form_values.get('food_name', '') }}" />
+            <div class="food-multi-select">
+              <label class="form-label" for="quick_food_name">Foods</label>
+              <input id="feeding_food_names" name="food_names" type="hidden" value="{{ form_values.get('food_names', '[]') }}" />
+              <div class="selected-foods" id="selected_foods" role="list" aria-live="polite"></div>
+              <div class="food-entry-row">
+                <input class="form-control form-control-lg" id="quick_food_name" name="food_name" type="text" list="recent_foods" enterkeyhint="done" autocomplete="off" maxlength="160" placeholder="Type a food" value="{{ form_values.get('food_name', '') }}" />
+                <button class="btn btn-outline-secondary" type="button" data-add-food>Add</button>
+              </div>
+              <small class="form-hint">Tap recent foods or type a new one. Select as many as you fed.</small>
               {% if recent_food_names %}
                 <datalist id="recent_foods">
                   {% for food_name in recent_food_names %}<option value="{{ food_name }}"></option>{% endfor %}
                 </datalist>
-                <div class="recent-value-row">
+                <div class="recent-value-row food-options" role="listbox" aria-label="Recently used foods" aria-multiselectable="true">
                   <span>Recently used</span>
                   {% for food_name in recent_food_names %}
-                    <button class="recent-value-button" type="button" data-food-name="{{ food_name }}">{{ food_name }}</button>
+                    <button class="recent-value-button food-option-button" type="button" role="option" aria-selected="false" data-food-name="{{ food_name }}">{{ food_name }}</button>
                   {% endfor %}
                 </div>
               {% endif %}
@@ -523,11 +529,84 @@
         document.getElementById("quick_equipment_name").value = button.dataset.equipmentName;
       });
     });
+    const feedingForm = document.getElementById("feeding-form");
+    const foodInput = document.getElementById("quick_food_name");
+    const foodNamesInput = document.getElementById("feeding_food_names");
+    const selectedFoodsContainer = document.getElementById("selected_foods");
+    let selectedFoods = [];
+    if (foodNamesInput) {
+      try {
+        const initialFoods = JSON.parse(foodNamesInput.value || "[]");
+        selectedFoods = Array.isArray(initialFoods) ? initialFoods.filter((food) => typeof food === "string" && food.trim()) : [];
+      } catch (_error) {
+        selectedFoods = [];
+      }
+    }
+
+    const syncFoods = () => {
+      if (!foodNamesInput || !selectedFoodsContainer) {
+        return;
+      }
+      foodNamesInput.value = JSON.stringify(selectedFoods);
+      selectedFoodsContainer.replaceChildren();
+      selectedFoods.forEach((food) => {
+        const chip = document.createElement("span");
+        chip.className = "selected-food-chip";
+        chip.setAttribute("role", "listitem");
+        chip.append(document.createTextNode(food));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.setAttribute("aria-label", `Remove ${food}`);
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          selectedFoods = selectedFoods.filter((item) => item.toLocaleLowerCase() !== food.toLocaleLowerCase());
+          syncFoods();
+        });
+        chip.append(remove);
+        selectedFoodsContainer.append(chip);
+      });
+      document.querySelectorAll("[data-food-name]").forEach((button) => {
+        const selected = selectedFoods.some((food) => food.toLocaleLowerCase() === button.dataset.foodName.toLocaleLowerCase());
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-selected", selected ? "true" : "false");
+      });
+    };
+
+    const addFood = (food) => {
+      const name = food.trim();
+      if (name && !selectedFoods.some((item) => item.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        selectedFoods.push(name);
+      }
+      if (foodInput) {
+        foodInput.value = "";
+      }
+      syncFoods();
+    };
+
     document.querySelectorAll("[data-food-name]").forEach((button) => {
       button.addEventListener("click", () => {
-        document.getElementById("quick_food_name").value = button.dataset.foodName;
+        const existing = selectedFoods.some((food) => food.toLocaleLowerCase() === button.dataset.foodName.toLocaleLowerCase());
+        if (existing) {
+          selectedFoods = selectedFoods.filter((food) => food.toLocaleLowerCase() !== button.dataset.foodName.toLocaleLowerCase());
+          syncFoods();
+        } else {
+          addFood(button.dataset.foodName);
+        }
       });
     });
+    document.querySelector("[data-add-food]")?.addEventListener("click", () => addFood(foodInput.value));
+    foodInput?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === ",") {
+        event.preventDefault();
+        addFood(foodInput.value.replace(/,$/, ""));
+      }
+    });
+    feedingForm?.addEventListener("submit", () => {
+      if (foodInput.value.trim()) {
+        addFood(foodInput.value);
+      }
+    });
+    syncFoods();
     document.querySelectorAll("[data-feeding-target]").forEach((button) => {
       button.addEventListener("click", () => {
         document.getElementById("feeding_target").value = button.dataset.feedingTarget;

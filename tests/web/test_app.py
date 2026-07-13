@@ -344,6 +344,41 @@ def test_quick_log_feeding_uses_recent_values_and_repeats_last(client: TestClien
     assert events.text.count("Fed Community flakes") == 2
 
 
+def test_quick_log_feeding_accepts_multiple_searchable_foods(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    saved = client.post(
+        "/quick-log/feeding",
+        data={
+            "tank_id": "1",
+            "food_names": '["Community flakes", "Frozen brine shrimp"]',
+            "amount": "1",
+            "unit": "portion",
+        },
+        follow_redirects=False,
+    )
+    assert saved.status_code == 303
+
+    feeding = client.get("/quick-log?action=feeding&tank_id=1")
+    assert 'aria-multiselectable="true"' in feeding.text
+    assert 'data-food-name="Community flakes"' in feeding.text
+    assert 'data-food-name="Frozen brine shrimp"' in feeding.text
+    assert 'id="feeding_food_names"' in feeding.text
+
+    events = client.get("/events")
+    assert "Fed Community flakes + Frozen brine shrimp" in events.text
+
+    repeated = client.post(
+        "/quick-log/feeding/repeat",
+        data={"tank_id": "1"},
+        follow_redirects=False,
+    )
+    assert repeated.status_code == 303
+    events = client.get("/events")
+    assert events.text.count("Fed Community flakes + Frozen brine shrimp") == 2
+
+
 def test_quick_log_feeding_validates_food_and_records_skip_reason(
     client: TestClient,
 ) -> None:

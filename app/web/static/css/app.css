@@ -1646,6 +1646,71 @@ body::after {
   background: color-mix(in srgb, var(--aqua-brand-teal) 18%, var(--aqua-panel));
 }
 
+.recent-value-button.active {
+  background: color-mix(in srgb, var(--aqua-brand-teal) 24%, var(--aqua-panel));
+  border-color: var(--aqua-brand-teal);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aqua-brand-teal) 35%, transparent);
+}
+
+.food-multi-select {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.food-entry-row {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.food-entry-row .btn {
+  min-width: 72px;
+}
+
+.selected-foods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.selected-foods:empty {
+  display: none;
+}
+
+.selected-food-chip {
+  align-items: center;
+  background: color-mix(in srgb, var(--aqua-brand-teal) 14%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 38%, var(--aqua-border));
+  border-radius: 999px;
+  color: var(--aqua-text);
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  min-height: 38px;
+  padding: 0.28rem 0.35rem 0.28rem 0.7rem;
+}
+
+.selected-food-chip button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--aqua-text-muted);
+  display: inline-flex;
+  font-size: 1.2rem;
+  height: 30px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+}
+
+.selected-food-chip button:hover {
+  background: color-mix(in srgb, var(--aqua-danger) 12%, transparent);
+  color: var(--aqua-danger);
+}
+
 .water-test-input .last-reading {
   color: var(--aqua-accent-strong);
   font-weight: 750;
