@@ -59,6 +59,7 @@
       <nav class="offcanvas-body mobile-drawer-nav" aria-label="Mobile navigation">
         <a class="nav-link {{ 'active' if active_nav == 'dashboard' else '' }}" href="/">Dashboard</a>
         <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">Aquariums</a>
+        <a class="nav-link {{ 'active' if active_nav == 'quick_log' else '' }}" href="/quick-log">Quick Log</a>
         <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">Events</a>
         {% if prefs is none or prefs.enable_livestock %}
           <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">Livestock</a>
@@ -105,6 +106,10 @@
           <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">
             <span class="nav-glyph nav-glyph-tanks" aria-hidden="true"></span>
             Aquariums
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'quick_log' else '' }}" href="/quick-log">
+            <span class="nav-glyph nav-glyph-log" aria-hidden="true"></span>
+            Quick Log
           </a>
           <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">
             <span class="nav-glyph nav-glyph-events" aria-hidden="true"></span>
@@ -186,9 +191,9 @@
         <span class="nav-glyph nav-glyph-tanks" aria-hidden="true"></span>
         <strong>Tanks</strong>
       </a>
-      <a class="mobile-tab {{ 'active' if active_nav == 'events' else '' }}" href="/events">
-        <span class="nav-glyph nav-glyph-events" aria-hidden="true"></span>
-        <strong>Events</strong>
+      <a class="mobile-tab mobile-tab-log {{ 'active' if active_nav == 'quick_log' else '' }}" href="/quick-log">
+        <span class="nav-glyph nav-glyph-log" aria-hidden="true"></span>
+        <strong>Log</strong>
       </a>
       <a class="mobile-tab {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">
         <span class="nav-glyph nav-glyph-settings" aria-hidden="true"></span>

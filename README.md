@@ -128,6 +128,8 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Reports: event mix and nitrate trend charts
 - Notifications: open reminder queue with overdue, due today, and upcoming buckets, plus completion and snoozing
 - Quick logging: tank-level feedings, maintenance, water changes, and observations
+- Mobile Quick Log: focused water change, water test, and maintenance entry with
+  thumb-friendly controls, optional details, and visible validation feedback
 - Maintenance schedules: per-tank reminder cadences for water changes, feeding, filter cleaning, and fertilizer
 - Recommendations: nitrate-based water change suggestions from tank-specific target ranges, with care queue explanations
 - Mobile UX: compact app bar, bottom tab navigation, mobile drawer, and dashboard quick-log priority

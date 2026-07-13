@@ -46,17 +46,16 @@
       </div>
       <div class="quick-action-grid">
         {% for tank in tanks[:4] %}
-          <a class="quick-action-card" href="/tanks/{{ tank.id }}#quick-log">
+          <article class="quick-action-card">
             <span>{{ tank.name }}</span>
             <strong>Log care</strong>
-            <small>Water test, water change, feeding, or note</small>
+            <small>Choose a focused mobile-friendly action.</small>
             <span class="quick-action-links">
-              <em>Test</em>
-              <em>Change</em>
-              <em>Feed</em>
-              <em>Note</em>
+              <a href="/quick-log?action=water_change&amp;tank_id={{ tank.id }}">Change</a>
+              <a href="/quick-log?action=water_test&amp;tank_id={{ tank.id }}">Test</a>
+              <a href="/quick-log?action=maintenance&amp;tank_id={{ tank.id }}">Maintain</a>
             </span>
-          </a>
+          </article>
         {% endfor %}
       </div>
     </section>

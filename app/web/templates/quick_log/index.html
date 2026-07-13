@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="quick-log-shell">
+    <div class="quick-log-intro">
+      <div>
+        <p class="eyebrow mb-1">Daily care</p>
+        <h2>Log it while you are at the tank.</h2>
+        <p>Choose an action, enter the essentials, and get back to the aquarium.</p>
+      </div>
+      {% if selected_tank %}
+        <a class="btn btn-outline-light btn-sm" href="/tanks/{{ selected_tank.id }}">Tank details</a>
+      {% endif %}
+    </div>
+
+    {% if saved %}
+      <div class="quick-log-message success" role="status">
+        <strong>Saved.</strong>
+        <span>Your {{ saved.replace("_", " ") }} was added to the tank history.</span>
+      </div>
+    {% endif %}
+    {% if error %}
+      <div class="quick-log-message error" role="alert">
+        <strong>Nothing was saved.</strong>
+        <span>{{ error }}</span>
+      </div>
+    {% endif %}
+
+    {% if tanks %}
+      <nav class="quick-log-actions" aria-label="Quick log action">
+        <a class="quick-log-action {{ 'active' if action == 'water_change' else '' }}" href="/quick-log?action=water_change&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon water-change-icon" aria-hidden="true"></span>
+          <strong>Water Change</strong>
+          <small>Fastest</small>
+        </a>
+        <a class="quick-log-action {{ 'active' if action == 'water_test' else '' }}" href="/quick-log?action=water_test&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon water-test-icon" aria-hidden="true"></span>
+          <strong>Water Test</strong>
+          <small>Parameters</small>
+        </a>
+        <a class="quick-log-action {{ 'active' if action == 'maintenance' else '' }}" href="/quick-log?action=maintenance&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon maintenance-icon" aria-hidden="true"></span>
+          <strong>Maintenance</strong>
+          <small>Other tasks</small>
+        </a>
+      </nav>
+
+      <section class="panel quick-log-form-panel">
+        <form class="stack-form" method="get" action="/quick-log">
+          <input name="action" type="hidden" value="{{ action }}" />
+          <div>
+            <label class="form-label" for="quick_log_tank">Aquarium</label>
+            <select class="form-select form-select-lg" id="quick_log_tank" name="tank_id" onchange="this.form.submit()">
+              {% for tank in tanks %}
+                <option value="{{ tank.id }}" {% if tank.id == selected_tank_id %}selected{% endif %}>{{ tank.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+
+        {% if action == "water_change" %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Routine care</span>
+              <h3>Water Change</h3>
+            </div>
+            {% if water_change_schedule and water_change_schedule.enabled %}
+              <div class="schedule-chip">
+                <span>{{ water_change_schedule.status.replace("_", " ")|title }}</span>
+                <strong>Next {{ display.format_date(water_change_schedule.next_due_at, include_year=false) }}</strong>
+              </div>
+            {% endif %}
+          </div>
+          <form class="stack-form" method="post" action="/quick-log/water-change">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <fieldset>
+              <legend>How much did you change?</legend>
+              <div class="percentage-presets" aria-label="Common water change percentages">
+                {% for amount in [10, 20, 25, 50] %}
+                  <button class="percentage-preset" type="button" data-percentage="{{ amount }}">{{ amount }}%</button>
+                {% endfor %}
+              </div>
+              <div class="quick-log-amount-grid">
+                <div>
+                  <label class="form-label" for="percentage">Percentage</label>
+                  <div class="input-group input-group-lg">
+                    <input class="form-control" id="percentage" name="percentage" type="number" inputmode="decimal" min="1" max="100" step="1" value="{{ form_values.get('percentage', '') }}" />
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
+                <div class="amount-divider"><span>or</span></div>
+                <div>
+                  <label class="form-label" for="volume_changed">Volume</label>
+                  <div class="input-group input-group-lg">
+                    <input class="form-control" id="volume_changed" name="volume_changed" type="number" inputmode="decimal" min="0" step="0.01" value="{{ form_values.get('volume_changed', '') }}" />
+                    <span class="input-group-text">{{ display.volume_unit_label }}</span>
+                  </div>
+                </div>
+              </div>
+              {% if selected_tank and selected_tank.volume_liters %}
+                <small class="form-hint">Tank volume: {{ display.format_volume(selected_tank.volume_liters) }}</small>
+              {% endif %}
+            </fieldset>
+            <details class="quick-log-details">
+              <summary>Add cleaning details or notes</summary>
+              <div class="quick-log-details-body">
+                <div class="care-check-grid">
+                  {% for key, label in [
+                    ('conditioner_used', 'Conditioner used'),
+                    ('substrate_vacuum', 'Substrate vacuumed'),
+                    ('glass_cleaned', 'Glass cleaned'),
+                    ('filter_cleaned', 'Filter cleaned'),
+                    ('temperature_matched', 'Temperature matched')
+                  ] %}
+                    <label class="care-check">
+                      <input class="form-check-input" name="{{ key }}" type="checkbox" {% if form_values.get(key) %}checked{% endif %} />
+                      <span>{{ label }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                <div class="form-grid">
+                  <div>
+                    <label class="form-label" for="duration_minutes">Minutes</label>
+                    <input class="form-control" id="duration_minutes" name="duration_minutes" type="number" inputmode="numeric" min="0" value="{{ form_values.get('duration_minutes', '') }}" />
+                  </div>
+                  <div>
+                    <label class="form-label" for="water_change_occurred_at">Date and time</label>
+                    <input class="form-control" id="water_change_occurred_at" name="occurred_at" type="datetime-local" value="{{ form_values.get('occurred_at', '') }}" />
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label" for="water_change_notes">Notes</label>
+                  <textarea class="form-control" id="water_change_notes" name="notes" rows="3">{{ form_values.get('notes', '') }}</textarea>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save water change</button>
+          </form>
+        {% elif action == "water_test" %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Current readings</span>
+              <h3>Water Test</h3>
+            </div>
+            <small>Enter only what you tested.</small>
+          </div>
+          <form class="stack-form" method="post" action="/quick-log/water-test">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <div class="mobile-water-test-grid">
+              {% for metric in water_metrics %}
+                <div class="water-test-input">
+                  <label for="quick_{{ metric.key.value }}">
+                    <strong>{{ metric.label }}</strong>
+                    <span>{{ metric.default_unit }}</span>
+                  </label>
+                  <input class="form-control form-control-lg" id="quick_{{ metric.key.value }}" name="{{ metric.key.value }}" type="number" inputmode="decimal" step="0.001" value="{{ form_values.get(metric.key.value, '') }}" />
+                </div>
+              {% endfor %}
+            </div>
+            <details class="quick-log-details">
+              <summary>Add date or notes</summary>
+              <div class="quick-log-details-body">
+                <div>
+                  <label class="form-label" for="water_test_occurred_at">Date and time</label>
+                  <input class="form-control" id="water_test_occurred_at" name="occurred_at" type="datetime-local" value="{{ form_values.get('occurred_at', '') }}" />
+                </div>
+                <div>
+                  <label class="form-label" for="water_test_notes">Notes</label>
+                  <textarea class="form-control" id="water_test_notes" name="notes" rows="3">{{ form_values.get('notes', '') }}</textarea>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save water test</button>
+          </form>
+        {% else %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Tank upkeep</span>
+              <h3>Maintenance</h3>
+            </div>
+          </div>
+          <form class="stack-form" method="post" action="/quick-log/maintenance">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <div>
+              <label class="form-label" for="quick_maintenance_type">Task</label>
+              <select class="form-select form-select-lg" id="quick_maintenance_type" name="maintenance_type">
+                {% for value, label in maintenance_types %}
+                  <option value="{{ value }}" {% if form_values.get('maintenance_type') == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="quick_equipment_name">Equipment <span class="optional-label">Optional</span></label>
+              <input class="form-control form-control-lg" id="quick_equipment_name" name="equipment_name" type="text" placeholder="Filter, heater, light, CO2" value="{{ form_values.get('equipment_name', '') }}" />
+            </div>
+            <details class="quick-log-details">
+              <summary>Add duration, date, or notes</summary>
+              <div class="quick-log-details-body">
+                <div class="form-grid">
+                  <div>
+                    <label class="form-label" for="maintenance_minutes">Minutes</label>
+                    <input class="form-control" id="maintenance_minutes" name="duration_minutes" type="number" inputmode="numeric" min="0" value="{{ form_values.get('duration_minutes', '') }}" />
+                  </div>
+                  <div>
+                    <label class="form-label" for="maintenance_occurred_at">Date and time</label>
+                    <input class="form-control" id="maintenance_occurred_at" name="occurred_at" type="datetime-local" value="{{ form_values.get('occurred_at', '') }}" />
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label" for="maintenance_notes">Notes</label>
+                  <textarea class="form-control" id="maintenance_notes" name="notes" rows="3">{{ form_values.get('notes', '') }}</textarea>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save maintenance</button>
+          </form>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="panel elevated-empty empty-state">
+        <strong>Create an aquarium first</strong>
+        <span>Quick Log needs a tank so each care event has a home.</span>
+        <a class="btn btn-primary" href="/tanks/new">Create tank</a>
+      </section>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    document.querySelectorAll("[data-percentage]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const percentage = document.getElementById("percentage");
+        const volume = document.getElementById("volume_changed");
+        percentage.value = button.dataset.percentage;
+        volume.value = "";
+        document.querySelectorAll("[data-percentage]").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+    document.getElementById("volume_changed")?.addEventListener("input", (event) => {
+      if (event.target.value) {
+        document.getElementById("percentage").value = "";
+        document.querySelectorAll("[data-percentage]").forEach((item) => item.classList.remove("active"));
+      }
+    });
+  </script>
+{% endblock %}

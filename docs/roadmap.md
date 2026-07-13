@@ -3,6 +3,8 @@
 ## Product Principles
 
 - Fast common workflows
+- Mobile-first daily workflows that are comfortable with one hand, minimize
+  typing, and scale naturally to tablets and desktops
 - Optional depth when a tank needs it
 - Tank-level configuration instead of one-size-fits-all behavior
 - User-level preferences for defaults and display choices
@@ -51,6 +53,8 @@
 - Maintenance schedule status showing last logged care and next due dates
 - Mobile app shell with a compact top bar, bottom tab navigation, and mobile
   dashboard quick-log priority
+- Mobile-first Quick Log for focused water changes, water tests, and maintenance,
+  with tank selection, optional detail disclosure, and visible save errors
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -65,8 +69,8 @@ as detailed as it needs to be.
 
 ## Next: Daily Usefulness
 
-- Universal quick-log flow for Water Change, Feeding, Water Test, Maintenance,
-  Dose, Observation, Photo, Livestock Change, and Plant Change
+- Extend the Quick Log flow beyond Water Change, Water Test, and Maintenance to
+  Feeding, Dose, Observation, Photo, Livestock Change, and Plant Change
 - Dropdown-first inputs with free-text fallback for repeated values such as
   foods, units, livestock targets, maintenance equipment, fertilizer products,
   observation tags, and common notes

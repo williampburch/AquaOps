@@ -90,6 +90,7 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     plants_response = client.get("/plants", follow_redirects=False)
     notifications_response = client.get("/notifications", follow_redirects=False)
     settings_response = client.get("/settings", follow_redirects=False)
+    quick_log_response = client.get("/quick-log", follow_redirects=False)
 
     assert events_response.status_code == 303
     assert events_response.headers["location"] == "/login"
@@ -102,6 +103,8 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     assert notifications_response.status_code == 303
     assert notifications_response.headers["location"] == "/login"
     assert settings_response.status_code == 303
+    assert quick_log_response.status_code == 303
+    assert quick_log_response.headers["location"] == "/login"
     assert settings_response.headers["location"] == "/login"
 
 
@@ -172,6 +175,98 @@ def test_log_water_test_updates_latest_readings_and_charts(client: TestClient) -
     assert "Water Trends" in detail.text
     assert "chartSeries" in detail.text
     assert "First full test" not in detail.text
+
+
+def test_mobile_quick_log_renders_focused_actions(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.get("/quick-log?action=water_change&tank_id=1")
+
+    assert response.status_code == 200
+    assert "Log it while you are at the tank." in response.text
+    assert "Water Change" in response.text
+    assert "Water Test" in response.text
+    assert "Maintenance" in response.text
+    assert "Display Tank" in response.text
+    assert 'inputmode="decimal"' in response.text
+    assert 'href="/quick-log"' in response.text
+
+
+def test_quick_log_water_change_saves_percentage_and_optional_details(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.post(
+        "/quick-log/water-change",
+        data={
+            "tank_id": "1",
+            "percentage": "25",
+            "conditioner_used": "on",
+            "substrate_vacuum": "on",
+            "notes": "Weekly reset",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"].startswith(
+        "/quick-log?action=water_change&tank_id=1&saved=water_change"
+    )
+
+    confirmation = client.get(response.headers["location"])
+    assert "Saved." in confirmation.text
+    events = client.get("/events")
+    assert "Water Change" in events.text
+    assert "Conditioner used, Substrate vacuumed. Weekly reset" in events.text
+
+
+def test_quick_log_shows_validation_without_losing_water_test_values(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    empty_response = client.post(
+        "/quick-log/water-test",
+        data={"tank_id": "1", "notes": "Kit ready"},
+    )
+
+    assert empty_response.status_code == 400
+    assert "Nothing was saved." in empty_response.text
+    assert "At least one water parameter is required" in empty_response.text
+    assert "Kit ready" in empty_response.text
+
+    saved_response = client.post(
+        "/quick-log/water-test",
+        data={"tank_id": "1", "ammonia": "0", "nitrate": "18"},
+        follow_redirects=False,
+    )
+    assert saved_response.status_code == 303
+    detail = client.get("/tanks/1")
+    assert "18.000 ppm" in detail.text
+
+
+def test_quick_log_saves_non_water_maintenance(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.post(
+        "/quick-log/maintenance",
+        data={
+            "tank_id": "1",
+            "maintenance_type": "filter_cleaning",
+            "equipment_name": "Canister filter",
+            "duration_minutes": "15",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    events = client.get("/events")
+    assert "Filter Cleaning" in events.text
 
 
 def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:
