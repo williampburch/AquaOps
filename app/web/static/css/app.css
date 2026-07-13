@@ -1394,7 +1394,7 @@ body::after {
 .quick-log-actions {
   display: grid;
   gap: 0.65rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .quick-log-action {
@@ -1452,6 +1452,35 @@ body::after {
 .feeding-icon {
   background: linear-gradient(145deg, var(--aqua-warning), var(--aqua-coral));
   border-radius: 50%;
+}
+
+.observation-icon {
+  background: linear-gradient(145deg, var(--aqua-blue), var(--aqua-brand-mint));
+  border-radius: 50% 50% 48% 52% / 54% 46% 54% 46%;
+}
+
+.observation-presets {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.observation-preset {
+  background: var(--aqua-panel-soft);
+  border: 1px solid var(--aqua-border);
+  border-radius: 9px;
+  color: var(--aqua-text);
+  font-size: 0.85rem;
+  font-weight: 800;
+  min-height: 48px;
+  padding: 0.55rem;
+}
+
+.observation-preset:hover,
+.observation-preset.active {
+  background: color-mix(in srgb, var(--aqua-blue) 12%, var(--aqua-panel));
+  border-color: var(--aqua-blue);
+  color: var(--aqua-accent-strong);
 }
 
 .repeat-feeding-card {
@@ -2514,6 +2543,10 @@ body::after {
 }
 
 @media (max-width: 980px) {
+  .quick-log-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -2825,6 +2858,11 @@ body::after {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .quick-log-action.observation-action {
+    grid-column: 1 / -1;
+    min-height: 72px;
+  }
+
   .quick-log-action {
     gap: 0.3rem;
     grid-template-columns: 1fr;
@@ -2855,7 +2893,8 @@ body::after {
 
   .quick-log-amount-grid,
   .mobile-water-test-grid,
-  .care-check-grid {
+  .care-check-grid,
+  .observation-presets {
     grid-template-columns: 1fr;
   }
 

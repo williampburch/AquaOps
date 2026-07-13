@@ -189,6 +189,7 @@ def test_mobile_quick_log_renders_focused_actions(client: TestClient) -> None:
     assert "Water Test" in response.text
     assert "Maintenance" in response.text
     assert "Feeding" in response.text
+    assert "Observation" in response.text
     assert "Display Tank" in response.text
     assert 'inputmode="decimal"' in response.text
     assert 'href="/quick-log"' in response.text
@@ -360,6 +361,46 @@ def test_quick_log_feeding_validates_food_and_records_skip_reason(
     events = client.get("/events")
     assert "Skipped feeding" in events.text
     assert "Weekly fasting day" in events.text
+
+
+def test_quick_log_observation_uses_presets_and_recent_titles(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    form = client.get("/quick-log?action=observation&tank_id=1")
+    assert form.status_code == 200
+    assert 'data-observation-title="Behavior change"' in form.text
+    assert 'data-observation-title="Plant growth"' in form.text
+
+    saved = client.post(
+        "/quick-log/observation",
+        data={
+            "tank_id": "1",
+            "title": "Fish hiding",
+            "notes": "Tetras stayed behind the driftwood after lights on.",
+        },
+        follow_redirects=False,
+    )
+    assert saved.status_code == 303
+
+    refreshed = client.get("/quick-log?action=observation&tank_id=1")
+    assert 'data-observation-title="Fish hiding"' in refreshed.text
+    events = client.get("/events")
+    assert "Fish hiding" in events.text
+    assert "Tetras stayed behind the driftwood" in events.text
+
+
+def test_quick_log_observation_requires_a_title_or_details(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.post(
+        "/quick-log/observation",
+        data={"tank_id": "1", "title": "", "notes": ""},
+    )
+
+    assert response.status_code == 400
+    assert "A note title or body is required" in response.text
 
 
 def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestClient) -> None:

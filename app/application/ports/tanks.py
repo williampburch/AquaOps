@@ -81,6 +81,7 @@ class QuickLogContext:
     last_feeding: RecentFeeding | None
     recent_food_names: list[str]
     recent_feeding_targets: list[str]
+    recent_observation_titles: list[str]
 
 
 @dataclass(frozen=True)

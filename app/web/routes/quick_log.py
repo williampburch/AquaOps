@@ -10,7 +10,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.application.ports.tanks import FeedingLog, MaintenanceLog
+from app.application.ports.tanks import FeedingLog, MaintenanceLog, NoteLog
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
@@ -25,7 +25,15 @@ router = APIRouter(prefix="/quick-log", tags=["quick-log"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
-QUICK_LOG_ACTIONS = {"water_change", "water_test", "maintenance", "feeding"}
+QUICK_LOG_ACTIONS = {"water_change", "water_test", "maintenance", "feeding", "observation"}
+OBSERVATION_PRESETS = (
+    "Behavior change",
+    "Health concern",
+    "Algae update",
+    "Plant growth",
+    "Water clarity",
+    "Spawning activity",
+)
 
 
 @router.get("")
@@ -321,6 +329,45 @@ async def skip_feeding(
     return _saved_redirect("feeding", tank_id)
 
 
+@router.post("/observation")
+async def log_observation(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        event_id = service.log_note(
+            current_user.id,
+            tank_id,
+            NoteLog(
+                occurred_at=_optional_datetime(values.get("occurred_at")) or utc_now(),
+                title=values.get("title", ""),
+                notes=values.get("notes") or None,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="observation",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("observation", tank_id)
+
+
 def _render_quick_log(
     request: Request,
     db: Session,
@@ -390,6 +437,10 @@ def _render_quick_log(
             "recent_feeding_targets": (
                 quick_context.recent_feeding_targets if quick_context else []
             ),
+            "recent_observation_titles": (
+                quick_context.recent_observation_titles if quick_context else []
+            ),
+            "observation_presets": OBSERVATION_PRESETS,
             "maintenance_types": [
                 (item.value, item.value.replace("_", " ").title())
                 for item in MaintenanceType

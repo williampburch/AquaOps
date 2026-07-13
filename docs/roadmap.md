@@ -66,7 +66,7 @@ changes, observations, and photos on one timeline.
 - Quick logging for feedings, maintenance, water changes, and observations from
   tank detail pages
 - Dashboard quick links into focused tank-level water change, water test,
-  feeding, and maintenance logging
+  feeding, observation, and maintenance logging
 - Tank-level maintenance schedule configs for water changes, feeding, filter
   cleaning, and fertilizer
 - Schedule-based reminder refresh after matching care logs
@@ -76,9 +76,9 @@ changes, observations, and photos on one timeline.
 - Maintenance schedule status showing last logged care and next due dates
 - Mobile app shell with a compact top bar, bottom tab navigation, and mobile
   dashboard quick-log priority
-- Mobile-first Quick Log for focused water changes, water tests, feeding, and
-  maintenance, with tank selection, optional detail disclosure, and visible
-  save errors
+- Mobile-first Quick Log for focused water changes, water tests, feeding,
+  observations, and maintenance, with tank selection, optional detail
+  disclosure, and visible save errors
 - Water changes entered by percentage or preferred volume unit, with one-tap
   percentage presets, recurring schedule context, and optional conditioner,
   substrate vacuum, glass cleaning, filter cleaning, temperature matching,
@@ -87,6 +87,8 @@ changes, observations, and photos on one timeline.
   readings, recently used maintenance equipment, and remembered tank selection
 - Feeding Quick Log with recently used foods and livestock targets, one-tap
   repeat-last feeding, and skipped feeding history with an optional reason
+- Observation Quick Log with behavior, health, algae, plant growth, water
+  clarity, and spawning presets, recently used titles, and optional detail
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -117,20 +119,20 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Next: Daily Usefulness
 
-- Extend the Quick Log flow beyond Water Change, Water Test, Feeding, and
-  Maintenance to Dose, Observation, Photo, Livestock Change, and Plant Change
+- Extend the Quick Log flow beyond Water Change, Water Test, Feeding,
+  Observation, and Maintenance to Dose, Photo, Livestock Change, and Plant
+  Change
 - Dropdown-first inputs with free-text fallback for repeated values such as
   foods, units, livestock targets, maintenance equipment, fertilizer products,
-  observation tags, and common notes
-- Expand recently used values to feeding units, fertilizer products, tags, and
-  common notes
+  and common notes
+- Expand recently used values to feeding units, fertilizer products, and common
+  notes
 - Ability to promote repeated custom entries into reusable user-owned options
 - Extend water change details with reusable conditioner choices plus TDS and
   nitrate before/after readings
 - Promote repeated custom foods and livestock targets into reusable user-owned
   options shared across tanks
 - More polished maintenance log flow with task-specific fields
-- More polished notes and observations log flow
 - Photo logging in the same quick-log system
 - Extend livestock and plant changes with partial-group moves, trims, root-tab
   placement context, and richer per-entry timelines

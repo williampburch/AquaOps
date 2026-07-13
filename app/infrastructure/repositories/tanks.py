@@ -288,12 +288,23 @@ class SqlAlchemyTankRepository:
             if feedings
             else None
         )
+        observation_titles = self.session.scalars(
+            select(EventModel.title)
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                EventModel.event_type == EventType.NOTE.value,
+            )
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(20)
+        )
         return QuickLogContext(
             last_water_change_liters=last_water_change_liters,
             recent_equipment_names=recent_equipment,
             last_feeding=last_feeding,
             recent_food_names=_recent_distinct(item.food_name for item in feedings),
             recent_feeding_targets=_recent_distinct(item.target_livestock for item in feedings),
+            recent_observation_titles=_recent_distinct(observation_titles),
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
