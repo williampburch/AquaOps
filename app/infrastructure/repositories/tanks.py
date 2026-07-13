@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -18,6 +19,7 @@ from app.application.ports.tanks import (
     ParameterReading,
     ParameterTarget,
     QuickLogContext,
+    RecentFeeding,
     TankCreate,
     TankDetail,
     TankEvent,
@@ -264,9 +266,34 @@ class SqlAlchemyTankRepository:
                 recent_equipment.append(normalized)
             if len(recent_equipment) == 5:
                 break
+        feeding_rows = self.session.execute(
+            select(FeedingEventDetailModel)
+            .join(EventModel, EventModel.id == FeedingEventDetailModel.event_id)
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                FeedingEventDetailModel.food_name != "Skipped",
+            )
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(20)
+        ).scalars()
+        feedings = list(feeding_rows)
+        last_feeding = (
+            RecentFeeding(
+                food_name=feedings[0].food_name,
+                amount=feedings[0].amount,
+                unit=feedings[0].unit,
+                target_livestock=feedings[0].target_livestock,
+            )
+            if feedings
+            else None
+        )
         return QuickLogContext(
             last_water_change_liters=last_water_change_liters,
             recent_equipment_names=recent_equipment,
+            last_feeding=last_feeding,
+            recent_food_names=_recent_distinct(item.food_name for item in feedings),
+            recent_feeding_targets=_recent_distinct(item.target_livestock for item in feedings),
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
@@ -274,21 +301,23 @@ class SqlAlchemyTankRepository:
         if tank is None:
             return None
 
+        food_name = data.food_name.strip() if not data.skipped else "Skipped"
+        skip_reason = (data.skip_reason or "").strip()
         event = EventModel(
             user_id=user_id,
             tank_id=tank_id,
             event_type=EventType.FEEDING.value,
-            title=f"Fed {data.food_name.strip()}",
-            notes=data.notes or "",
+            title="Skipped feeding" if data.skipped else f"Fed {food_name}",
+            notes=(data.notes or skip_reason) if data.skipped else (data.notes or ""),
             occurred_at=data.occurred_at,
-            metadata_json={},
+            metadata_json={"skipped": data.skipped, "skip_reason": skip_reason or None},
         )
         self.session.add(event)
         self.session.flush()
         self.session.add(
             FeedingEventDetailModel(
                 event_id=event.id,
-                food_name=data.food_name.strip(),
+                food_name=food_name,
                 amount=data.amount,
                 unit=data.unit,
                 target_livestock=data.target_livestock,
@@ -727,6 +756,17 @@ def _classify_reading(value: Decimal, target: ParameterTarget | None) -> str:
 
 def _maintenance_title(maintenance_type: str) -> str:
     return maintenance_type.replace("_", " ").title()
+
+
+def _recent_distinct(values: Iterable[str | None], limit: int = 5) -> list[str]:
+    recent = []
+    for value in values:
+        normalized = (value or "").strip()
+        if normalized and normalized not in recent:
+            recent.append(normalized)
+        if len(recent) == limit:
+            break
+    return recent
 
 
 def _format_decimal(value: Decimal) -> str:

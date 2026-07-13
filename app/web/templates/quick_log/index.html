@@ -43,6 +43,11 @@
           <strong>Maintenance</strong>
           <small>Other tasks</small>
         </a>
+        <a class="quick-log-action {{ 'active' if action == 'feeding' else '' }}" href="/quick-log?action=feeding&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon feeding-icon" aria-hidden="true"></span>
+          <strong>Feeding</strong>
+          <small>Repeat in one tap</small>
+        </a>
       </nav>
 
       <section class="panel quick-log-form-panel">
@@ -185,7 +190,7 @@
             </details>
             <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save water test</button>
           </form>
-        {% else %}
+        {% elif action == "maintenance" %}
           <div class="quick-log-heading">
             <div>
               <span>Tank upkeep</span>
@@ -240,6 +245,96 @@
             </details>
             <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save maintenance</button>
           </form>
+        {% else %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Daily care</span>
+              <h3>Feeding</h3>
+            </div>
+            <small>Record what the tank received.</small>
+          </div>
+          {% if last_feeding %}
+            <form class="repeat-feeding-card" method="post" action="/quick-log/feeding/repeat">
+              <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+              <div>
+                <span>Last feeding</span>
+                <strong>{{ last_feeding.food_name }}</strong>
+                <small>
+                  {% if last_feeding.amount is not none %}{{ last_feeding.amount }} {{ last_feeding.unit or '' }}{% endif %}
+                  {% if last_feeding.target_livestock %} · {{ last_feeding.target_livestock }}{% endif %}
+                </small>
+              </div>
+              <button class="btn btn-primary" type="submit">Repeat now</button>
+            </form>
+          {% endif %}
+          <form class="stack-form" method="post" action="/quick-log/feeding">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <div>
+              <label class="form-label" for="quick_food_name">Food</label>
+              <input class="form-control form-control-lg" id="quick_food_name" name="food_name" type="text" list="recent_foods" required placeholder="Flakes, pellets, frozen food" value="{{ form_values.get('food_name', '') }}" />
+              {% if recent_food_names %}
+                <datalist id="recent_foods">
+                  {% for food_name in recent_food_names %}<option value="{{ food_name }}"></option>{% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Recently used</span>
+                  {% for food_name in recent_food_names %}
+                    <button class="recent-value-button" type="button" data-food-name="{{ food_name }}">{{ food_name }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="feeding_amount">Amount <span class="optional-label">Optional</span></label>
+                <input class="form-control form-control-lg" id="feeding_amount" name="amount" type="number" inputmode="decimal" min="0" step="0.001" value="{{ form_values.get('amount', '') }}" />
+              </div>
+              <div>
+                <label class="form-label" for="feeding_unit">Unit <span class="optional-label">Optional</span></label>
+                <input class="form-control form-control-lg" id="feeding_unit" name="unit" type="text" placeholder="pinch, cube, scoop" value="{{ form_values.get('unit', '') }}" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="feeding_target">Livestock target <span class="optional-label">Optional</span></label>
+              <input class="form-control form-control-lg" id="feeding_target" name="target_livestock" type="text" list="recent_feeding_targets" placeholder="Whole tank, fry, bottom feeders" value="{{ form_values.get('target_livestock', '') }}" />
+              {% if recent_feeding_targets %}
+                <datalist id="recent_feeding_targets">
+                  {% for target in recent_feeding_targets %}<option value="{{ target }}"></option>{% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Recent targets</span>
+                  {% for target in recent_feeding_targets %}
+                    <button class="recent-value-button" type="button" data-feeding-target="{{ target }}">{{ target }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <details class="quick-log-details">
+              <summary>Add date or notes</summary>
+              <div class="quick-log-details-body">
+                <div>
+                  <label class="form-label" for="feeding_occurred_at">Date and time</label>
+                  <input class="form-control" id="feeding_occurred_at" name="occurred_at" type="datetime-local" value="{{ form_values.get('occurred_at', '') }}" />
+                </div>
+                <div>
+                  <label class="form-label" for="feeding_notes">Notes</label>
+                  <textarea class="form-control" id="feeding_notes" name="notes" rows="3">{{ form_values.get('notes', '') }}</textarea>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save feeding</button>
+          </form>
+          <details class="quick-log-details skip-feeding-details">
+            <summary>Skip this feeding</summary>
+            <form class="quick-log-details-body" method="post" action="/quick-log/feeding/skip">
+              <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+              <div>
+                <label class="form-label" for="skip_reason">Reason <span class="optional-label">Optional</span></label>
+                <input class="form-control" id="skip_reason" name="skip_reason" type="text" placeholder="Fasting day, fish not eating, away" />
+              </div>
+              <button class="btn btn-outline-secondary" type="submit">Record skipped feeding</button>
+            </form>
+          </details>
         {% endif %}
       </section>
     {% else %}
@@ -290,6 +385,16 @@
     document.querySelectorAll("[data-equipment-name]").forEach((button) => {
       button.addEventListener("click", () => {
         document.getElementById("quick_equipment_name").value = button.dataset.equipmentName;
+      });
+    });
+    document.querySelectorAll("[data-food-name]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("quick_food_name").value = button.dataset.foodName;
+      });
+    });
+    document.querySelectorAll("[data-feeding-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("feeding_target").value = button.dataset.feedingTarget;
       });
     });
   </script>

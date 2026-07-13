@@ -188,6 +188,7 @@ def test_mobile_quick_log_renders_focused_actions(client: TestClient) -> None:
     assert "Water Change" in response.text
     assert "Water Test" in response.text
     assert "Maintenance" in response.text
+    assert "Feeding" in response.text
     assert "Display Tank" in response.text
     assert 'inputmode="decimal"' in response.text
     assert 'href="/quick-log"' in response.text
@@ -301,6 +302,64 @@ def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
     assert "Canister filter" in maintenance.text
     assert 'data-equipment-name="Canister filter"' in maintenance.text
     assert "aquaops-last-tank" in maintenance.text
+
+
+def test_quick_log_feeding_uses_recent_values_and_repeats_last(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    saved = client.post(
+        "/quick-log/feeding",
+        data={
+            "tank_id": "1",
+            "food_name": "Community flakes",
+            "amount": "1",
+            "unit": "pinch",
+            "target_livestock": "Whole tank",
+        },
+        follow_redirects=False,
+    )
+
+    assert saved.status_code == 303
+    feeding = client.get("/quick-log?action=feeding&tank_id=1")
+    assert 'data-food-name="Community flakes"' in feeding.text
+    assert 'data-feeding-target="Whole tank"' in feeding.text
+    assert "Repeat now" in feeding.text
+
+    repeated = client.post(
+        "/quick-log/feeding/repeat",
+        data={"tank_id": "1"},
+        follow_redirects=False,
+    )
+
+    assert repeated.status_code == 303
+    events = client.get("/events")
+    assert events.text.count("Fed Community flakes") == 2
+
+
+def test_quick_log_feeding_validates_food_and_records_skip_reason(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    invalid = client.post(
+        "/quick-log/feeding",
+        data={"tank_id": "1", "food_name": "", "notes": "Food ready"},
+    )
+    assert invalid.status_code == 400
+    assert "Food name is required" in invalid.text
+    assert "Food ready" in invalid.text
+
+    skipped = client.post(
+        "/quick-log/feeding/skip",
+        data={"tank_id": "1", "skip_reason": "Weekly fasting day"},
+        follow_redirects=False,
+    )
+    assert skipped.status_code == 303
+    events = client.get("/events")
+    assert "Skipped feeding" in events.text
+    assert "Weekly fasting day" in events.text
 
 
 def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestClient) -> None:

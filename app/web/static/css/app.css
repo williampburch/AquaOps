@@ -1394,7 +1394,7 @@ body::after {
 .quick-log-actions {
   display: grid;
   gap: 0.65rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .quick-log-action {
@@ -1447,6 +1447,41 @@ body::after {
 .maintenance-icon {
   background: linear-gradient(145deg, var(--aqua-brand-mint), var(--aqua-blue));
   border-radius: 9px;
+}
+
+.feeding-icon {
+  background: linear-gradient(145deg, var(--aqua-warning), var(--aqua-coral));
+  border-radius: 50%;
+}
+
+.repeat-feeding-card {
+  align-items: center;
+  background: color-mix(in srgb, var(--aqua-brand-mint) 12%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-mint) 38%, var(--aqua-border));
+  border-radius: 10px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.repeat-feeding-card div {
+  display: grid;
+}
+
+.repeat-feeding-card span,
+.repeat-feeding-card small {
+  color: var(--aqua-text-muted);
+}
+
+.repeat-feeding-card span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.skip-feeding-details {
+  border-color: color-mix(in srgb, var(--aqua-warning) 38%, var(--aqua-border));
 }
 
 .quick-log-form-panel {
@@ -2787,6 +2822,7 @@ body::after {
 
   .quick-log-actions {
     gap: 0.45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .quick-log-action {
@@ -2832,6 +2868,11 @@ body::after {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.15rem;
+  }
+
+  .repeat-feeding-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .inventory-manage-summary {

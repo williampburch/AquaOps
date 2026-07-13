@@ -10,7 +10,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.application.ports.tanks import MaintenanceLog
+from app.application.ports.tanks import FeedingLog, MaintenanceLog
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/quick-log", tags=["quick-log"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
-QUICK_LOG_ACTIONS = {"water_change", "water_test", "maintenance"}
+QUICK_LOG_ACTIONS = {"water_change", "water_test", "maintenance", "feeding"}
 
 
 @router.get("")
@@ -196,6 +196,131 @@ async def log_maintenance(
     return _saved_redirect("maintenance", tank_id)
 
 
+@router.post("/feeding")
+async def log_feeding(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        event_id = service.log_feeding(
+            current_user.id,
+            tank_id,
+            FeedingLog(
+                occurred_at=_optional_datetime(values.get("occurred_at")) or utc_now(),
+                food_name=values.get("food_name", ""),
+                amount=_optional_decimal(values.get("amount")),
+                unit=values.get("unit") or None,
+                target_livestock=values.get("target_livestock") or None,
+                notes=values.get("notes") or None,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="feeding",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("feeding", tank_id)
+
+
+@router.post("/feeding/repeat")
+async def repeat_feeding(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        context = service.get_quick_log_context(current_user.id, tank_id)
+        if context is None or context.last_feeding is None:
+            raise ValueError("Log a feeding first before using repeat last feeding.")
+        previous = context.last_feeding
+        event_id = service.log_feeding(
+            current_user.id,
+            tank_id,
+            FeedingLog(
+                occurred_at=utc_now(),
+                food_name=previous.food_name,
+                amount=previous.amount,
+                unit=previous.unit,
+                target_livestock=previous.target_livestock,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="feeding",
+            tank_id=tank_id,
+            error=str(exc),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("feeding", tank_id)
+
+
+@router.post("/feeding/skip")
+async def skip_feeding(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = TankService(SqlAlchemyTankRepository(db))
+
+    try:
+        tank_id = _required_tank_id(values)
+        event_id = service.log_feeding(
+            current_user.id,
+            tank_id,
+            FeedingLog(
+                occurred_at=utc_now(),
+                food_name="",
+                skipped=True,
+                skip_reason=values.get("skip_reason") or None,
+            ),
+        )
+        if event_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="feeding",
+            tank_id=tank_id,
+            error=str(exc),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return _saved_redirect("feeding", tank_id)
+
+
 def _render_quick_log(
     request: Request,
     db: Session,
@@ -259,6 +384,11 @@ def _render_quick_log(
             "latest_readings": latest_readings,
             "recent_equipment_names": (
                 quick_context.recent_equipment_names if quick_context else []
+            ),
+            "last_feeding": quick_context.last_feeding if quick_context else None,
+            "recent_food_names": quick_context.recent_food_names if quick_context else [],
+            "recent_feeding_targets": (
+                quick_context.recent_feeding_targets if quick_context else []
             ),
             "maintenance_types": [
                 (item.value, item.value.replace("_", " ").title())

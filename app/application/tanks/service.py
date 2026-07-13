@@ -79,8 +79,10 @@ class TankService:
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
-        if not data.food_name.strip():
+        if not data.skipped and not data.food_name.strip():
             raise ValueError("Food name is required")
+        if data.amount is not None and data.amount < 0:
+            raise ValueError("Feeding amount cannot be negative")
         return self.repository.log_feeding(user_id, tank_id, data)
 
     def log_maintenance(self, user_id: int, tank_id: int, data: MaintenanceLog) -> int | None:

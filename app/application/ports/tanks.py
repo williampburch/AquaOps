@@ -27,6 +27,8 @@ class FeedingLog:
     unit: str | None = None
     target_livestock: str | None = None
     notes: str | None = None
+    skipped: bool = False
+    skip_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -65,9 +67,20 @@ class MaintenanceConfigUpdate:
 
 
 @dataclass(frozen=True)
+class RecentFeeding:
+    food_name: str
+    amount: Decimal | None
+    unit: str | None
+    target_livestock: str | None
+
+
+@dataclass(frozen=True)
 class QuickLogContext:
     last_water_change_liters: Decimal | None
     recent_equipment_names: list[str]
+    last_feeding: RecentFeeding | None
+    recent_food_names: list[str]
+    recent_feeding_targets: list[str]
 
 
 @dataclass(frozen=True)
