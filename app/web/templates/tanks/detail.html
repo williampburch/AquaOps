@@ -201,7 +201,7 @@
   {% if display.module_enabled("livestock") or display.module_enabled("plants") %}
     <section class="content-grid mt-4">
       {% if display.module_enabled("livestock") %}
-        <div class="panel">
+        <div class="panel" id="add-livestock">
           <div class="panel-heading">
             <h2>Add Livestock</h2>
           </div>
@@ -245,7 +245,7 @@
       {% endif %}
 
       {% if display.module_enabled("plants") %}
-        <div class="panel">
+        <div class="panel" id="add-plant">
           <div class="panel-heading">
             <h2>Add Plant</h2>
           </div>

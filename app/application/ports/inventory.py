@@ -21,9 +21,22 @@ class InventoryGroup:
 
 
 @dataclass(frozen=True)
+class InventoryItem:
+    id: int
+    tank_id: int
+    tank_name: str
+    common_name: str
+    species: str | None
+    quantity: int
+    notes: str | None
+    started_on: date | None
+
+
+@dataclass(frozen=True)
 class InventorySnapshot:
     summary: InventorySummary
     groups: list[InventoryGroup]
+    items: list[InventoryItem]
 
 
 @dataclass(frozen=True)
@@ -59,6 +72,23 @@ class PlantCreate:
     planted_on: date | None
 
 
+@dataclass(frozen=True)
+class InventoryUpdate:
+    tank_id: int
+    common_name: str
+    species: str | None
+    quantity: int
+    notes: str | None
+    started_on: date | None
+
+
+@dataclass(frozen=True)
+class InventoryArchive:
+    reason: str
+    notes: str | None
+    ended_on: date
+
+
 class InventoryReadRepository(Protocol):
     def get_livestock(self, user_id: int) -> InventorySnapshot:
         """Return grouped livestock inventory for a user."""
@@ -74,3 +104,15 @@ class InventoryReadRepository(Protocol):
 
     def add_plant(self, user_id: int, data: PlantCreate) -> int | None:
         """Add a plant to a user's tank from catalog or custom text."""
+
+    def update_livestock(self, user_id: int, item_id: int, data: InventoryUpdate) -> bool:
+        """Update or move an active livestock entry."""
+
+    def update_plant(self, user_id: int, item_id: int, data: InventoryUpdate) -> bool:
+        """Update or move an active plant entry."""
+
+    def archive_livestock(self, user_id: int, item_id: int, data: InventoryArchive) -> bool:
+        """Retire an active livestock entry while preserving history."""
+
+    def archive_plant(self, user_id: int, item_id: int, data: InventoryArchive) -> bool:
+        """Remove an active plant entry while preserving history."""

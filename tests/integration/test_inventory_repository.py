@@ -1,17 +1,24 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import date
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.application.ports.inventory import LivestockCreate, PlantCreate
+from app.application.ports.inventory import (
+    InventoryArchive,
+    InventoryUpdate,
+    LivestockCreate,
+    PlantCreate,
+)
 from app.core.security import hash_password
 from app.infrastructure.db import models  # noqa: F401
 from app.infrastructure.db.base import Base
 from app.infrastructure.db.models import (
+    EventModel,
     LivestockModel,
     PlantModel,
     SpeciesCatalogModel,
@@ -181,3 +188,109 @@ def test_inventory_repository_adds_entries_from_catalog(session: Session) -> Non
     assert stored_plant.common_name == "Java Fern"
     assert stored_plant.species == "Microsorum pteropus"
     assert stored_plant.species_catalog_id == plant.id
+
+
+def test_inventory_repository_updates_moves_and_archives_with_history(session: Session) -> None:
+    user = UserModel(
+        email="history@example.com",
+        username="history",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    display_tank = TankModel(user=user, name="Display Tank", tank_type="planted")
+    grow_out = TankModel(user=user, name="Grow Out", tank_type="freshwater")
+    livestock = LivestockModel(
+        tank=display_tank,
+        common_name="Ember Tetra",
+        species="Hyphessobrycon amandae",
+        quantity=8,
+    )
+    plant = PlantModel(
+        tank=display_tank,
+        common_name="Java Fern",
+        species="Microsorum pteropus",
+        quantity=2,
+    )
+    session.add_all([user, display_tank, grow_out, livestock, plant])
+    session.commit()
+
+    repository = SqlAlchemyInventoryRepository(session)
+    assert repository.get_livestock(user.id).items[0].id == livestock.id
+    assert repository.get_plants(user.id).items[0].id == plant.id
+
+    updated = repository.update_livestock(
+        user.id,
+        livestock.id,
+        InventoryUpdate(
+            tank_id=grow_out.id,
+            common_name="Ember Tetra",
+            species="Hyphessobrycon amandae",
+            quantity=6,
+            notes="Moved the smaller group",
+            started_on=date(2026, 7, 1),
+        ),
+    )
+    archived = repository.archive_plant(
+        user.id,
+        plant.id,
+        InventoryArchive(
+            reason="melted",
+            notes="Did not adapt after planting",
+            ended_on=date(2026, 7, 13),
+        ),
+    )
+
+    assert updated is True
+    assert archived is True
+    assert repository.get_livestock(user.id).items[0].tank_name == "Grow Out"
+    assert repository.get_livestock(user.id).items[0].quantity == 6
+    assert repository.get_plants(user.id).summary.total_count == 0
+    assert session.get(PlantModel, plant.id).removed_on == date(2026, 7, 13)
+
+    events = session.query(EventModel).order_by(EventModel.id).all()
+    assert events[0].event_type == "livestock_change"
+    assert events[0].title == "Updated Ember Tetra"
+    assert "Moved from Display Tank to Grow Out" in events[0].notes
+    assert events[1].event_type == "plant_change"
+    assert events[1].title == "Melted: Java Fern"
+
+
+def test_inventory_repository_rejects_cross_user_lifecycle_changes(session: Session) -> None:
+    owner = UserModel(
+        email="owner@example.com",
+        username="owner",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    other = UserModel(
+        email="other@example.com",
+        username="other",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=owner, name="Owner Tank", tank_type="freshwater")
+    other_tank = TankModel(user=other, name="Other Tank", tank_type="freshwater")
+    livestock = LivestockModel(tank=tank, common_name="Guppy", quantity=3)
+    session.add_all([owner, other, tank, other_tank, livestock])
+    session.commit()
+
+    repository = SqlAlchemyInventoryRepository(session)
+    updated = repository.update_livestock(
+        other.id,
+        livestock.id,
+        InventoryUpdate(
+            tank_id=other_tank.id,
+            common_name="Guppy",
+            species=None,
+            quantity=1,
+            notes=None,
+            started_on=None,
+        ),
+    )
+    archived = repository.archive_livestock(
+        other.id,
+        livestock.id,
+        InventoryArchive(reason="other", notes=None, ended_on=date(2026, 7, 13)),
+    )
+
+    assert updated is False
+    assert archived is False
+    assert session.get(LivestockModel, livestock.id).quantity == 3
+    assert session.get(LivestockModel, livestock.id).retired_on is None

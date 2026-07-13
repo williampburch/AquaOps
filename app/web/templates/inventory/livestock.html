@@ -7,10 +7,26 @@
       <span>{{ snapshot.summary.total_count }} animals across {{ snapshot.summary.species_count }} species</span>
     </div>
     <div class="command-actions">
-      <button class="btn btn-outline-light btn-sm" type="button" onclick="if (document.referrer) { history.back(); } else { location.href = '/'; }">Back</button>
-      <a class="btn btn-primary btn-sm" href="/tanks">View tanks</a>
+      {% if tanks %}
+        <a class="btn btn-primary btn-sm" href="/tanks/{{ tanks[0].id }}#add-livestock">Add livestock</a>
+      {% else %}
+        <a class="btn btn-primary btn-sm" href="/tanks/new">Create tank</a>
+      {% endif %}
     </div>
   </section>
+
+  {% if saved %}
+    <div class="quick-log-message success mb-3" role="status">
+      <strong>Saved.</strong>
+      <span>{{ saved }}</span>
+    </div>
+  {% endif %}
+  {% if error %}
+    <div class="quick-log-message error mb-3" role="alert">
+      <strong>Nothing was changed.</strong>
+      <span>{{ error }}</span>
+    </div>
+  {% endif %}
 
   <section class="inventory-summary">
     <article class="insight-card">
@@ -28,6 +44,105 @@
       <strong>{{ snapshot.summary.tank_count }}</strong>
       <small>Habitats with active livestock</small>
     </article>
+  </section>
+
+  <section class="panel surface-panel mt-4">
+    <div class="panel-heading inventory-section-heading">
+      <div>
+        <h2>Manage Livestock</h2>
+        <span>Adjust quantities, move animals between tanks, or preserve a removal in history.</span>
+      </div>
+    </div>
+    {% if snapshot.items %}
+      <div class="inventory-manage-list">
+        {% for item in snapshot.items %}
+          <article class="inventory-manage-card">
+            <div class="inventory-manage-summary">
+              <div>
+                <span class="inventory-tank-label">{{ item.tank_name }}</span>
+                <strong>{{ item.common_name }}</strong>
+                <small>{{ item.species or "Scientific name not recorded" }}</small>
+              </div>
+              <span class="inventory-quantity-badge">{{ item.quantity }}</span>
+            </div>
+            <details class="inventory-editor">
+              <summary>Manage entry</summary>
+              <div class="inventory-editor-body">
+                <form class="stack-form" method="post" action="/livestock/{{ item.id }}/update">
+                  <div class="form-grid">
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_name">Common name</label>
+                      <input class="form-control" id="livestock_{{ item.id }}_name" name="common_name" type="text" value="{{ item.common_name }}" required />
+                    </div>
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_species">Scientific name</label>
+                      <input class="form-control" id="livestock_{{ item.id }}_species" name="species" type="text" value="{{ item.species or '' }}" />
+                    </div>
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_quantity">Quantity</label>
+                      <input class="form-control" id="livestock_{{ item.id }}_quantity" name="quantity" type="number" inputmode="numeric" min="1" value="{{ item.quantity }}" required />
+                    </div>
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_tank">Aquarium</label>
+                      <select class="form-select" id="livestock_{{ item.id }}_tank" name="tank_id">
+                        {% for tank in tanks %}
+                          <option value="{{ tank.id }}" {% if tank.id == item.tank_id %}selected{% endif %}>{{ tank.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_started">Acquired</label>
+                      <input class="form-control" id="livestock_{{ item.id }}_started" name="started_on" type="date" value="{{ item.started_on.isoformat() if item.started_on else '' }}" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label" for="livestock_{{ item.id }}_notes">Notes</label>
+                    <textarea class="form-control" id="livestock_{{ item.id }}_notes" name="notes" rows="2">{{ item.notes or '' }}</textarea>
+                  </div>
+                  <button class="btn btn-primary inventory-save-button" type="submit">Save changes</button>
+                </form>
+
+                <div class="inventory-archive-zone">
+                  <div>
+                    <strong>Remove from active inventory</strong>
+                    <span>The entry stays in history and can explain future tank changes.</span>
+                  </div>
+                  <form class="stack-form" method="post" action="/livestock/{{ item.id }}/archive">
+                    <div class="form-grid">
+                      <div>
+                        <label class="form-label" for="livestock_{{ item.id }}_reason">What happened?</label>
+                        <select class="form-select" id="livestock_{{ item.id }}_reason" name="reason" required>
+                          <option value="">Choose a reason</option>
+                          <option value="death">Death</option>
+                          <option value="rehomed">Rehomed</option>
+                          <option value="sold">Sold</option>
+                          <option value="moved_out">Moved outside AquaOps</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="form-label" for="livestock_{{ item.id }}_ended">Date</label>
+                        <input class="form-control" id="livestock_{{ item.id }}_ended" name="ended_on" type="date" />
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label" for="livestock_{{ item.id }}_archive_notes">Context <span class="optional-label">Optional</span></label>
+                      <textarea class="form-control" id="livestock_{{ item.id }}_archive_notes" name="notes" rows="2" placeholder="Symptoms, destination, or anything worth remembering"></textarea>
+                    </div>
+                    <button class="btn btn-outline-danger inventory-save-button" type="submit">Remove and preserve history</button>
+                  </form>
+                </div>
+              </div>
+            </details>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state elevated-empty">
+        <strong>No livestock to manage</strong>
+        <span>Add fish, shrimp, snails, or other animals from a tank.</span>
+      </div>
+    {% endif %}
   </section>
 
   <section class="panel surface-panel mt-4">

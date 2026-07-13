@@ -14,6 +14,26 @@
 - Power-user extensibility without forcing complexity on everyone
 - No unnecessary complexity in the default experience
 
+## Product Focus
+
+AquaOps should be the fastest, clearest freshwater aquarium care log, especially
+on a phone. Its initial audience is engaged freshwater and planted-tank keepers,
+particularly people managing multiple display, breeding, grow-out, quarantine,
+or propagation tanks. It should win through low-friction daily use and useful
+history rather than trying to have the longest feature list.
+
+The core product loop is:
+
+1. Remember what is due
+2. Log care while standing at the tank
+3. Review a trustworthy chronological history
+4. Understand what changed
+5. Decide what to do next
+
+The long-term differentiator is answering questions such as "What changed before
+this problem?" by connecting water tests, maintenance, livestock and plant
+changes, observations, and photos on one timeline.
+
 ## Completed Foundation
 
 - Project structure and clean architecture layers
@@ -39,6 +59,8 @@
 - Catalog-backed livestock and plant add forms with custom-entry fallback
 - Livestock inventory grouped by species and quantity
 - Plant inventory grouped by species and quantity
+- Mobile-friendly item-level livestock and plant management for edits, quantity
+  changes, tank moves, and reasoned removals that remain in event history
 - Notifications page for open reminders
 - Reminder completion and snoozing from the care queue
 - Quick logging for feedings, maintenance, water changes, and observations from
@@ -72,6 +94,22 @@ configurable app with smart care modules, tank-level setup choices, user-level
 preferences, and progressive disclosure so each workspace can feel as simple or
 as detailed as it needs to be.
 
+## Adoption Priority
+
+Near-term work should follow this order:
+
+1. Frictionless mobile logging and inventory lifecycle management
+2. Recently used values and repeat-last-action shortcuts
+3. Notification delivery outside the app through push or email
+4. Photo capture and tank, plant, and livestock timelines
+5. Export, backup, and restore so long-term data remains trustworthy
+6. Historical explanations that help connect a problem with preceding changes
+7. Hosted, installable PWA behavior and a low-friction onboarding path
+
+Reef-specific breadth is not an immediate priority. If AquaOps later targets reef
+keepers, that should be an intentional expansion covering salinity, alkalinity,
+calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
+
 ## Next: Daily Usefulness
 
 - Extend the Quick Log flow beyond Water Change, Water Test, and Maintenance to
@@ -90,12 +128,8 @@ as detailed as it needs to be.
 - More polished maintenance log flow with task-specific fields
 - More polished notes and observations log flow
 - Photo logging in the same quick-log system
-- Livestock change flow for deaths, rehomes, moves, quantity adjustments, and
-  acquisitions
-- Plant change flow for removals, moves, trims, melt, propagation, and root-tab
-  placement context
-- Livestock edit/archive workflows
-- Plant edit/remove/archive workflows
+- Extend livestock and plant changes with partial-group moves, trims, root-tab
+  placement context, and richer per-entry timelines
 - Fast data entry with minimal required fields
 - Optional detail fields for users who want deeper tracking
 

@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.application.ports.inventory import (
+    InventoryArchive,
     InventoryReadRepository,
     InventorySnapshot,
+    InventoryUpdate,
     LivestockCreate,
     PlantCreate,
     SpeciesCatalogEntry,
@@ -40,3 +42,27 @@ class InventoryService:
         if data.quantity is not None and data.quantity < 1:
             raise ValueError("Quantity must be at least 1")
         return self.repository.add_plant(user_id, data)
+
+    def update_livestock(self, user_id: int, item_id: int, data: InventoryUpdate) -> bool:
+        self._validate_update(data)
+        return self.repository.update_livestock(user_id, item_id, data)
+
+    def update_plant(self, user_id: int, item_id: int, data: InventoryUpdate) -> bool:
+        self._validate_update(data)
+        return self.repository.update_plant(user_id, item_id, data)
+
+    def archive_livestock(self, user_id: int, item_id: int, data: InventoryArchive) -> bool:
+        if data.reason not in {"death", "rehomed", "sold", "moved_out", "other"}:
+            raise ValueError("Choose what happened to this livestock")
+        return self.repository.archive_livestock(user_id, item_id, data)
+
+    def archive_plant(self, user_id: int, item_id: int, data: InventoryArchive) -> bool:
+        if data.reason not in {"removed", "melted", "propagated", "moved_out", "other"}:
+            raise ValueError("Choose what happened to this plant")
+        return self.repository.archive_plant(user_id, item_id, data)
+
+    def _validate_update(self, data: InventoryUpdate) -> None:
+        if not data.common_name.strip():
+            raise ValueError("Common name is required")
+        if data.quantity < 1:
+            raise ValueError("Quantity must be at least 1")

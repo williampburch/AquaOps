@@ -482,6 +482,76 @@ def test_tank_detail_adds_custom_livestock_and_plants(client: TestClient) -> Non
     assert "Microsorum pteropus" in plants.text
 
 
+def test_mobile_inventory_lifecycle_updates_moves_and_preserves_history(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+    second_tank = client.post(
+        "/tanks",
+        data={
+            "name": "Grow Out",
+            "tank_type": "freshwater",
+            "volume_liters": "40",
+        },
+        follow_redirects=False,
+    )
+    assert second_tank.status_code == 303
+
+    client.post(
+        "/tanks/1/livestock",
+        data={"common_name": "Ember Tetra", "quantity": "8"},
+    )
+    client.post(
+        "/tanks/1/plants",
+        data={"common_name": "Java Fern", "quantity": "2"},
+    )
+
+    livestock_page = client.get("/livestock")
+    plants_page = client.get("/plants")
+    assert "Manage Livestock" in livestock_page.text
+    assert "Manage Plants" in plants_page.text
+    assert "Manage entry" in livestock_page.text
+    assert 'inputmode="numeric"' in livestock_page.text
+
+    livestock_update = client.post(
+        "/livestock/1/update",
+        data={
+            "tank_id": "2",
+            "common_name": "Ember Tetra",
+            "species": "Hyphessobrycon amandae",
+            "quantity": "6",
+            "notes": "Moved for grow out",
+        },
+        follow_redirects=False,
+    )
+    plant_archive = client.post(
+        "/plants/1/archive",
+        data={
+            "reason": "melted",
+            "ended_on": "2026-07-13",
+            "notes": "Failed to establish",
+        },
+        follow_redirects=False,
+    )
+
+    assert livestock_update.status_code == 303
+    assert "saved=Livestock+updated" in livestock_update.headers["location"]
+    assert plant_archive.status_code == 303
+    assert "saved=Plant+history+updated" in plant_archive.headers["location"]
+
+    updated_livestock = client.get("/livestock")
+    updated_plants = client.get("/plants")
+    events = client.get("/events")
+    assert "Grow Out" in updated_livestock.text
+    assert 'value="6"' in updated_livestock.text
+    assert "No plants to manage" in updated_plants.text
+    assert "Updated Ember Tetra" in events.text
+    assert "Quantity 8 to 6; Moved from Display Tank to Grow Out" in events.text
+    assert "Melted: Java Fern" in events.text
+    assert "Failed to establish" in events.text
+
+
 def test_notifications_and_settings_pages_render(client: TestClient) -> None:
     _register(client)
 

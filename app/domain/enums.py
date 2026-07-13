@@ -10,6 +10,8 @@ class EventType(StrEnum):
     FERTILIZER = "fertilizer"
     NOTE = "note"
     PHOTO = "photo"
+    LIVESTOCK_CHANGE = "livestock_change"
+    PLANT_CHANGE = "plant_change"
 
 
 class MeasurementMetric(StrEnum):
