@@ -3,13 +3,15 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.application.exports.service import DataExportService
 from app.application.preferences.service import UserPreferenceService
 from app.core.config import get_settings
 from app.domain.preferences import UserPreferences
+from app.infrastructure.repositories.exports import SqlAlchemyDataExportRepository
 from app.infrastructure.repositories.preferences import SqlAlchemyUserPreferenceRepository
 from app.web.dependencies import AuthenticatedUser, get_db
 from app.web.presentation import UserDisplay
@@ -66,6 +68,19 @@ async def save_settings(
     service = UserPreferenceService(SqlAlchemyUserPreferenceRepository(db))
     service.save_preferences(current_user.id, preferences)
     return RedirectResponse("/settings?saved=1", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/export")
+def export_data(
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    export = DataExportService(SqlAlchemyDataExportRepository(db)).create_export(current_user.id)
+    return Response(
+        content=export.content,
+        media_type=export.media_type,
+        headers={"Content-Disposition": f'attachment; filename="{export.filename}"'},
+    )
 
 
 def _form_choice(form, key: str, default: str) -> str:

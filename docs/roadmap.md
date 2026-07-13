@@ -92,6 +92,9 @@ changes, observations, and photos on one timeline.
 - Fertilizer Dose Quick Log with automatically reusable user-owned products,
   recent locations, structured amount and unit history, and one-tap repeat-last
   dosing
+- Portable account data export as a ZIP of CSV datasets covering tanks, care
+  events and details, water measurements, schedules, reminders, livestock,
+  plants, fertilizer products, preferences, and a machine-readable manifest
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -112,7 +115,7 @@ Near-term work should follow this order:
 2. Recently used values and repeat-last-action shortcuts
 3. Notification delivery outside the app through push or email
 4. Photo capture and tank, plant, and livestock timelines
-5. Export, backup, and restore so long-term data remains trustworthy
+5. Import, backup automation, and restore so long-term data remains trustworthy
 6. Historical explanations that help connect a problem with preceding changes
 7. Hosted, installable PWA behavior and a low-friction onboarding path
 
@@ -249,10 +252,9 @@ Suggested care profiles:
 
 ## Later: Sharing, Export, and Data Ownership
 
-- CSV export
 - Printable tank history
 - Shareable read-only tank snapshot
-- Backup and restore workflows
+- Import, backup automation, and restore workflows
 - Photo timeline export
 - Optional public portfolio or demo tank page
 

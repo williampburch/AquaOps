@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Generator
+from io import BytesIO
+from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
@@ -90,6 +93,7 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     plants_response = client.get("/plants", follow_redirects=False)
     notifications_response = client.get("/notifications", follow_redirects=False)
     settings_response = client.get("/settings", follow_redirects=False)
+    export_response = client.get("/settings/export", follow_redirects=False)
     quick_log_response = client.get("/quick-log", follow_redirects=False)
 
     assert events_response.status_code == 303
@@ -103,6 +107,8 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     assert notifications_response.status_code == 303
     assert notifications_response.headers["location"] == "/login"
     assert settings_response.status_code == 303
+    assert export_response.status_code == 303
+    assert export_response.headers["location"] == "/login"
     assert quick_log_response.status_code == 303
     assert quick_log_response.headers["location"] == "/login"
     assert settings_response.headers["location"] == "/login"
@@ -775,6 +781,57 @@ def test_notifications_and_settings_pages_render(client: TestClient) -> None:
     assert "Automation Control" in settings_response.text
     assert "Water Alerts" in settings_response.text
     assert "Plant Care" in settings_response.text
+    assert "Download Your Data" in settings_response.text
+
+
+def test_settings_export_downloads_portable_user_data(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+    client.post(
+        "/quick-log/water-test",
+        data={"tank_id": "1", "ammonia": "0", "nitrate": "12"},
+    )
+    client.post(
+        "/quick-log/feeding",
+        data={"tank_id": "1", "food_name": "Community flakes"},
+    )
+    client.post(
+        "/quick-log/dose",
+        data={
+            "tank_id": "1",
+            "product_name": "Easy Green",
+            "dose_amount": "2",
+            "dose_unit": "mL",
+        },
+    )
+
+    response = client.get("/settings/export")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/zip"
+    assert "aquaops-export-" in response.headers["content-disposition"]
+    with ZipFile(BytesIO(response.content)) as export_zip:
+        filenames = set(export_zip.namelist())
+        assert {
+            "manifest.json",
+            "account.csv",
+            "tanks.csv",
+            "events.csv",
+            "water_measurements.csv",
+            "feeding_details.csv",
+            "fertilizer_details.csv",
+            "livestock.csv",
+            "plants.csv",
+        }.issubset(filenames)
+        assert "Display Tank" in export_zip.read("tanks.csv").decode()
+        assert "Community flakes" in export_zip.read("feeding_details.csv").decode()
+        assert "Easy Green" in export_zip.read("fertilizer_details.csv").decode()
+        manifest = json.loads(export_zip.read("manifest.json"))
+        assert manifest["format"] == "aquaops-portable-export"
+        event_manifest = next(
+            item for item in manifest["files"] if item["filename"] == "events.csv"
+        )
+        assert event_manifest["row_count"] == 3
 
 
 def test_settings_preferences_affect_new_tank_units(client: TestClient) -> None:
