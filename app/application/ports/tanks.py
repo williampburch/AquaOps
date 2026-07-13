@@ -65,6 +65,12 @@ class MaintenanceConfigUpdate:
 
 
 @dataclass(frozen=True)
+class QuickLogContext:
+    last_water_change_liters: Decimal | None
+    recent_equipment_names: list[str]
+
+
+@dataclass(frozen=True)
 class TankSummary:
     id: int
     name: str
@@ -178,3 +184,6 @@ class TankRepository(Protocol):
         configs: list[MaintenanceConfigUpdate],
     ) -> bool:
         """Persist recurring maintenance configs for a tank."""
+
+    def get_quick_log_context(self, user_id: int, tank_id: int) -> QuickLogContext | None:
+        """Return recent values that can accelerate safe quick logging."""

@@ -33,6 +33,9 @@ class TankService:
     def get_tank_detail(self, user_id: int, tank_id: int):
         return self.repository.get_tank_detail(user_id, tank_id)
 
+    def get_quick_log_context(self, user_id: int, tank_id: int):
+        return self.repository.get_quick_log_context(user_id, tank_id)
+
     def update_targets(
         self,
         user_id: int,

@@ -269,6 +269,51 @@ def test_quick_log_saves_non_water_maintenance(client: TestClient) -> None:
     assert "Filter Cleaning" in events.text
 
 
+def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+    client.post(
+        "/quick-log/water-change",
+        data={"tank_id": "1", "volume_changed": "10"},
+    )
+    client.post(
+        "/quick-log/water-test",
+        data={"tank_id": "1", "nitrate": "18"},
+    )
+    client.post(
+        "/quick-log/maintenance",
+        data={
+            "tank_id": "1",
+            "maintenance_type": "filter_cleaning",
+            "equipment_name": "Canister filter",
+        },
+    )
+
+    water_change = client.get("/quick-log?action=water_change&tank_id=1")
+    water_test = client.get("/quick-log?action=water_test&tank_id=1")
+    maintenance = client.get("/quick-log?action=maintenance&tank_id=1")
+
+    assert 'data-last-volume="10.0"' in water_change.text
+    assert "Use 10.0 gal" in water_change.text
+    assert "Last 18.000 ppm" in water_test.text
+    assert "Canister filter" in maintenance.text
+    assert 'data-equipment-name="Canister filter"' in maintenance.text
+    assert "aquaops-last-tank" in maintenance.text
+
+
+def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestClient) -> None:
+    response = client.get("/static/css/app.css")
+
+    assert response.status_code == 200
+    assert ".hero-brand-mark" in response.text
+    assert "max-width: 100%" in response.text
+    assert "overflow: hidden" in response.text
+    assert ".mobile-brand" in response.text
+    assert "height: 2.15rem" in response.text
+
+
 def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:
     _register(client)
     _create_tank(client)

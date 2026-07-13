@@ -82,6 +82,8 @@ changes, observations, and photos on one timeline.
   percentage presets, recurring schedule context, and optional conditioner,
   substrate vacuum, glass cleaning, filter cleaning, temperature matching,
   duration, and notes
+- Quick Log recent-value assistance for the last water-change volume, prior water
+  readings, recently used maintenance equipment, and remembered tank selection
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -117,8 +119,8 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 - Dropdown-first inputs with free-text fallback for repeated values such as
   foods, units, livestock targets, maintenance equipment, fertilizer products,
   observation tags, and common notes
-- Recently used values per user/tank so frequent entries become one-click
-  choices without blocking custom text
+- Expand recently used values beyond water changes and maintenance equipment to
+  foods, units, livestock targets, fertilizer products, tags, and common notes
 - Ability to promote repeated custom entries into reusable user-owned options
 - Extend water change details with reusable conditioner choices plus TDS and
   nitrate before/after readings

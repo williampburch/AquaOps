@@ -17,13 +17,14 @@ from app.application.ports.tanks import (
     NoteLog,
     ParameterReading,
     ParameterTarget,
+    QuickLogContext,
     TankCreate,
     TankDetail,
     TankEvent,
     TankSummary,
 )
 from app.core.time import utc_now
-from app.domain.enums import EventType
+from app.domain.enums import EventType, MaintenanceType
 from app.domain.maintenance import (
     MAINTENANCE_CONFIG_DEFAULT_INTERVALS,
     MAINTENANCE_CONFIG_LABELS,
@@ -229,6 +230,44 @@ class SqlAlchemyTankRepository:
         self._create_nitrate_recommendation(user_id, tank_id, event.id, measurements)
         self.session.commit()
         return event.id
+
+    def get_quick_log_context(self, user_id: int, tank_id: int) -> QuickLogContext | None:
+        if self._get_owned_tank(user_id, tank_id) is None:
+            return None
+        last_water_change_liters = self.session.scalar(
+            select(MaintenanceEventDetailModel.volume_changed_liters)
+            .join(EventModel, EventModel.id == MaintenanceEventDetailModel.event_id)
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                MaintenanceEventDetailModel.maintenance_type == MaintenanceType.WATER_CHANGE.value,
+                MaintenanceEventDetailModel.volume_changed_liters.is_not(None),
+            )
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(1)
+        )
+        equipment_rows = self.session.scalars(
+            select(MaintenanceEventDetailModel.equipment_name)
+            .join(EventModel, EventModel.id == MaintenanceEventDetailModel.event_id)
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                MaintenanceEventDetailModel.equipment_name.is_not(None),
+            )
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(20)
+        )
+        recent_equipment = []
+        for equipment_name in equipment_rows:
+            normalized = (equipment_name or "").strip()
+            if normalized and normalized not in recent_equipment:
+                recent_equipment.append(normalized)
+            if len(recent_equipment) == 5:
+                break
+        return QuickLogContext(
+            last_water_change_liters=last_water_change_liters,
+            recent_equipment_names=recent_equipment,
+        )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:
         tank = self._get_owned_tank(user_id, tank_id)

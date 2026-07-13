@@ -50,7 +50,7 @@
           <input name="action" type="hidden" value="{{ action }}" />
           <div>
             <label class="form-label" for="quick_log_tank">Aquarium</label>
-            <select class="form-select form-select-lg" id="quick_log_tank" name="tank_id" onchange="this.form.submit()">
+            <select class="form-select form-select-lg" id="quick_log_tank" name="tank_id" onchange="localStorage.setItem('aquaops-last-tank', this.value); this.form.submit()">
               {% for tank in tanks %}
                 <option value="{{ tank.id }}" {% if tank.id == selected_tank_id %}selected{% endif %}>{{ tank.name }}</option>
               {% endfor %}
@@ -80,6 +80,14 @@
                   <button class="percentage-preset" type="button" data-percentage="{{ amount }}">{{ amount }}%</button>
                 {% endfor %}
               </div>
+              {% if last_water_change_volume is not none %}
+                <div class="recent-value-row">
+                  <span>Last change</span>
+                  <button class="recent-value-button" type="button" data-last-volume="{{ last_water_change_volume }}">
+                    Use {{ last_water_change_volume }} {{ display.volume_unit_label }}
+                  </button>
+                </div>
+              {% endif %}
               <div class="quick-log-amount-grid">
                 <div>
                   <label class="form-label" for="percentage">Percentage</label>
@@ -151,7 +159,12 @@
                 <div class="water-test-input">
                   <label for="quick_{{ metric.key.value }}">
                     <strong>{{ metric.label }}</strong>
-                    <span>{{ metric.default_unit }}</span>
+                    {% set last_reading = latest_readings.get(metric.key.value) %}
+                    {% if last_reading %}
+                      <span class="last-reading">Last {{ last_reading.value }} {{ last_reading.unit }}</span>
+                    {% else %}
+                      <span>{{ metric.default_unit }}</span>
+                    {% endif %}
                   </label>
                   <input class="form-control form-control-lg" id="quick_{{ metric.key.value }}" name="{{ metric.key.value }}" type="number" inputmode="decimal" step="0.001" value="{{ form_values.get(metric.key.value, '') }}" />
                 </div>
@@ -191,7 +204,20 @@
             </div>
             <div>
               <label class="form-label" for="quick_equipment_name">Equipment <span class="optional-label">Optional</span></label>
-              <input class="form-control form-control-lg" id="quick_equipment_name" name="equipment_name" type="text" placeholder="Filter, heater, light, CO2" value="{{ form_values.get('equipment_name', '') }}" />
+              <input class="form-control form-control-lg" id="quick_equipment_name" name="equipment_name" type="text" list="recent_equipment" placeholder="Filter, heater, light, CO2" value="{{ form_values.get('equipment_name', '') }}" />
+              {% if recent_equipment_names %}
+                <datalist id="recent_equipment">
+                  {% for equipment_name in recent_equipment_names %}
+                    <option value="{{ equipment_name }}"></option>
+                  {% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Recently used</span>
+                  {% for equipment_name in recent_equipment_names %}
+                    <button class="recent-value-button" type="button" data-equipment-name="{{ equipment_name }}">{{ equipment_name }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
             <details class="quick-log-details">
               <summary>Add duration, date, or notes</summary>
@@ -228,6 +254,18 @@
 
 {% block extra_scripts %}
   <script>
+    const tankSelect = document.getElementById("quick_log_tank");
+    const query = new URLSearchParams(window.location.search);
+    const rememberedTank = localStorage.getItem("aquaops-last-tank");
+    const rememberedTankExists = tankSelect && Array.from(tankSelect.options).some((option) => option.value === rememberedTank);
+    if (tankSelect && !query.has("tank_id") && rememberedTank && rememberedTankExists) {
+      const action = query.get("action") || "water_change";
+      window.location.replace(`/quick-log?action=${encodeURIComponent(action)}&tank_id=${encodeURIComponent(rememberedTank)}`);
+    }
+    if (tankSelect) {
+      localStorage.setItem("aquaops-last-tank", tankSelect.value);
+    }
+
     document.querySelectorAll("[data-percentage]").forEach((button) => {
       button.addEventListener("click", () => {
         const percentage = document.getElementById("percentage");
@@ -243,6 +281,16 @@
         document.getElementById("percentage").value = "";
         document.querySelectorAll("[data-percentage]").forEach((item) => item.classList.remove("active"));
       }
+    });
+    document.querySelector("[data-last-volume]")?.addEventListener("click", (event) => {
+      document.getElementById("volume_changed").value = event.currentTarget.dataset.lastVolume;
+      document.getElementById("percentage").value = "";
+      document.querySelectorAll("[data-percentage]").forEach((item) => item.classList.remove("active"));
+    });
+    document.querySelectorAll("[data-equipment-name]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("quick_equipment_name").value = button.dataset.equipmentName;
+      });
     });
   </script>
 {% endblock %}

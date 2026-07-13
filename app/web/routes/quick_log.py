@@ -15,7 +15,7 @@ from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
 from app.domain.enums import MaintenanceType
-from app.domain.preferences import volume_to_liters
+from app.domain.preferences import volume_from_liters, volume_to_liters
 from app.domain.water import WATER_METRICS
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
@@ -219,6 +219,8 @@ def _render_quick_log(
     preferences = preferences_for_user(db, current_user)
     display = UserDisplay(preferences)
     water_change_schedule = None
+    quick_context = None
+    latest_readings = {}
     if selected_tank:
         water_change_schedule = next(
             (
@@ -228,6 +230,13 @@ def _render_quick_log(
             ),
             None,
         )
+        quick_context = service.get_quick_log_context(current_user.id, selected_tank.id)
+        latest_readings = {reading.metric_key: reading for reading in selected_tank.latest_readings}
+    last_water_change_volume = (
+        volume_from_liters(quick_context.last_water_change_liters, preferences.volume_unit)
+        if quick_context
+        else None
+    )
     return templates.TemplateResponse(
         request,
         "quick_log/index.html",
@@ -246,6 +255,11 @@ def _render_quick_log(
             "form_values": form_values or {},
             "water_metrics": display.visible_water_items(WATER_METRICS),
             "water_change_schedule": water_change_schedule,
+            "last_water_change_volume": last_water_change_volume,
+            "latest_readings": latest_readings,
+            "recent_equipment_names": (
+                quick_context.recent_equipment_names if quick_context else []
+            ),
             "maintenance_types": [
                 (item.value, item.value.replace("_", " ").title())
                 for item in MaintenanceType
