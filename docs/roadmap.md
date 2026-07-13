@@ -43,7 +43,8 @@
 - Reminder completion and snoozing from the care queue
 - Quick logging for feedings, maintenance, water changes, and observations from
   tank detail pages
-- Dashboard quick links into tank-level care logging
+- Dashboard quick links into focused tank-level water change, water test, and
+  maintenance logging
 - Tank-level maintenance schedule configs for water changes, feeding, filter
   cleaning, and fertilizer
 - Schedule-based reminder refresh after matching care logs
@@ -55,6 +56,10 @@
   dashboard quick-log priority
 - Mobile-first Quick Log for focused water changes, water tests, and maintenance,
   with tank selection, optional detail disclosure, and visible save errors
+- Water changes entered by percentage or preferred volume unit, with one-tap
+  percentage presets, recurring schedule context, and optional conditioner,
+  substrate vacuum, glass cleaning, filter cleaning, temperature matching,
+  duration, and notes
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -77,10 +82,8 @@ as detailed as it needs to be.
 - Recently used values per user/tank so frequent entries become one-click
   choices without blocking custom text
 - Ability to promote repeated custom entries into reusable user-owned options
-- More polished water change log flow with recurring schedule context
-- Water change optional details for conditioner, substrate vacuum, glass
-  cleaning, filter cleaning, temperature match, TDS before/after, and nitrate
-  before/after
+- Extend water change details with reusable conditioner choices plus TDS and
+  nitrate before/after readings
 - More polished feeding log flow with reusable foods and livestock targeting
 - Feeding shortcuts such as "fed today" and "skipped feeding" with optional
   reason
