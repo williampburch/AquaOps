@@ -1,289 +1,257 @@
-# Deployment Guide
+# AquaOps Production Deployment
 
-Target: Azure Linux VM, Docker Compose, Nginx reverse proxy, SQLite first.
+AquaOps production runs on an Azure Linux VM from a prebuilt Docker image published
+to GitHub Container Registry (GHCR):
 
-This guide assumes AquaOps is one of several sites on the same VM. Each site should have
-its own domain or subdomain, its own Compose project directory, and its own localhost
-port behind Nginx.
-
-Local development continues to use the base Compose file and local Dockerfile:
-
-```bash
-docker compose up --build
+```text
+ghcr.io/williampburch/aquaops
 ```
 
-Production uses `docker-compose.prod.yml`, which contains an `image:` reference and no
-`build:` section.
+The repository checkout is `/opt/aquaops`. Production uses
+`docker-compose.prod.yml`, and `make deploy` runs `scripts/deploy-image.sh`.
+The VM does **not** build an application image during a normal production deployment.
 
-## 1. Prepare the VM
+## Production architecture
 
-Install Docker, the Docker Compose plugin, Git, and Nginx. On Ubuntu:
+- The `aquaops-web` container binds `127.0.0.1:8010:8000`. The application port is
+  not exposed directly to the internet.
+- Nginx terminates public HTTPS traffic and proxies it to
+  `http://127.0.0.1:8010`.
+- The local health endpoint is `http://127.0.0.1:8010/health`.
+- SQLite data is stored in the `aquaops_data` Docker volume.
+- Uploaded media is stored in the `aquaops_media` Docker volume.
+- Docker Compose may prefix the physical volume names with the project name, such as
+  `aquaops_aquaops_data` and `aquaops_aquaops_media`.
+- Production settings and secrets are stored in `/opt/aquaops/.env`.
+
+Never commit `.env`, print its contents, or copy its secrets into deployment logs or
+support chats. Confirm that the file exists without displaying it:
 
 ```bash
-sudo apt update
-sudo apt install -y ca-certificates curl git nginx
+cd /opt/aquaops
+test -f .env && echo ".env exists" || echo "ERROR: .env is missing"
 ```
 
-Install Docker from Docker's official instructions for your distribution, then verify:
+## Image tags
+
+GitHub Actions publishes the application image after a successful build. Production
+deployments should use the immutable short Git commit SHA for the desired release:
 
 ```bash
+AQUAOPS_IMAGE_TAG=ed8ab8a make deploy
+```
+
+Replace `ed8ab8a` with the tag for the commit being deployed. A short-SHA tag makes
+the deployed version explicit and repeatable. The `latest` tag can move whenever a
+new image is published, so it is less safe and should not be used for routine
+production deployments.
+
+## GHCR access
+
+Public GHCR images can be pulled without authentication. If the AquaOps package is
+private, authenticate once as the same Linux user that performs deployments. Use a
+GitHub personal access token (classic) with only the `read:packages` scope. Do not put
+the token in this repository or in `.env`.
+
+```bash
+read -rsp "GitHub package token: " CR_PAT
+echo
+printf '%s' "$CR_PAT" | docker login ghcr.io -u williampburch --password-stdin
+unset CR_PAT
+```
+
+Docker saves the registry login in that Linux user's Docker client configuration.
+
+## Before every deployment
+
+### 1. Connect and run preflight checks
+
+```bash
+cd /opt/aquaops
+pwd
 docker --version
 docker compose version
-sudo systemctl status nginx
+curl --version
+flock --version
+test -f .env && echo ".env exists" || echo "ERROR: .env is missing"
 ```
 
-Clone the repository into a stable path:
+The expected working directory is `/opt/aquaops`. Stop if `.env` is missing or Docker
+is unavailable.
+
+Check the current container, health endpoint, and persistent volumes:
 
 ```bash
-sudo mkdir -p /opt/aquaops
-sudo chown "$USER":"$USER" /opt/aquaops
-git clone https://github.com/williampburch/AquaOps.git /opt/aquaops
+docker ps --filter "name=aquaops-web"
+curl -fsS http://127.0.0.1:8010/health
+docker volume ls --format '{{.Name}}' | grep aquaops
+```
+
+### 2. Back up data and media
+
+Back up both persistent volumes before any deployment that may run migrations. The
+following example discovers the actual volume names from the running container, stops
+the application for a consistent SQLite backup, and creates timestamped compressed
+archives. It does not print `.env`.
+
+```bash
 cd /opt/aquaops
+
+DATA_VOLUME="$(docker inspect aquaops-web --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}')"
+MEDIA_VOLUME="$(docker inspect aquaops-web --format '{{range .Mounts}}{{if eq .Destination "/app/media"}}{{.Name}}{{end}}{{end}}')"
+BACKUP_DIR="$HOME/aquaops-backups/$(date -u +%Y%m%dT%H%M%SZ)"
+
+test -n "$DATA_VOLUME" || { echo "Could not find the /app/data volume" >&2; exit 1; }
+test -n "$MEDIA_VOLUME" || { echo "Could not find the /app/media volume" >&2; exit 1; }
+mkdir -p "$BACKUP_DIR"
+
+docker pull alpine:3.20
+docker compose -f docker-compose.prod.yml stop web
+docker run --rm \
+  -v "$DATA_VOLUME:/source:ro" \
+  -v "$BACKUP_DIR:/backup" \
+  alpine:3.20 tar -C /source -czf /backup/aquaops_data.tar.gz .
+docker run --rm \
+  -v "$MEDIA_VOLUME:/source:ro" \
+  -v "$BACKUP_DIR:/backup" \
+  alpine:3.20 tar -C /source -czf /backup/aquaops_media.tar.gz .
+
+ls -lh "$BACKUP_DIR"
+sha256sum "$BACKUP_DIR"/*.tar.gz
+docker compose -f docker-compose.prod.yml start web
+curl -fsS http://127.0.0.1:8010/health
 ```
 
-## 2. Configure Environment
+Pulling the small backup helper image before stopping the service limits downtime. Both
+archives must exist and have plausible, nonzero sizes, the checksums must be recorded,
+and the existing application must be healthy before proceeding. If an archive command
+fails and leaves the service stopped, restart the existing container with:
 
 ```bash
-cp .env.example .env
+docker compose -f docker-compose.prod.yml start web
+curl -fsS http://127.0.0.1:8010/health
 ```
 
-Set production values in `.env`:
+Copy backups off the VM and periodically test restoration. A backup stored only on the
+production VM is not sufficient disaster recovery. Restoring a volume overwrites live
+state, so perform restoration only during a planned outage and retain the current
+volumes until the restored application has been verified.
 
-```env
-APP_ENV=production
-DEBUG=false
-SECRET_KEY=<long-random-secret>
-DATABASE_URL=sqlite:////app/data/aquaops.db
-AUTO_CREATE_TABLES=false
-SESSION_COOKIE_NAME=aquaops_session
-SESSION_TTL_DAYS=30
-DATA_DIR=/app/data
-MEDIA_ROOT=/app/media
-```
+## Deploy a release
 
-Generate a secret key with:
+Choose the short-SHA tag for the release and use the same value in every command below.
+This example uses `ed8ab8a`:
+
+### 1. Confirm that the image is available
 
 ```bash
-openssl rand -hex 32
+docker pull ghcr.io/williampburch/aquaops:ed8ab8a
 ```
 
-Do not reuse `SECRET_KEY` from another site. It protects session-token hashes.
+If this fails with an authorization error, complete the GHCR authentication step above.
+Do not proceed if the requested image cannot be pulled.
 
-## 3. Choose a Local Port
+### 2. Update the deployment files
 
-The Compose file binds Uvicorn to localhost only:
+```bash
+cd /opt/aquaops
+git pull --ff-only origin main
+```
+
+The fast-forward-only pull stops instead of silently merging unexpected VM-side Git
+changes. Resolve any reported local changes deliberately before deploying.
+
+### 3. Deploy the selected image
+
+```bash
+AQUAOPS_IMAGE_TAG=ed8ab8a make deploy
+```
+
+`make deploy` runs `scripts/deploy-image.sh`, which:
+
+1. Takes a deployment lock so two deployments cannot overlap.
+2. Preserves the previously running image with a timestamped local `rollback-*` tag.
+3. Pulls `ghcr.io/williampburch/aquaops:<tag>` from GHCR.
+4. Runs `alembic upgrade head` using the pulled image.
+5. Recreates `aquaops-web` with Docker Compose and `--no-build`.
+6. Retries `http://127.0.0.1:8010/health` and prints diagnostics on failure.
+7. Attempts to recreate the previous image if restart or health verification fails.
+
+## Verify the deployment
+
+Run all of these checks after `make deploy` succeeds:
+
+```bash
+curl -fsS http://127.0.0.1:8010/health
+docker ps --filter "name=aquaops-web"
+docker compose -f docker-compose.prod.yml logs --tail 80 web
+curl -fsS -o /dev/null -w "public_https=%{http_code}\n" https://aquaops.william-burch.com/
+```
+
+The local health request must succeed, `aquaops-web` should be running, and the public
+HTTPS check should report a successful HTTP status. If verification fails, retain the
+command output and inspect the diagnostics printed by the deploy script.
+
+To confirm which image reference the container was created from:
+
+```bash
+docker inspect aquaops-web --format 'image={{.Config.Image}} id={{.Image}} status={{.State.Status}}'
+```
+
+## Rollback behavior and limitation
+
+Before replacing an existing container, the deploy script tags its image locally as:
+
+```text
+ghcr.io/williampburch/aquaops:rollback-<UTC timestamp>
+```
+
+If the new container cannot start or pass its health check, the script makes a
+best-effort attempt to recreate the service from that preserved image. Keep these local
+rollback tags until the new release and its data are confirmed healthy.
+
+**Image rollback does not reverse database migrations.** Alembic may already have
+changed the SQLite database in the shared data volume before a container failure is
+detected. If a release requires a database rollback, use the migration-specific recovery
+plan or restore the pre-deployment data backup during a planned outage. Do not assume
+that starting the old image also restores the old schema.
+
+## Nginx and TLS
+
+Nginx is the only public entry point. It reverse proxies AquaOps HTTPS traffic to:
+
+```nginx
+proxy_pass http://127.0.0.1:8010;
+```
+
+The application port must remain bound to localhost in `docker-compose.prod.yml`:
 
 ```yaml
 ports:
   - "127.0.0.1:8010:8000"
 ```
 
-If another site already uses port `8010`, change only the host-side port:
-
-```yaml
-ports:
-  - "127.0.0.1:8020:8000"
-```
-
-Then proxy Nginx to the same port, for example `http://127.0.0.1:8020`.
-
-## 4. Authenticate to GHCR
-
-The AquaOps package may require GitHub Container Registry authentication. Create a
-GitHub personal access token with `read:packages`, then authenticate once as the VM user
-that runs deployments:
+After an intentional Nginx configuration change, validate before reloading:
 
 ```bash
-printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u williampburch --password-stdin
-```
-
-Do not place the token in the repository or `.env`. Docker stores the login in that
-user's Docker client configuration. A public package can be pulled without logging in.
-
-## 5. Deploy and Start the App
-
-Deploy the most recently published `latest` image:
-
-```bash
-make deploy
-```
-
-The production deployment script pulls the image, runs Alembic migrations from that
-image, recreates the service without building, and health-checks the localhost endpoint.
-The VM no longer builds AquaOps images during normal production deployments.
-For a reproducible deployment, use the short-SHA tag published by GitHub Actions:
-
-```bash
-AQUAOPS_IMAGE_TAG=3dc1580 make deploy
-```
-
-Use the tag shown for the commit you intend to deploy. `latest` is the default when
-`AQUAOPS_IMAGE_TAG` is unset.
-
-Check the app locally from the VM:
-
-```bash
-curl -f http://127.0.0.1:8010/health
-```
-
-Use your chosen host port if you changed it in Compose.
-
-## 6. Nginx for Multiple Sites
-
-Use one Nginx server block per site. AquaOps ships an example at
-`docker/nginx/aquaops.conf.example`.
-
-Copy it into `sites-available`:
-
-```bash
-sudo cp docker/nginx/aquaops.conf.example /etc/nginx/sites-available/aquaops.conf
-sudo nano /etc/nginx/sites-available/aquaops.conf
-```
-
-Set:
-
-- `server_name` to your AquaOps domain, such as `aquaops.example.com`
-- both `proxy_pass` values to the localhost port chosen in Compose
-
-Example:
-
-```nginx
-server {
-    listen 80;
-    server_name aquaops.example.com;
-
-    client_max_body_size 25m;
-
-    location /static/ {
-        proxy_pass http://127.0.0.1:8010/static/;
-        expires 7d;
-        add_header Cache-Control "public";
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:8010;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-AquaOps versions the application stylesheet URL from the built file timestamp.
-This allows long-lived browser and Nginx caching while ensuring a new container
-build immediately points browsers to the current CSS instead of a stale mobile
-layout.
-
-Enable the site and reload Nginx:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/aquaops.conf /etc/nginx/sites-enabled/aquaops.conf
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Each additional site on the VM should use a different `server_name` and, if it is a
-separate containerized app, a different localhost port.
+Do not expose port `8010` through the Azure network security group or VM firewall.
 
-If the default Nginx welcome site is still enabled and conflicts with your domains,
-disable it:
+## Local and legacy deployment paths
 
-```bash
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-```
+Local development may continue to use `docker-compose.yml` and build the repository's
+Dockerfile on a development machine. This is separate from production.
 
-At the VM firewall or cloud network security group, expose only HTTP/HTTPS to the
-internet. The AquaOps app port should stay bound to `127.0.0.1`.
+`make deploy-build` remains only as a legacy/local troubleshooting fallback. It builds
+an image on the machine where it is run and is **not** the normal or recommended Azure
+VM deployment path. Production releases must use the prebuilt GHCR image through
+`AQUAOPS_IMAGE_TAG=<short-sha> make deploy`.
 
-## 7. TLS
+## Documentation maintenance
 
-Add TLS with Certbot or your preferred certificate workflow:
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d aquaops.example.com
-```
-
-Certbot will update the Nginx server block and reload Nginx after issuing the certificate.
-
-## 8. Backups
-
-Back up the Compose-managed Docker volumes:
-
-- `aquaops_data`: SQLite database
-- `aquaops_media`: uploaded photos
-
-Depending on the Compose project name, Docker may prefix these names, for example
-`aquaops_aquaops_data`. Confirm with:
-
-```bash
-docker volume ls
-```
-
-For a simple SQLite backup, stop the container or ensure the database is quiet, then copy
-the database out of the data volume. For long-term production use, add a tested backup
-script before relying on the app for critical history.
-
-## 9. Updating
-
-From `/opt/aquaops`:
-
-```bash
-make deploy
-```
-
-`make deploy` runs `scripts/deploy-image.sh`. The script:
-
-- refuses to continue if Docker, the Compose plugin, `curl`, or `flock` is unavailable
-- takes a non-blocking deployment lock so two releases cannot overlap
-- preserves the currently running image under a local rollback tag
-- pulls `ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG:-latest}`
-- runs `alembic upgrade head` in a one-off container using the pulled image
-- recreates `aquaops-web` with `--no-build`
-- retries `http://127.0.0.1:8010/health` and prints container status, logs, and inspect
-  output on failure
-- attempts to recreate and health-check the previous image when restart or health
-  verification fails
-
-Deploy an immutable SHA-tagged image when possible:
-
-```bash
-AQUAOPS_IMAGE_TAG=<short-sha> make deploy
-```
-
-The image rollback is best effort. It restores the previous container image, but it does
-not downgrade database migrations already applied to the shared SQLite volume. Keep a
-tested database and media backup before deployments that include schema changes. Local
-`rollback-*` image tags are retained and may be pruned manually after a deployment is
-confirmed healthy.
-
-The former VM-build deployment remains available for troubleshooting, but is not the
-normal production path:
-
-```bash
-make deploy-build
-```
-
-That target runs `scripts/deploy-container.sh` and builds locally. Local development still
-uses `docker compose up --build` with `docker-compose.yml`.
-
-## GHCR Image Publishing
-
-The separate `Publish Docker image` GitHub Actions workflow now builds the repository
-`Dockerfile` and publishes it to `ghcr.io/williampburch/aquaops` after pushes to `main`.
-It can also be started manually with **Actions → Publish Docker image → Run workflow**.
-Published images receive `latest`, `main`, and short commit-SHA tags.
-
-Production now consumes these images through `docker-compose.prod.yml` and
-`scripts/deploy-image.sh`. GitHub Actions publishes images but does not connect to or
-modify the VM; an operator still starts each deployment from the VM with `make deploy`.
-
-## 10. PostgreSQL Later
-
-SQLite is intentional for the first deployment. To move later, replace `DATABASE_URL` with
-a PostgreSQL URL and add either a PostgreSQL service or a managed database. The ORM and
-migrations are structured to support that path.
+Any future change to deployment behavior, ports, Compose files, image registry, volume
+names, health checks, rollback behavior, or the backup/restore process must update
+`docs/deployment.md` in the same pull request.
