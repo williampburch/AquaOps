@@ -156,6 +156,68 @@ def test_create_tank_seeds_target_ranges(client: TestClient) -> None:
     assert "Nitrate" in detail.text
 
 
+def test_tank_setup_wizard_applies_editable_care_profile_templates(
+    client: TestClient,
+) -> None:
+    _register(client)
+
+    wizard = client.get("/tanks/new")
+    response = client.post(
+        "/tanks",
+        data={
+            "name": "Aquascape",
+            "tank_type": "planted",
+            "volume_liters": "120",
+            "care_profile": "planted_tank",
+            "reminders_enabled": "on",
+        },
+        follow_redirects=False,
+    )
+
+    assert wizard.status_code == 200
+    assert "Set up care that fits this aquarium." in wizard.text
+    assert "Simple Care" in wizard.text
+    assert "High-Tech Planted" in wizard.text
+    assert "Breeder / Grow-Out" in wizard.text
+    assert response.status_code == 303
+
+    detail = client.get("/tanks/1")
+    notifications = client.get("/notifications")
+    assert "Planted Tank" in detail.text
+    assert 'name="water_change_interval_days"' in detail.text
+    assert 'name="plant_trimming_interval_days"' in detail.text
+    assert 'name="fertilizer_interval_days"' in detail.text
+    assert "Water changes due" in notifications.text
+    assert "Feeding due" in notifications.text
+    assert "Fertilizer dosing due" in notifications.text
+    assert "Plant trimming" in detail.text
+
+
+def test_water_testing_profile_refreshes_its_starter_reminder(client: TestClient) -> None:
+    _register(client)
+    client.post(
+        "/tanks",
+        data={
+            "name": "Cycling Tank",
+            "tank_type": "freshwater",
+            "care_profile": "water_testing",
+            "reminders_enabled": "on",
+        },
+    )
+
+    response = client.post(
+        "/tanks/1/water-tests",
+        data={"occurred_at": "2026-07-14T08:00", "ammonia": "0", "nitrite": "0"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    notifications = client.get("/notifications")
+    assert "Water testing due" in notifications.text
+    assert "Jul 21, 2026" in notifications.text
+    assert "Generated from the water testing schedule after Water test" in notifications.text
+
+
 def test_log_water_test_updates_latest_readings_and_charts(client: TestClient) -> None:
     _register(client)
     _create_tank(client)

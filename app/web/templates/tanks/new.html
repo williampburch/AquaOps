@@ -1,60 +1,119 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="form-layout">
-    <form class="panel stack-form" method="post" action="/tanks">
+  <section class="tank-wizard-shell">
+    <header class="tank-wizard-intro">
+      <div>
+        <p class="eyebrow mb-1">Guided setup</p>
+        <h2>Set up care that fits this aquarium.</h2>
+        <p>Choose a starting profile now. Every reminder and interval stays editable.</p>
+      </div>
+      <span>About 1 minute</span>
+    </header>
+
+    <form class="tank-wizard" method="post" action="/tanks">
       {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
       {% endif %}
 
-      <div class="form-grid">
-        <div>
-          <label class="form-label" for="name">Name</label>
-          <input class="form-control" id="name" name="name" type="text" required />
+      <section class="panel tank-wizard-step">
+        <div class="tank-wizard-step-heading">
+          <span>1</span>
+          <div><strong>Aquarium basics</strong><small>Only the name is required.</small></div>
         </div>
-        <div>
-          <label class="form-label" for="tank_type">Type</label>
-          <select class="form-select" id="tank_type" name="tank_type">
-            <option value="freshwater">Freshwater</option>
-            <option value="planted">Planted freshwater</option>
-            <option value="brackish">Brackish</option>
-            <option value="saltwater">Saltwater</option>
-          </select>
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="name">Tank name</label>
+            <input class="form-control form-control-lg" id="name" name="name" type="text" required autofocus placeholder="Living Room Community" value="{{ form_values.get('name', '') }}" />
+          </div>
+          <div>
+            <label class="form-label" for="tank_type">Aquarium type</label>
+            <select class="form-select form-select-lg" id="tank_type" name="tank_type">
+              {% for value, label in [('freshwater', 'Freshwater'), ('planted', 'Planted freshwater'), ('brackish', 'Brackish'), ('saltwater', 'Saltwater')] %}
+                <option value="{{ value }}" {% if form_values.get('tank_type', 'freshwater') == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="volume">Volume <span class="optional-label">Optional</span></label>
+            <div class="input-group input-group-lg">
+              <input class="form-control" id="volume" name="volume" type="number" inputmode="decimal" min="0" step="0.01" value="{{ form_values.get('volume', '') }}" />
+              <span class="input-group-text">{{ display.volume_unit_label }}</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="started_on">Started <span class="optional-label">Optional</span></label>
+            <input class="form-control form-control-lg" id="started_on" name="started_on" type="date" value="{{ form_values.get('started_on', '') }}" />
+          </div>
         </div>
-        <div>
-          <label class="form-label" for="volume">Volume ({{ display.volume_unit_label }})</label>
-          <input class="form-control" id="volume" name="volume" type="number" step="0.01" />
-        </div>
-        <div>
-          <label class="form-label" for="started_on">Started</label>
-          <input class="form-control" id="started_on" name="started_on" type="date" />
-        </div>
-      </div>
+      </section>
 
-      <div>
-        <label class="form-label" for="description">Description</label>
-        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-      </div>
+      <section class="panel tank-wizard-step">
+        <div class="tank-wizard-step-heading">
+          <span>2</span>
+          <div><strong>Choose a care profile</strong><small>This creates editable starter schedules.</small></div>
+        </div>
+        <div class="care-profile-grid">
+          {% for profile in care_profiles %}
+            <label class="care-profile-card">
+              <input name="care_profile" type="radio" value="{{ profile.key }}" {% if form_values.get('care_profile', 'simple_care') == profile.key %}checked{% endif %} />
+              <span class="care-profile-check" aria-hidden="true"></span>
+              <strong>{{ profile.label }}</strong>
+              <small>{{ profile.summary }}</small>
+              <span class="care-profile-schedules">
+                {% if profile.schedule_intervals %}
+                  {{ profile.schedule_intervals|length }} starter schedules
+                {% else %}
+                  No automatic schedules
+                {% endif %}
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+        <label class="wizard-reminder-toggle">
+          <input class="form-check-input" name="reminders_enabled" type="checkbox" {% if not error or form_values.get('reminders_enabled') %}checked{% endif %} />
+          <span><strong>Add these schedules to my Care Queue</strong><small>Immediate tasks start today; longer-cycle care is scheduled ahead.</small></span>
+        </label>
+      </section>
 
-      <div class="form-grid">
-        <div>
-          <label class="form-label" for="lighting">Lighting</label>
-          <input class="form-control" id="lighting" name="lighting" type="text" />
+      <section class="panel tank-wizard-step">
+        <div class="tank-wizard-step-heading">
+          <span>3</span>
+          <div><strong>Optional tank details</strong><small>Skip these now and add them later.</small></div>
         </div>
-        <div>
-          <label class="form-label" for="filtration">Filtration</label>
-          <input class="form-control" id="filtration" name="filtration" type="text" />
-        </div>
-        <div>
-          <label class="form-label" for="substrate">Substrate</label>
-          <input class="form-control" id="substrate" name="substrate" type="text" />
-        </div>
-      </div>
+        <details class="wizard-optional-details" {% if form_values.get('description') or form_values.get('lighting') or form_values.get('filtration') or form_values.get('substrate') %}open{% endif %}>
+          <summary>Add equipment, substrate, or a description</summary>
+          <div class="quick-log-details-body">
+            <div>
+              <label class="form-label" for="description">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" placeholder="Community tank, aquascape goals, or anything useful">{{ form_values.get('description', '') }}</textarea>
+            </div>
+            <div class="form-grid">
+              <div><label class="form-label" for="lighting">Lighting</label><input class="form-control" id="lighting" name="lighting" type="text" value="{{ form_values.get('lighting', '') }}" /></div>
+              <div><label class="form-label" for="filtration">Filtration</label><input class="form-control" id="filtration" name="filtration" type="text" value="{{ form_values.get('filtration', '') }}" /></div>
+              <div><label class="form-label" for="substrate">Substrate</label><input class="form-control" id="substrate" name="substrate" type="text" value="{{ form_values.get('substrate', '') }}" /></div>
+            </div>
+          </div>
+        </details>
+      </section>
 
-      <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Create tank</button>
-        <a class="btn btn-outline-light" href="/tanks">Cancel</a>
+      <div class="tank-wizard-actions">
+        <a class="btn btn-outline-secondary btn-lg" href="/tanks">Cancel</a>
+        <button class="btn btn-primary btn-lg" type="submit">Create tank and care plan</button>
       </div>
     </form>
   </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    const tankType = document.getElementById("tank_type");
+    document.querySelectorAll('input[name="care_profile"]').forEach((profile) => {
+      profile.addEventListener("change", () => {
+        if (["planted_tank", "high_tech_planted"].includes(profile.value) && tankType.value === "freshwater") {
+          tankType.value = "planted";
+        }
+      });
+    });
+  </script>
 {% endblock %}

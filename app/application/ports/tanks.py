@@ -17,6 +17,8 @@ class TankCreate:
     filtration: str | None
     substrate: str | None
     temperature_unit: str = "F"
+    care_profile: str = "custom"
+    reminders_enabled: bool = False
 
 
 @dataclass(frozen=True)
@@ -122,6 +124,7 @@ class TankSummary:
     volume_liters: Decimal | None
     event_count: int
     latest_event_at: datetime | None
+    care_profile: str = "custom"
 
 
 @dataclass(frozen=True)
@@ -182,6 +185,7 @@ class TankDetail:
     chart_series: list[ChartSeries]
     recent_events: list[TankEvent]
     maintenance_configs: list[MaintenanceConfig]
+    care_profile: str = "custom"
 
 
 class TankRepository(Protocol):

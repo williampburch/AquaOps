@@ -16,6 +16,7 @@
           <span class="metric-label">{{ tank.tank_type }}</span>
           <strong>{{ tank.name }}</strong>
           <div class="tile-meta">
+            <span>{{ tank.care_profile.replace("_", " ")|title }}</span>
             <span>{{ display.format_volume(tank.volume_liters) }}</span>
             <span>{{ tank.event_count }} events</span>
           </div>

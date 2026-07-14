@@ -49,6 +49,11 @@ changes, observations, and photos on one timeline.
 ## Current Product Slice
 
 - Tank creation and profile pages
+- Mobile-first tank setup wizard with Simple Care, Water Testing, Planted Tank,
+  High-Tech Planted, Breeder / Grow-Out, Quarantine, and Custom profiles
+- Care profiles that persist on each tank and create immediately useful,
+  editable feeding, water-change, water-test, filter, fertilizer, and plant-trim
+  schedules with starter items in the Care Queue
 - Tank-specific water parameter target ranges
 - Water test logging through the generic event model
 - Latest water readings and per-parameter trend charts
@@ -168,45 +173,23 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 ## Next: Configurable Care Modes
 
 - Setup wizard after account creation
-- Tank setup wizard when creating a tank
 - Hobby-style setup questions for tank type, plants, fertilizer, CO2,
   reminders, units, and desired tracking detail
-- Preset care profiles for common aquarium styles
-- Custom mode for users who want complete control
 - Tank-level module configuration
 - User-level default preferences
 - Dashboard density options
 - Feature and module toggles
 - Progressive disclosure so simple users are not overwhelmed
 
-Suggested care profiles:
-
-- Simple Care
-- Water Testing
-- Planted Tank
-- High-Tech Planted
-- Breeder / Grow-Out
-- Quarantine
-- Custom
-
 ## Next: Care Schedule Templates
 
-- Weekly water change template
-- Daily feeding template
 - Weekly fasting day template
-- Feeding schedule template
-- Filter cleaning schedule template
 - Prefilter sponge cleaning template
 - Canister cleaning template
 - Water testing schedule while cycling
-- Weekly nitrate testing template
-- Fertilizer dosing schedule
 - Root tab replacement schedule
-- Plant trimming schedule
 - CO2 check schedule
 - Custom recurring care templates
-- Templates that create editable tank-specific maintenance configs instead of
-  rigid global schedules
 
 ## Next: Planted Tank Workflows
 

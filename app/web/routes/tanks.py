@@ -22,7 +22,12 @@ from app.application.ports.tanks import (
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
 from app.core.time import utc_now
+from app.domain.care_profiles import CARE_PROFILES, care_profile
 from app.domain.enums import MaintenanceType
+from app.domain.maintenance import (
+    MAINTENANCE_CONFIG_DEFAULT_INTERVALS,
+    MAINTENANCE_CONFIG_LABELS,
+)
 from app.domain.preferences import volume_to_liters
 from app.domain.water import WATER_METRICS
 from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
@@ -71,6 +76,8 @@ def new_tank_form(request: Request, db: DbSession, current_user: AuthenticatedUs
             "preferences": preferences,
             "display": UserDisplay(preferences),
             "error": None,
+            "form_values": {},
+            "care_profiles": list(CARE_PROFILES.values()),
         },
     )
 
@@ -82,6 +89,7 @@ async def create_tank(
     current_user: AuthenticatedUser,
 ):
     form = await request.form()
+    form_values = {str(key): str(value).strip() for key, value in form.items()}
     service = TankService(SqlAlchemyTankRepository(db))
     preferences = preferences_for_user(db, current_user)
     try:
@@ -103,6 +111,8 @@ async def create_tank(
                 filtration=_form_text(form, "filtration"),
                 substrate=_form_text(form, "substrate"),
                 temperature_unit=preferences.temperature_unit,
+                care_profile=_form_text(form, "care_profile") or "custom",
+                reminders_enabled="reminders_enabled" in form,
             ),
         )
     except ValueError as exc:
@@ -116,6 +126,8 @@ async def create_tank(
                 "preferences": preferences,
                 "display": UserDisplay(preferences),
                 "error": str(exc),
+                "form_values": form_values,
+                "care_profiles": list(CARE_PROFILES.values()),
             },
             status_code=status.HTTP_400_BAD_REQUEST,
         )
@@ -147,6 +159,7 @@ def tank_detail(
             "preferences": preferences,
             "display": display,
             "tank": tank,
+            "tank_care_profile": care_profile(tank.care_profile),
             "water_metrics": display.visible_water_items(WATER_METRICS),
             "maintenance_types": [
                 (maintenance_type.value, maintenance_type.value.replace("_", " ").title())
@@ -360,12 +373,13 @@ async def update_maintenance_configs(
 ):
     form = await request.form()
     configs = []
-    for key in ("water_change", "feeding", "filter_cleaning", "fertilizer"):
+    for key in MAINTENANCE_CONFIG_LABELS:
         configs.append(
             MaintenanceConfigUpdate(
                 config_type=key,
                 enabled=f"{key}_enabled" in form,
-                interval_days=_optional_int(_form_text(form, f"{key}_interval_days")),
+                interval_days=_optional_int(_form_text(form, f"{key}_interval_days"))
+                or MAINTENANCE_CONFIG_DEFAULT_INTERVALS[key],
             )
         )
 

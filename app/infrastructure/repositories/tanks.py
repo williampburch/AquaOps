@@ -30,6 +30,7 @@ from app.application.ports.tanks import (
     TankSummary,
 )
 from app.core.time import utc_now
+from app.domain.care_profiles import care_profile
 from app.domain.enums import EventType, MaintenanceType
 from app.domain.maintenance import (
     MAINTENANCE_CONFIG_DEFAULT_INTERVALS,
@@ -80,15 +81,18 @@ class SqlAlchemyTankRepository:
                 volume_liters=tank.volume_liters,
                 event_count=event_count,
                 latest_event_at=latest_event_at,
+                care_profile=tank.care_profile,
             )
             for tank, event_count, latest_event_at in rows
         ]
 
     def create_tank(self, user_id: int, data: TankCreate) -> int:
+        profile = care_profile(data.care_profile)
         tank = TankModel(
             user_id=user_id,
             name=data.name.strip(),
             tank_type=data.tank_type.strip() or "freshwater",
+            care_profile=profile.key,
             volume_liters=data.volume_liters,
             started_on=data.started_on,
             description=data.description,
@@ -99,6 +103,12 @@ class SqlAlchemyTankRepository:
         self.session.add(tank)
         self.session.flush()
         self._seed_default_targets(tank.id, data.temperature_unit)
+        self._seed_maintenance_profile(
+            user_id,
+            tank.id,
+            profile.schedule_intervals,
+            data.reminders_enabled,
+        )
         self.session.commit()
         return tank.id
 
@@ -127,6 +137,7 @@ class SqlAlchemyTankRepository:
             chart_series=self._chart_series(tank.id),
             recent_events=self._recent_events(tank.id),
             maintenance_configs=self._maintenance_configs_for_tank(tank.id),
+            care_profile=tank.care_profile,
         )
 
     def update_targets(
@@ -236,6 +247,14 @@ class SqlAlchemyTankRepository:
             )
 
         self._create_nitrate_recommendation(user_id, tank_id, event.id, measurements)
+        self._refresh_scheduled_reminder(
+            user_id=user_id,
+            tank_id=tank_id,
+            source_event_id=event.id,
+            config_type="water_test",
+            title=MAINTENANCE_CONFIG_LABELS["water_test"],
+            occurred_at=occurred_at,
+        )
         self.session.commit()
         return event.id
 
@@ -608,6 +627,40 @@ class SqlAlchemyTankRepository:
                         config_type=config_type,
                         enabled=False,
                         interval_days=interval_days,
+                    )
+                )
+
+    def _seed_maintenance_profile(
+        self,
+        user_id: int,
+        tank_id: int,
+        schedule_intervals: dict[str, int],
+        reminders_enabled: bool,
+    ) -> None:
+        now = utc_now()
+        immediate_types = {"feeding", "fertilizer", "water_test"}
+        for config_type, default_interval in MAINTENANCE_CONFIG_DEFAULT_INTERVALS.items():
+            enabled = reminders_enabled and config_type in schedule_intervals
+            interval_days = schedule_intervals.get(config_type, default_interval)
+            self.session.add(
+                TankMaintenanceConfigModel(
+                    tank_id=tank_id,
+                    config_type=config_type,
+                    enabled=enabled,
+                    interval_days=interval_days,
+                )
+            )
+            if enabled:
+                due_at = (
+                    now if config_type in immediate_types else now + timedelta(days=interval_days)
+                )
+                self.session.add(
+                    ReminderModel(
+                        user_id=user_id,
+                        tank_id=tank_id,
+                        reminder_type=config_type,
+                        title=f"{MAINTENANCE_CONFIG_LABELS[config_type]} due",
+                        due_at=due_at,
                     )
                 )
 

@@ -97,6 +97,7 @@ class TankModel(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str | None] = mapped_column(Text)
     tank_type: Mapped[str] = mapped_column(String(80), default="freshwater")
+    care_profile: Mapped[str] = mapped_column(String(40), default="custom")
     volume_liters: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     lighting: Mapped[str | None] = mapped_column(String(255))
     filtration: Mapped[str | None] = mapped_column(String(255))

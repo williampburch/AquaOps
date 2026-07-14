@@ -14,6 +14,7 @@ from app.application.ports.tanks import (
     TankCreate,
     TankRepository,
 )
+from app.domain.care_profiles import CARE_PROFILES
 from app.domain.enums import MaintenanceType
 from app.domain.maintenance import MAINTENANCE_CONFIG_LABELS
 from app.domain.water import FRESHWATER_BEGINNER_TARGETS, WATER_METRIC_BY_KEY, metric_label
@@ -29,6 +30,8 @@ class TankService:
     def create_tank(self, user_id: int, data: TankCreate) -> int:
         if not data.name.strip():
             raise ValueError("Tank name is required")
+        if data.care_profile not in CARE_PROFILES:
+            raise ValueError("Choose an available care profile")
         return self.repository.create_tank(user_id, data)
 
     def get_tank_detail(self, user_id: int, tank_id: int):

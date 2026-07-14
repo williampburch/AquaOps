@@ -9,6 +9,7 @@
       <p class="eyebrow mb-1">{{ tank.tank_type }}</p>
       <h2>{{ tank.name }}</h2>
       <div class="tile-meta">
+        <span>{{ tank_care_profile.label }}</span>
         <span>{{ display.format_volume(tank.volume_liters) }}</span>
         {% if tank.started_on %}
           <span>Started {{ display.format_date(tank.started_on) }}</span>
@@ -318,7 +319,7 @@
     <form class="stack-form" method="post" action="/tanks/{{ tank.id }}/maintenance-configs">
       <div class="maintenance-config-grid">
         {% for config in tank.maintenance_configs %}
-          {% if config.config_type != "fertilizer" or display.module_enabled("plants") %}
+          {% if config.config_type not in ["fertilizer", "plant_trimming"] or display.module_enabled("plants") %}
             <label class="maintenance-config-card" for="{{ config.config_type }}_enabled">
               <span>
                 <strong>{{ config.label }}</strong>
