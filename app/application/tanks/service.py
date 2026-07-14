@@ -99,6 +99,14 @@ class TankService:
             raise ValueError("Duration cannot be negative")
         if data.volume_changed_liters is not None and data.volume_changed_liters < 0:
             raise ValueError("Water change volume cannot be negative")
+        readings = (
+            data.nitrate_before,
+            data.nitrate_after,
+            data.tds_before,
+            data.tds_after,
+        )
+        if any(reading is not None and reading < 0 for reading in readings):
+            raise ValueError("Water change readings cannot be negative")
         return self.repository.log_maintenance(user_id, tank_id, data)
 
     def log_note(self, user_id: int, tank_id: int, data: NoteLog) -> int | None:

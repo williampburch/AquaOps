@@ -1928,6 +1928,47 @@ body::after {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.water-change-readings {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.water-change-reading-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.water-change-reading-card {
+  background: var(--aqua-panel);
+  border: 1px solid var(--aqua-border);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.75rem;
+}
+
+.water-change-reading-card > strong {
+  color: var(--aqua-accent-strong);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.reading-reuse-button {
+  background: transparent;
+  border: 0;
+  color: var(--aqua-accent-strong);
+  font-size: 0.75rem;
+  font-weight: 750;
+  margin-top: 0.3rem;
+  padding: 0;
+}
+
+.reading-reuse-button:hover {
+  text-decoration: underline;
+}
+
 .care-check {
   align-items: center;
   background: var(--aqua-panel);
@@ -3160,7 +3201,8 @@ body::after {
   .quick-log-amount-grid,
   .mobile-water-test-grid,
   .care-check-grid,
-  .observation-presets {
+  .observation-presets,
+  .water-change-reading-grid {
     grid-template-columns: 1fr;
   }
 

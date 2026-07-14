@@ -154,11 +154,70 @@
               {% endif %}
             </fieldset>
             <details class="quick-log-details">
-              <summary>Add cleaning details or notes</summary>
+              <summary>Add conditioner, readings, or cleaning details</summary>
               <div class="quick-log-details-body">
+                <div>
+                  <label class="form-label" for="conditioner_name">Water conditioner <span class="optional-label">Optional</span></label>
+                  <input class="form-control form-control-lg" id="conditioner_name" name="conditioner_name" type="text" list="recent_conditioners" maxlength="160" placeholder="Prime, AquaSafe, Stress Coat" value="{{ form_values.get('conditioner_name', '') }}" />
+                  {% if recent_conditioner_names %}
+                    <datalist id="recent_conditioners">
+                      {% for conditioner_name in recent_conditioner_names %}<option value="{{ conditioner_name }}"></option>{% endfor %}
+                    </datalist>
+                    <div class="recent-value-row">
+                      <span>Recent</span>
+                      {% for conditioner_name in recent_conditioner_names %}
+                        <button class="recent-value-button" type="button" data-conditioner-name="{{ conditioner_name }}">{{ conditioner_name }}</button>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                <fieldset class="water-change-readings">
+                  <legend>Before and after readings <span class="optional-label">Optional</span></legend>
+                  <div class="water-change-reading-grid">
+                    <section class="water-change-reading-card">
+                      <strong>Before change</strong>
+                      <div>
+                        <label class="form-label" for="nitrate_before">Nitrate</label>
+                        <div class="input-group">
+                          <input class="form-control" id="nitrate_before" name="nitrate_before" type="number" inputmode="decimal" min="0" step="0.001" value="{{ form_values.get('nitrate_before', '') }}" />
+                          <span class="input-group-text">ppm</span>
+                        </div>
+                        {% if latest_readings.get('nitrate') %}
+                          <button class="reading-reuse-button" type="button" data-reading-target="nitrate_before" data-reading-value="{{ latest_readings.get('nitrate').value }}">Use latest: {{ latest_readings.get('nitrate').value }}</button>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <label class="form-label" for="tds_before">TDS</label>
+                        <div class="input-group">
+                          <input class="form-control" id="tds_before" name="tds_before" type="number" inputmode="decimal" min="0" step="0.001" value="{{ form_values.get('tds_before', '') }}" />
+                          <span class="input-group-text">ppm</span>
+                        </div>
+                        {% if latest_readings.get('tds') %}
+                          <button class="reading-reuse-button" type="button" data-reading-target="tds_before" data-reading-value="{{ latest_readings.get('tds').value }}">Use latest: {{ latest_readings.get('tds').value }}</button>
+                        {% endif %}
+                      </div>
+                    </section>
+                    <section class="water-change-reading-card">
+                      <strong>After change</strong>
+                      <div>
+                        <label class="form-label" for="nitrate_after">Nitrate</label>
+                        <div class="input-group">
+                          <input class="form-control" id="nitrate_after" name="nitrate_after" type="number" inputmode="decimal" min="0" step="0.001" value="{{ form_values.get('nitrate_after', '') }}" />
+                          <span class="input-group-text">ppm</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label class="form-label" for="tds_after">TDS</label>
+                        <div class="input-group">
+                          <input class="form-control" id="tds_after" name="tds_after" type="number" inputmode="decimal" min="0" step="0.001" value="{{ form_values.get('tds_after', '') }}" />
+                          <span class="input-group-text">ppm</span>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </fieldset>
                 <div class="care-check-grid">
                   {% for key, label in [
-                    ('conditioner_used', 'Conditioner used'),
                     ('substrate_vacuum', 'Substrate vacuumed'),
                     ('glass_cleaned', 'Glass cleaned'),
                     ('filter_cleaned', 'Filter cleaned'),
@@ -781,6 +840,16 @@
       document.getElementById("volume_changed").value = event.currentTarget.dataset.lastVolume;
       document.getElementById("percentage").value = "";
       document.querySelectorAll("[data-percentage]").forEach((item) => item.classList.remove("active"));
+    });
+    document.querySelectorAll("[data-conditioner-name]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("conditioner_name").value = button.dataset.conditionerName;
+      });
+    });
+    document.querySelectorAll("[data-reading-target]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById(button.dataset.readingTarget).value = button.dataset.readingValue;
+      });
     });
     document.querySelectorAll("[data-equipment-name]").forEach((button) => {
       button.addEventListener("click", () => {

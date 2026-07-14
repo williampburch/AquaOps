@@ -423,11 +423,19 @@ def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
     _create_tank(client)
     client.post(
         "/quick-log/water-change",
-        data={"tank_id": "1", "volume_changed": "10"},
+        data={
+            "tank_id": "1",
+            "volume_changed": "10",
+            "conditioner_name": "Seachem Prime",
+            "nitrate_before": "18",
+            "nitrate_after": "8",
+            "tds_before": "220",
+            "tds_after": "190",
+        },
     )
     client.post(
         "/quick-log/water-test",
-        data={"tank_id": "1", "nitrate": "18"},
+        data={"tank_id": "1", "nitrate": "18", "tds": "210"},
     )
     client.post(
         "/quick-log/maintenance",
@@ -444,10 +452,39 @@ def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
 
     assert 'data-last-volume="10.0"' in water_change.text
     assert "Use 10.0 gal" in water_change.text
+    assert 'data-conditioner-name="Seachem Prime"' in water_change.text
+    assert "Use latest: 18.000" in water_change.text
+    assert "Use latest: 210.000" in water_change.text
     assert "Last 18.000 ppm" in water_test.text
     assert "Canister filter" in maintenance.text
     assert 'data-equipment-name="Canister filter"' in maintenance.text
     assert "aquaops-last-tank" in maintenance.text
+    events = client.get("/events")
+    assert "Conditioner: Seachem Prime" in events.text
+    assert "Nitrate 18 to 8 ppm" in events.text
+    assert "TDS 220 to 190 ppm" in events.text
+
+
+def test_quick_log_water_change_rejects_negative_before_after_readings(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.post(
+        "/quick-log/water-change",
+        data={
+            "tank_id": "1",
+            "percentage": "25",
+            "conditioner_name": "Prime",
+            "nitrate_before": "-1",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Water change readings cannot be negative" in response.text
+    assert 'value="Prime"' in response.text
+    assert 'value="-1"' in response.text
 
 
 def test_quick_log_feeding_uses_recent_values_and_repeats_last(client: TestClient) -> None:

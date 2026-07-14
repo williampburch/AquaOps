@@ -283,6 +283,11 @@ async def log_water_change(
                 volume_changed_liters=volume_liters,
                 equipment_name=None,
                 notes=notes,
+                conditioner_name=values.get("conditioner_name") or None,
+                nitrate_before=_optional_decimal(values.get("nitrate_before")),
+                nitrate_after=_optional_decimal(values.get("nitrate_after")),
+                tds_before=_optional_decimal(values.get("tds_before")),
+                tds_after=_optional_decimal(values.get("tds_after")),
             ),
         )
         if event_id is None:
@@ -723,6 +728,9 @@ def _render_quick_log(
             "water_metrics": display.visible_water_items(WATER_METRICS),
             "water_change_schedule": water_change_schedule,
             "last_water_change_volume": last_water_change_volume,
+            "recent_conditioner_names": (
+                quick_context.recent_conditioner_names if quick_context else []
+            ),
             "latest_readings": latest_readings,
             "recent_equipment_names": (
                 quick_context.recent_equipment_names if quick_context else []
@@ -844,12 +852,48 @@ def _water_change_notes(values: dict[str, str]) -> str | None:
         )
         if values.get(key)
     ]
+    conditioner_name = values.get("conditioner_name", "").strip()
+    if conditioner_name:
+        details.append(f"Conditioner: {conditioner_name}")
+    details.extend(
+        reading
+        for reading in (
+            _before_after_note(
+                "Nitrate",
+                values.get("nitrate_before"),
+                values.get("nitrate_after"),
+                "ppm",
+            ),
+            _before_after_note(
+                "TDS",
+                values.get("tds_before"),
+                values.get("tds_after"),
+                "ppm",
+            ),
+        )
+        if reading
+    )
     notes = values.get("notes", "").strip()
     if details and notes:
         return f"{', '.join(details)}. {notes}"
     if details:
         return ", ".join(details)
     return notes or None
+
+
+def _before_after_note(
+    label: str,
+    before: str | None,
+    after: str | None,
+    unit: str,
+) -> str | None:
+    if before and after:
+        return f"{label} {before} to {after} {unit}"
+    if before:
+        return f"{label} before {before} {unit}"
+    if after:
+        return f"{label} after {after} {unit}"
+    return None
 
 
 def _parse_food_names(

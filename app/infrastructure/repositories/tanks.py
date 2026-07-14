@@ -254,6 +254,20 @@ class SqlAlchemyTankRepository:
             .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
             .limit(1)
         )
+        water_change_metadata = self.session.scalars(
+            select(EventModel.metadata_json)
+            .join(
+                MaintenanceEventDetailModel,
+                MaintenanceEventDetailModel.event_id == EventModel.id,
+            )
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                MaintenanceEventDetailModel.maintenance_type == MaintenanceType.WATER_CHANGE.value,
+            )
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(20)
+        )
         equipment_rows = self.session.scalars(
             select(MaintenanceEventDetailModel.equipment_name)
             .join(EventModel, EventModel.id == MaintenanceEventDetailModel.event_id)
@@ -340,6 +354,9 @@ class SqlAlchemyTankRepository:
         )
         return QuickLogContext(
             last_water_change_liters=last_water_change_liters,
+            recent_conditioner_names=_recent_distinct(
+                (metadata or {}).get("conditioner_name") for metadata in water_change_metadata
+            ),
             recent_equipment_names=recent_equipment,
             last_feeding=last_feeding,
             recent_food_names=_recent_distinct(
@@ -410,6 +427,19 @@ class SqlAlchemyTankRepository:
         if tank is None:
             return None
 
+        metadata = {}
+        if data.maintenance_type == MaintenanceType.WATER_CHANGE.value:
+            metadata = {
+                key: value
+                for key, value in {
+                    "conditioner_name": (data.conditioner_name or "").strip() or None,
+                    "nitrate_before": _decimal_string(data.nitrate_before),
+                    "nitrate_after": _decimal_string(data.nitrate_after),
+                    "tds_before": _decimal_string(data.tds_before),
+                    "tds_after": _decimal_string(data.tds_after),
+                }.items()
+                if value is not None
+            }
         event = EventModel(
             user_id=user_id,
             tank_id=tank_id,
@@ -417,7 +447,7 @@ class SqlAlchemyTankRepository:
             title=_maintenance_title(data.maintenance_type),
             notes=data.notes or "",
             occurred_at=data.occurred_at,
-            metadata_json={},
+            metadata_json=metadata,
         )
         self.session.add(event)
         self.session.flush()
@@ -941,3 +971,7 @@ def _custom_product_key(product_name: str) -> str:
 
 def _format_decimal(value: Decimal) -> str:
     return format(value.normalize(), "f")
+
+
+def _decimal_string(value: Decimal | None) -> str | None:
+    return _format_decimal(value) if value is not None else None

@@ -40,6 +40,11 @@ class MaintenanceLog:
     volume_changed_liters: Decimal | None = None
     equipment_name: str | None = None
     notes: str | None = None
+    conditioner_name: str | None = None
+    nitrate_before: Decimal | None = None
+    nitrate_after: Decimal | None = None
+    tds_before: Decimal | None = None
+    tds_after: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -97,6 +102,7 @@ class RecentDose:
 @dataclass(frozen=True)
 class QuickLogContext:
     last_water_change_liters: Decimal | None
+    recent_conditioner_names: list[str]
     recent_equipment_names: list[str]
     last_feeding: RecentFeeding | None
     recent_food_names: list[str]

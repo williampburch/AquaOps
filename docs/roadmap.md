@@ -89,11 +89,14 @@ changes, observations, and photos on one timeline.
   media delivery, upload validation, previews, captions, and photos embedded in
   the activity timeline
 - Water changes entered by percentage or preferred volume unit, with one-tap
-  percentage presets, recurring schedule context, and optional conditioner,
-  substrate vacuum, glass cleaning, filter cleaning, temperature matching,
-  duration, and notes
+  percentage presets, recurring schedule context, automatically reusable
+  conditioner names, optional nitrate/TDS before-and-after readings, substrate
+  vacuum, glass cleaning, filter cleaning, temperature matching, duration, and
+  notes
 - Quick Log recent-value assistance for the last water-change volume, prior water
-  readings, recently used maintenance equipment, and remembered tank selection
+  readings, one-tap reuse of the latest nitrate/TDS as pre-change readings,
+  recently used conditioners and maintenance equipment, and remembered tank
+  selection
 - Feeding Quick Log with a searchable, typeable multi-select for recently used
   and custom foods, multiple foods per feeding, recent and common one-tap units,
   quick livestock targets, one-tap repeat-last feeding, and skipped feeding
@@ -138,8 +141,6 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 - Recently used and reusable common notes across Quick Log workflows
 - Ability to promote repeated custom entries into reusable user-owned options
-- Extend water change details with reusable conditioner choices plus TDS and
-  nitrate before/after readings
 - Promote repeated custom foods and livestock targets into reusable user-owned
   options shared across tanks
 - More polished maintenance log flow with task-specific fields
