@@ -13,6 +13,7 @@ from app.web.routes import (
     auth,
     dashboard,
     events,
+    guide,
     health,
     inventory,
     notifications,
@@ -58,6 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(quick_log.router)
     app.include_router(reports.router)
     app.include_router(settings_routes.router)
+    app.include_router(guide.router)
     app.include_router(dashboard.router)
     return app
 
