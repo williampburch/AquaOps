@@ -67,6 +67,19 @@ def test_dashboard_renders_public_empty_state(client: TestClient) -> None:
     assert "fertilizer" not in response.text.lower()
 
 
+def test_user_guide_is_public_mobile_friendly_and_linked(client: TestClient) -> None:
+    dashboard = client.get("/")
+    guide = client.get("/guide")
+
+    assert guide.status_code == 200
+    assert "Start with one aquarium." in guide.text
+    assert "Log care while you are at the tank." in guide.text
+    assert "What AquaOps can help you do" in guide.text
+    assert 'href="/register"' in guide.text
+    assert 'href="/guide"' in dashboard.text
+    assert 'class="guide-jump-nav"' in guide.text
+
+
 def test_register_creates_session_cookie(client: TestClient) -> None:
     response = client.post(
         "/register",

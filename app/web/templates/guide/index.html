@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="guide-shell">
+    <section class="guide-hero">
+      <div class="guide-hero-copy">
+        <p class="eyebrow mb-2">AquaOps field guide</p>
+        <h2>Care for the aquarium.<br />Keep the history.</h2>
+        <p>
+          AquaOps helps you remember what is due, log care while you are standing
+          at the tank, and understand what changed over time.
+        </p>
+        <div class="guide-hero-actions">
+          {% if current_user %}
+            <a class="btn btn-primary" href="/quick-log">Open Quick Log</a>
+            <a class="btn btn-outline-light" href="/tanks/new">Add an aquarium</a>
+          {% else %}
+            <a class="btn btn-primary" href="/register">Create an account</a>
+            <a class="btn btn-outline-light" href="/login">Sign in</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="guide-care-loop" aria-label="The AquaOps care loop">
+        <div><span>1</span><strong>Remember</strong><small>See what is due</small></div>
+        <div><span>2</span><strong>Log</strong><small>Record care quickly</small></div>
+        <div><span>3</span><strong>Review</strong><small>Trust the timeline</small></div>
+        <div><span>4</span><strong>Understand</strong><small>Notice what changed</small></div>
+        <div><span>5</span><strong>Decide</strong><small>Choose what to do next</small></div>
+      </div>
+    </section>
+
+    <nav class="guide-jump-nav" aria-label="User guide sections">
+      <a href="#start">Quick start</a>
+      <a href="#daily-care">Daily care</a>
+      <a href="#features">Features</a>
+      <a href="#history">History</a>
+      <a href="#questions">Common questions</a>
+    </nav>
+
+    <section class="guide-section" id="start">
+      <div class="guide-section-heading">
+        <span>Start here</span>
+        <h2>Start with one aquarium.</h2>
+        <p>You can refine everything later. The first useful setup takes only a few steps.</p>
+      </div>
+      <div class="guide-step-grid">
+        <article class="guide-step">
+          <span>01</span>
+          <h3>Create the tank</h3>
+          <p>Add its name, type, and size. Lighting, filtration, substrate, and notes are optional.</p>
+          <a href="{{ '/tanks/new' if current_user else '/register' }}">{{ "Add an aquarium" if current_user else "Create an account" }} →</a>
+        </article>
+        <article class="guide-step">
+          <span>02</span>
+          <h3>Choose a care profile</h3>
+          <p>Pick Simple Care, Water Testing, Planted Tank, High-Tech Planted, Breeder, Quarantine, or Custom.</p>
+        </article>
+        <article class="guide-step">
+          <span>03</span>
+          <h3>Review the schedule</h3>
+          <p>Profiles can create editable feeding, water-change, testing, filter, fertilizer, and trimming rhythms.</p>
+        </article>
+        <article class="guide-step">
+          <span>04</span>
+          <h3>Log the next thing</h3>
+          <p>Use Quick Log from the bottom navigation. Choose the tank, tap the action, and save only the essentials.</p>
+          <a href="{{ '/quick-log' if current_user else '/login' }}">Open Quick Log →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="guide-routine" id="daily-care">
+      <div>
+        <span class="guide-label">At the tank</span>
+        <h2>Log care while you are at the tank.</h2>
+        <p>
+          On a phone, tap <strong>Log</strong> in the bottom bar. AquaOps remembers
+          your last tank and offers recent values so common care takes seconds.
+        </p>
+      </div>
+      <ol>
+        <li><span>1</span><div><strong>Confirm the aquarium</strong><small>The last tank is remembered on this device.</small></div></li>
+        <li><span>2</span><div><strong>Choose what happened</strong><small>Water change, test, feeding, maintenance, observation, photo, dose, livestock, or plants.</small></div></li>
+        <li><span>3</span><div><strong>Enter only the essentials</strong><small>Optional details stay out of the way until you need them.</small></div></li>
+        <li><span>4</span><div><strong>Save and move on</strong><small>The event joins the tank's chronological history immediately.</small></div></li>
+      </ol>
+    </section>
+
+    <section class="guide-section">
+      <div class="guide-section-heading">
+        <span>Fast workflows</span>
+        <h2>Use the shortest path for the job.</h2>
+      </div>
+      <div class="guide-topic-list">
+        <details class="guide-topic" open>
+          <summary><span class="guide-topic-mark water-change-mark" aria-hidden="true"></span><div><strong>Water changes</strong><small>Percentage or measured volume</small></div></summary>
+          <div class="guide-topic-body">
+            <p>Use a percentage preset, repeat the last change, or enter gallons/liters. Conditioner, nitrate/TDS comparisons, cleaning tasks, duration, and notes are optional.</p>
+          </div>
+        </details>
+        <details class="guide-topic">
+          <summary><span class="guide-topic-mark water-test-mark" aria-hidden="true"></span><div><strong>Water tests</strong><small>Enter only what you tested</small></div></summary>
+          <div class="guide-topic-body">
+            <p>Record ammonia, nitrite, nitrate, pH, temperature, and optional advanced values. Previous readings stay visible for quick comparison.</p>
+          </div>
+        </details>
+        <details class="guide-topic">
+          <summary><span class="guide-topic-mark feeding-mark" aria-hidden="true"></span><div><strong>Feeding</strong><small>Recent foods and repeat-last</small></div></summary>
+          <div class="guide-topic-body">
+            <p>Select one or several recently used foods, type a new food when needed, repeat the last feeding, or record a planned skipped feeding.</p>
+          </div>
+        </details>
+        <details class="guide-topic">
+          <summary><span class="guide-topic-mark observation-mark" aria-hidden="true"></span><div><strong>Observations and photos</strong><small>Capture what you notice</small></div></summary>
+          <div class="guide-topic-body">
+            <p>Use quick categories for behavior, health, algae, plant growth, water clarity, equipment, or livestock loss. Phone photo logging can open the rear camera directly.</p>
+          </div>
+        </details>
+        <details class="guide-topic">
+          <summary><span class="guide-topic-mark inventory-mark" aria-hidden="true"></span><div><strong>Livestock and plants</strong><small>Add, adjust, move, or remove</small></div></summary>
+          <div class="guide-topic-body">
+            <p>Choose from the built-in catalog or enter a custom name. Quantity changes, moves, and reasoned removals stay connected to history instead of disappearing.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="guide-section" id="features">
+      <div class="guide-section-heading">
+        <span>Feature map</span>
+        <h2>What AquaOps can help you do</h2>
+        <p>Start with Dashboard, Log, and Care Queue. Open the deeper tools only when they are useful.</p>
+      </div>
+      <div class="guide-feature-grid">
+        <article><span>Overview</span><h3>Dashboard</h3><p>See tanks, care status, latest readings, recent activity, and shortcuts into common logging.</p><a href="/">Open Dashboard →</a></article>
+        <article><span>Profiles</span><h3>Aquariums</h3><p>Keep each tank's setup, target ranges, schedules, readings, inventory, and recent history together.</p><a href="/tanks">View Aquariums →</a></article>
+        <article><span>Action</span><h3>Quick Log</h3><p>Record daily care with recent values, presets, repeat actions, and optional details.</p><a href="/quick-log">Open Quick Log →</a></article>
+        <article><span>Due care</span><h3>Care Queue</h3><p>Review overdue and upcoming care, understand why it is due, then complete or snooze reminders.</p><a href="/notifications">Open Care Queue →</a></article>
+        <article><span>Stock</span><h3>Livestock &amp; Plants</h3><p>Track current quantities and preserve the story of additions, moves, reductions, and removals.</p><a href="/livestock">View Livestock →</a></article>
+        <article><span>Patterns</span><h3>Reports</h3><p>Review event mix and water trends without losing access to the underlying chronological events.</p><a href="/reports">Open Reports →</a></article>
+      </div>
+    </section>
+
+    <section class="guide-history" id="history">
+      <div class="guide-history-copy">
+        <span class="guide-label">Your record</span>
+        <h2>Use history to answer “what changed?”</h2>
+        <p>
+          Every useful log becomes part of the shared event timeline. When fish behavior,
+          algae, clarity, or plant growth changes, review the preceding tests, maintenance,
+          feeding, inventory changes, observations, and photos together.
+        </p>
+        <div class="guide-history-actions">
+          <a class="btn btn-primary" href="/events">Review Events</a>
+          {% if current_user %}<a class="btn btn-outline-light" href="/settings/export">Download your data</a>{% endif %}
+        </div>
+      </div>
+      <div class="guide-history-list">
+        <div><span>Water</span><strong>Tests and water changes</strong></div>
+        <div><span>Care</span><strong>Maintenance, feeding, and dosing</strong></div>
+        <div><span>Life</span><strong>Livestock and plant changes</strong></div>
+        <div><span>Context</span><strong>Observations, notes, and photos</strong></div>
+      </div>
+    </section>
+
+    <section class="guide-section" id="questions">
+      <div class="guide-section-heading">
+        <span>Common questions</span>
+        <h2>When something does not look right</h2>
+      </div>
+      <div class="guide-faq-grid">
+        <details><summary>Why do I not see Plant Care or another feature?</summary><p>Open Settings and review Feature Modules. Plant Care can be Auto, On, or Off so simple tanks stay quiet.</p></details>
+        <details><summary>How do I change gallons, liters, or temperature units?</summary><p>Open Settings, choose US or Metric, then adjust volume and temperature independently if needed.</p></details>
+        <details><summary>Why did AquaOps say care is due?</summary><p>Open the Care Queue. Schedule reminders and water-based recommendations include an explanation of why they appeared.</p></details>
+        <details><summary>Where can I see everything that happened?</summary><p>Events is the shared chronological history. A tank page narrows the same story to one aquarium, and Reports summarizes patterns.</p></details>
+        <details><summary>Can I take my data with me?</summary><p>Yes. Settings → Download Your Data creates a ZIP containing CSV datasets and a JSON manifest.</p></details>
+        <details><summary>How do I switch the color theme?</summary><p>On a phone, use the sun/moon button in the top bar. On larger screens, choose Light, System, or Dark from the header.</p></details>
+      </div>
+    </section>
+
+    <section class="guide-closing">
+      <div><span>Keep it easy</span><h2>Log consistently, not perfectly.</h2><p>A short, trustworthy entry is more useful than a detailed entry you never make.</p></div>
+      <a class="btn btn-primary" href="{{ '/quick-log' if current_user else '/register' }}">{{ "Log aquarium care" if current_user else "Get started" }}</a>
+    </section>
+  </div>
+{% endblock %}

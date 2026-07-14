@@ -79,6 +79,7 @@
           <a class="nav-link {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications">Care Queue</a>
         {% endif %}
         <a class="nav-link {{ 'active' if active_nav == 'settings' else '' }}" href="/settings">Settings</a>
+        <a class="nav-link {{ 'active' if active_nav == 'guide' else '' }}" href="/guide">User Guide</a>
         {% if current_user %}
           <form method="post" action="/logout">
             <button class="btn btn-outline-light w-100" type="submit">Sign out</button>
@@ -152,6 +153,9 @@
             <h1 class="page-title mb-0">{{ title }}</h1>
           </div>
           <div class="topbar-actions">
+            <a class="icon-button guide-button {{ 'active' if active_nav == 'guide' else '' }}" href="/guide" title="User guide" aria-label="User guide">
+              <span aria-hidden="true">?</span>
+            </a>
             <div class="theme-switcher" role="group" aria-label="Theme">
               <button class="theme-option" type="button" data-theme-value="light" title="Light theme" aria-label="Light theme">
                 <span class="theme-icon theme-icon-light" aria-hidden="true"></span>

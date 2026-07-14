@@ -25,6 +25,8 @@ This repository contains a publishable, working foundation:
 - Notifications page for open reminders with configurable due-soon windows and plant-care filtering
 - Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior
 - Branded enterprise-style UI with AquaOps wordmark, ocean/teal palette, responsive command surfaces, and persisted light, dark, and system theme choices
+- Public, mobile-first in-app user guide covering setup, daily care, inventory,
+  history, reports, preferences, and data export
 - Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - Example Nginx reverse proxy config for hosting behind a domain
@@ -117,6 +119,7 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - [Database ERD](docs/erd.md)
 - [Developer Setup](docs/developer-setup.md)
 - [Deployment Guide](docs/deployment.md)
+- [In-app User Guide](https://aquaops.william-burch.com/guide)
 - [Roadmap](docs/roadmap.md)
 
 ## Implemented Tracking

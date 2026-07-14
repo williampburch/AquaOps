@@ -92,6 +92,8 @@ changes, observations, and photos on one timeline.
 - Maintenance schedule status showing last logged care and next due dates
 - Mobile app shell with a compact top bar, bottom tab navigation, and mobile
   dashboard quick-log priority
+- Public, mobile-first in-app user guide with quick-start steps, task-focused
+  feature guidance, daily routines, and direct links into core workflows
 - Mobile-first Quick Log for focused water changes, water tests, feeding,
   observations, and maintenance, with tank selection, optional detail
   disclosure, and visible save errors
