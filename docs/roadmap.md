@@ -86,8 +86,9 @@ changes, observations, and photos on one timeline.
 - Quick Log recent-value assistance for the last water-change volume, prior water
   readings, recently used maintenance equipment, and remembered tank selection
 - Feeding Quick Log with a searchable, typeable multi-select for recently used
-  and custom foods, multiple foods per feeding, livestock targets, one-tap
-  repeat-last feeding, and skipped feeding history with an optional reason
+  and custom foods, multiple foods per feeding, recent and common one-tap units,
+  quick livestock targets, one-tap repeat-last feeding, and skipped feeding
+  history with an optional reason
 - Observation Quick Log with behavior, health, algae, plant growth, water
   clarity, and spawning presets, recently used titles, and optional detail
 - Fertilizer Dose Quick Log with automatically reusable user-owned products,
@@ -128,9 +129,7 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 - Extend the Quick Log flow beyond Water Change, Water Test, Feeding,
   Observation, Dose, and Maintenance to Photo, Livestock Change, and Plant Change
-- Dropdown-first inputs with free-text fallback for repeated values such as
-  units, livestock targets, maintenance equipment, and common notes
-- Expand recently used values to feeding units and common notes
+- Recently used and reusable common notes across Quick Log workflows
 - Ability to promote repeated custom entries into reusable user-owned options
 - Extend water change details with reusable conditioner choices plus TDS and
   nitrate before/after readings

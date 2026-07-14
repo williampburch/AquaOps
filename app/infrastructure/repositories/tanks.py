@@ -347,6 +347,7 @@ class SqlAlchemyTankRepository:
                 for detail, event in feedings
                 for food_name in _event_food_names(detail, event)
             ),
+            recent_feeding_units=_recent_distinct(detail.unit for detail, _ in feedings),
             recent_feeding_targets=_recent_distinct(
                 detail.target_livestock for detail, _ in feedings
             ),

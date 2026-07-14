@@ -43,6 +43,7 @@ OBSERVATION_PRESETS = (
     "Water clarity",
     "Spawning activity",
 )
+COMMON_FEEDING_UNITS = ("pinch", "pellet", "cube", "scoop", "portion")
 
 
 @router.get("")
@@ -538,8 +539,17 @@ def _render_quick_log(
             ),
             "last_feeding": quick_context.last_feeding if quick_context else None,
             "recent_food_names": quick_context.recent_food_names if quick_context else [],
-            "recent_feeding_targets": (
-                quick_context.recent_feeding_targets if quick_context else []
+            "feeding_unit_options": _unique_options(
+                [
+                    *(quick_context.recent_feeding_units if quick_context else []),
+                    *COMMON_FEEDING_UNITS,
+                ]
+            ),
+            "feeding_target_options": _unique_options(
+                [
+                    "Whole tank",
+                    *(quick_context.recent_feeding_targets if quick_context else []),
+                ]
             ),
             "recent_observation_titles": (
                 quick_context.recent_observation_titles if quick_context else []
@@ -649,3 +659,14 @@ def _parse_food_names(
             unique.append(name)
             normalized.add(key)
     return tuple(unique)
+
+
+def _unique_options(values: list[str]) -> list[str]:
+    options = []
+    seen = set()
+    for value in values:
+        normalized = value.casefold()
+        if value and normalized not in seen:
+            options.append(value)
+            seen.add(normalized)
+    return options

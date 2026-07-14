@@ -309,23 +309,30 @@
               </div>
               <div>
                 <label class="form-label" for="feeding_unit">Unit <span class="optional-label">Optional</span></label>
-                <input class="form-control form-control-lg" id="feeding_unit" name="unit" type="text" placeholder="pinch, cube, scoop" value="{{ form_values.get('unit', '') }}" />
+                <input class="form-control form-control-lg" id="feeding_unit" name="unit" type="text" list="feeding_units" placeholder="pinch, cube, scoop" value="{{ form_values.get('unit', '') }}" />
+                <datalist id="feeding_units">
+                  {% for unit in feeding_unit_options %}<option value="{{ unit }}"></option>{% endfor %}
+                </datalist>
+                <div class="recent-value-row">
+                  <span>Quick units</span>
+                  {% for unit in feeding_unit_options %}
+                    <button class="recent-value-button" type="button" data-feeding-unit="{{ unit }}">{{ unit }}</button>
+                  {% endfor %}
+                </div>
               </div>
             </div>
             <div>
               <label class="form-label" for="feeding_target">Livestock target <span class="optional-label">Optional</span></label>
-              <input class="form-control form-control-lg" id="feeding_target" name="target_livestock" type="text" list="recent_feeding_targets" placeholder="Whole tank, fry, bottom feeders" value="{{ form_values.get('target_livestock', '') }}" />
-              {% if recent_feeding_targets %}
-                <datalist id="recent_feeding_targets">
-                  {% for target in recent_feeding_targets %}<option value="{{ target }}"></option>{% endfor %}
-                </datalist>
-                <div class="recent-value-row">
-                  <span>Recent targets</span>
-                  {% for target in recent_feeding_targets %}
-                    <button class="recent-value-button" type="button" data-feeding-target="{{ target }}">{{ target }}</button>
-                  {% endfor %}
-                </div>
-              {% endif %}
+              <input class="form-control form-control-lg" id="feeding_target" name="target_livestock" type="text" list="feeding_targets" placeholder="Whole tank, fry, bottom feeders" value="{{ form_values.get('target_livestock', '') }}" />
+              <datalist id="feeding_targets">
+                {% for target in feeding_target_options %}<option value="{{ target }}"></option>{% endfor %}
+              </datalist>
+              <div class="recent-value-row">
+                <span>Quick targets</span>
+                {% for target in feeding_target_options %}
+                  <button class="recent-value-button" type="button" data-feeding-target="{{ target }}">{{ target }}</button>
+                {% endfor %}
+              </div>
             </div>
             <details class="quick-log-details">
               <summary>Add date or notes</summary>
@@ -610,6 +617,11 @@
     document.querySelectorAll("[data-feeding-target]").forEach((button) => {
       button.addEventListener("click", () => {
         document.getElementById("feeding_target").value = button.dataset.feedingTarget;
+      });
+    });
+    document.querySelectorAll("[data-feeding-unit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("feeding_unit").value = button.dataset.feedingUnit;
       });
     });
     document.querySelectorAll("[data-observation-title]").forEach((button) => {

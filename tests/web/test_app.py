@@ -331,6 +331,7 @@ def test_quick_log_feeding_uses_recent_values_and_repeats_last(client: TestClien
     feeding = client.get("/quick-log?action=feeding&tank_id=1")
     assert 'data-food-name="Community flakes"' in feeding.text
     assert 'data-feeding-target="Whole tank"' in feeding.text
+    assert 'data-feeding-unit="pinch"' in feeding.text
     assert "Repeat now" in feeding.text
 
     repeated = client.post(
@@ -518,6 +519,16 @@ def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestC
     assert "overflow: hidden" in response.text
     assert ".mobile-brand" in response.text
     assert "height: 1.75rem" in response.text
+
+
+def test_quick_log_actions_reflow_before_labels_can_overflow(client: TestClient) -> None:
+    response = client.get("/static/css/app.css")
+
+    assert response.status_code == 200
+    assert "@media (max-width: 1280px)" in response.text
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in response.text
+    assert ".quick-log-action strong" in response.text
+    assert "min-width: 0" in response.text
 
 
 def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:

@@ -1425,6 +1425,7 @@ body::after {
 .quick-log-action strong,
 .quick-log-action small {
   grid-column: 2;
+  min-width: 0;
 }
 
 .quick-log-action small {
@@ -2612,10 +2613,13 @@ body::after {
   color: var(--aqua-text);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1280px) {
   .quick-log-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+@media (max-width: 980px) {
 
   .app-shell {
     grid-template-columns: 1fr;

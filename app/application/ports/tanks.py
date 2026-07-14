@@ -100,6 +100,7 @@ class QuickLogContext:
     recent_equipment_names: list[str]
     last_feeding: RecentFeeding | None
     recent_food_names: list[str]
+    recent_feeding_units: list[str]
     recent_feeding_targets: list[str]
     recent_observation_titles: list[str]
     last_dose: RecentDose | None
