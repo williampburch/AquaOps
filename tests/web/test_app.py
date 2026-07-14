@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Generator
 from io import BytesIO
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
@@ -19,7 +20,7 @@ from app.web.dependencies import get_db
 
 
 @pytest.fixture
-def client() -> Generator[TestClient]:
+def client(tmp_path: Path) -> Generator[TestClient]:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -32,6 +33,8 @@ def client() -> Generator[TestClient]:
         secret_key="test-secret-key-that-is-long-enough",
         database_url="sqlite+pysqlite:///:memory:",
         auto_create_tables=False,
+        data_dir=tmp_path / "data",
+        media_root=tmp_path / "media",
     )
     app = create_app(settings)
 
@@ -196,9 +199,145 @@ def test_mobile_quick_log_renders_focused_actions(client: TestClient) -> None:
     assert "Maintenance" in response.text
     assert "Feeding" in response.text
     assert "Observation" in response.text
+    assert "More quick actions" in response.text
+    assert "Livestock" in response.text
+    assert "Plants" in response.text
     assert "Display Tank" in response.text
     assert 'inputmode="decimal"' in response.text
     assert 'href="/quick-log"' in response.text
+
+
+def test_quick_log_adds_and_adjusts_tank_inventory(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    livestock_add = client.post(
+        "/quick-log/livestock/add",
+        data={
+            "tank_id": "1",
+            "common_name": "Ember Tetra",
+            "species": "Hyphessobrycon amandae",
+            "quantity": "3",
+        },
+        follow_redirects=False,
+    )
+    plant_add = client.post(
+        "/quick-log/plants/add",
+        data={"tank_id": "1", "common_name": "Java Fern", "quantity": "2"},
+        follow_redirects=False,
+    )
+
+    assert livestock_add.status_code == 303
+    assert "action=livestock_change" in livestock_add.headers["location"]
+    assert plant_add.status_code == 303
+    assert "action=plant_change" in plant_add.headers["location"]
+
+    livestock_change = client.post(
+        "/quick-log/livestock/change",
+        data={"tank_id": "1", "item_id": "1", "direction": "add", "quantity": "2"},
+        follow_redirects=False,
+    )
+    livestock_loss = client.post(
+        "/quick-log/livestock/change",
+        data={
+            "tank_id": "1",
+            "item_id": "1",
+            "direction": "remove",
+            "quantity": "1",
+            "reason": "death",
+            "notes": "Old age",
+        },
+        follow_redirects=False,
+    )
+    plant_remove = client.post(
+        "/quick-log/plants/change",
+        data={
+            "tank_id": "1",
+            "item_id": "1",
+            "direction": "remove",
+            "quantity": "2",
+            "reason": "propagated",
+        },
+        follow_redirects=False,
+    )
+
+    assert livestock_change.status_code == 303
+    assert livestock_loss.status_code == 303
+    assert plant_remove.status_code == 303
+    livestock_page = client.get("/quick-log?action=livestock_change&tank_id=1")
+    plant_page = client.get("/quick-log?action=plant_change&tank_id=1")
+    events = client.get("/events")
+    assert "Ember Tetra" in livestock_page.text
+    assert "4 recorded" in livestock_page.text
+    assert "No plants recorded in this tank yet." in plant_page.text
+    assert "Added 2 Ember Tetra" in events.text
+    assert "Death: 1 Ember Tetra" in events.text
+    assert "Old age" in events.text
+    assert "Propagated: 2 Java Fern" in events.text
+
+
+def test_quick_inventory_change_rejects_excess_removal(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+    client.post(
+        "/quick-log/livestock/add",
+        data={"tank_id": "1", "common_name": "Otocinclus", "quantity": "2"},
+    )
+
+    response = client.post(
+        "/quick-log/livestock/change",
+        data={
+            "tank_id": "1",
+            "item_id": "1",
+            "direction": "remove",
+            "quantity": "3",
+            "reason": "rehomed",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Only 2 Otocinclus are currently recorded" in response.text
+    assert "2 recorded" in response.text
+
+
+def test_quick_log_photo_upload_appears_in_activity_timeline(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    form = client.get("/quick-log?action=photo&tank_id=1")
+    upload = client.post(
+        "/quick-log/photo",
+        data={"tank_id": "1", "caption": "Java fern growth"},
+        files={"photo": ("tank.jpg", b"\xff\xd8\xfftest-photo", "image/jpeg")},
+        follow_redirects=False,
+    )
+
+    assert form.status_code == 200
+    assert 'capture="environment"' in form.text
+    assert upload.status_code == 303
+    assert "action=photo" in upload.headers["location"]
+    events = client.get("/events")
+    assert "Photo: Java fern growth" in events.text
+    assert 'src="/media/1"' in events.text
+    media = client.get("/media/1")
+    assert media.status_code == 200
+    assert media.headers["content-type"] == "image/jpeg"
+    assert media.content == b"\xff\xd8\xfftest-photo"
+
+
+def test_quick_log_photo_rejects_non_image_content(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+
+    response = client.post(
+        "/quick-log/photo",
+        data={"tank_id": "1"},
+        files={"photo": ("not-a-photo.jpg", b"plain text", "image/jpeg")},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert "Use+a+JPEG" in response.headers["location"]
 
 
 def test_quick_log_water_change_saves_percentage_and_optional_details(

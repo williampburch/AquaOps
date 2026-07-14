@@ -24,6 +24,9 @@
                 <span>{{ event.event_type.replace("_", " ") }}</span>
               </div>
               <p>{{ event.notes or "No notes recorded" }}</p>
+              {% if event.media_asset_id %}
+                <img class="activity-photo" src="/media/{{ event.media_asset_id }}" alt="{{ event.photo_caption or event.title }}" loading="lazy" />
+              {% endif %}
             </div>
             <div class="activity-meta">
               <span>{{ event.tank_name or "No tank" }}</span>

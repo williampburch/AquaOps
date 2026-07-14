@@ -61,6 +61,9 @@ changes, observations, and photos on one timeline.
 - Plant inventory grouped by species and quantity
 - Mobile-friendly item-level livestock and plant management for edits, quantity
   changes, tank moves, and reasoned removals that remain in event history
+- Mobile Quick Log livestock and plant changes for catalog-backed or custom
+  additions, one-tap quantity increases, partial-group reductions, and reasoned
+  removals that automatically archive an entry when its quantity reaches zero
 - Notifications page for open reminders
 - Reminder completion and snoozing from the care queue
 - Quick logging for feedings, maintenance, water changes, and observations from
@@ -79,6 +82,12 @@ changes, observations, and photos on one timeline.
 - Mobile-first Quick Log for focused water changes, water tests, feeding,
   observations, and maintenance, with tank selection, optional detail
   disclosure, and visible save errors
+- Adaptive mobile Quick Log launcher that keeps the four most common care
+  actions immediately visible while grouping photos, observations, dosing,
+  livestock, and plant changes behind one compact secondary-action control
+- Mobile Photo Quick Log with native rear-camera capture, authenticated local
+  media delivery, upload validation, previews, captions, and photos embedded in
+  the activity timeline
 - Water changes entered by percentage or preferred volume unit, with one-tap
   percentage presets, recurring schedule context, and optional conditioner,
   substrate vacuum, glass cleaning, filter cleaning, temperature matching,
@@ -127,8 +136,6 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Next: Daily Usefulness
 
-- Extend the Quick Log flow beyond Water Change, Water Test, Feeding,
-  Observation, Dose, and Maintenance to Photo, Livestock Change, and Plant Change
 - Recently used and reusable common notes across Quick Log workflows
 - Ability to promote repeated custom entries into reusable user-owned options
 - Extend water change details with reusable conditioner choices plus TDS and
@@ -136,7 +143,6 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 - Promote repeated custom foods and livestock targets into reusable user-owned
   options shared across tanks
 - More polished maintenance log flow with task-specific fields
-- Photo logging in the same quick-log system
 - Extend livestock and plant changes with partial-group moves, trims, root-tab
   placement context, and richer per-entry timelines
 - Fast data entry with minimal required fields
@@ -260,8 +266,8 @@ Suggested care profiles:
 
 ## Later: Photos and Richer Reports
 
-- Local photo uploads
-- Photo timeline
+- Dedicated tank, plant, and livestock photo timelines beyond the current
+  unified activity stream
 - Maintenance and fertilizer reports
 - Livestock and plant history reports
 - Exportable report data

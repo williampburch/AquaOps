@@ -1397,6 +1397,36 @@ body::after {
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
 }
 
+.quick-log-action-launcher {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.quick-log-primary-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quick-log-more-toggle {
+  align-items: center;
+  background: var(--aqua-panel);
+  border: 1px solid var(--aqua-border);
+  border-radius: 10px;
+  color: var(--aqua-text);
+  display: none;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+}
+
+.quick-log-more-toggle span {
+  font-weight: 850;
+}
+
+.quick-log-more-toggle small {
+  color: var(--aqua-text-muted);
+}
+
 .quick-log-action {
   align-items: center;
   background: var(--aqua-panel);
@@ -1465,6 +1495,21 @@ body::after {
   border-radius: 50% 45% 55% 50% / 64% 64% 36% 36%;
 }
 
+.livestock-icon {
+  background: linear-gradient(145deg, #47d7ff, #557cff);
+  border-radius: 65% 35% 58% 42% / 48% 58% 42% 52%;
+}
+
+.plant-icon {
+  background: linear-gradient(145deg, #9fe870, var(--aqua-brand-mint));
+  border-radius: 75% 25% 72% 28% / 70% 25% 75% 30%;
+}
+
+.photo-icon {
+  background: linear-gradient(145deg, var(--aqua-coral), #bf72ff);
+  border-radius: 9px;
+}
+
 .observation-presets {
   display: grid;
   gap: 0.55rem;
@@ -1523,6 +1568,146 @@ body::after {
   display: grid;
   gap: 1.25rem;
   padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.quick-inventory-add fieldset {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.22fr);
+}
+
+.quick-inventory-add fieldset > legend,
+.quick-inventory-add fieldset > details {
+  grid-column: 1 / -1;
+}
+
+.quick-inventory-current {
+  border-top: 1px solid var(--aqua-border);
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 1.1rem;
+}
+
+.quick-inventory-section-heading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.quick-inventory-section-heading span,
+.quick-inventory-card-heading small {
+  color: var(--aqua-text-muted);
+}
+
+.quick-inventory-card {
+  background: color-mix(in srgb, var(--aqua-panel-soft) 84%, transparent);
+  border: 1px solid var(--aqua-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.9rem;
+}
+
+.quick-inventory-card-heading {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.quick-inventory-card-heading > div {
+  display: grid;
+}
+
+.quick-inventory-card-heading > span {
+  background: color-mix(in srgb, var(--aqua-brand-teal) 12%, var(--aqua-panel));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 32%, var(--aqua-border));
+  border-radius: 999px;
+  color: var(--aqua-accent-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.28rem 0.55rem;
+  white-space: nowrap;
+}
+
+.quick-inventory-change-row {
+  align-items: end;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: minmax(90px, 0.3fr) minmax(100px, auto);
+}
+
+.quick-inventory-remove {
+  border-top: 1px solid var(--aqua-border);
+  padding-top: 0.7rem;
+}
+
+.quick-inventory-remove > summary {
+  color: var(--aqua-text-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.quick-inventory-empty {
+  background: var(--aqua-panel-soft);
+  border: 1px dashed var(--aqua-border);
+  border-radius: 10px;
+  color: var(--aqua-text-muted);
+  padding: 0.9rem;
+  text-align: center;
+}
+
+.quick-photo-picker {
+  align-items: center;
+  background: color-mix(in srgb, var(--aqua-blue) 8%, var(--aqua-panel-soft));
+  border: 1px dashed color-mix(in srgb, var(--aqua-blue) 55%, var(--aqua-border));
+  border-radius: 14px;
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  min-height: 180px;
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.quick-photo-picker:hover {
+  background: color-mix(in srgb, var(--aqua-blue) 13%, var(--aqua-panel-soft));
+  border-color: var(--aqua-blue);
+}
+
+.quick-photo-picker small {
+  color: var(--aqua-text-muted);
+}
+
+.quick-photo-picker input {
+  max-width: 100%;
+  margin-top: 0.55rem;
+}
+
+.quick-photo-picker-icon {
+  background: linear-gradient(145deg, var(--aqua-blue), var(--aqua-brand-mint));
+  border: 4px solid color-mix(in srgb, var(--aqua-panel) 70%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--aqua-border);
+  height: 3rem;
+  width: 3rem;
+}
+
+.quick-photo-preview {
+  border: 1px solid var(--aqua-border);
+  border-radius: 14px;
+  max-height: 420px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.activity-photo {
+  border: 1px solid var(--aqua-border);
+  border-radius: 10px;
+  max-height: 280px;
+  object-fit: cover;
+  width: min(100%, 420px);
 }
 
 .quick-log-heading {
@@ -2932,9 +3117,16 @@ body::after {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .quick-log-actions:not(.has-dose) .quick-log-action.observation-action {
-    grid-column: 1 / -1;
-    min-height: 72px;
+  .quick-log-more-toggle {
+    display: flex;
+  }
+
+  .quick-log-secondary-actions {
+    display: none;
+  }
+
+  .quick-log-secondary-actions.expanded {
+    display: grid;
   }
 
   .quick-log-action {
@@ -2970,6 +3162,18 @@ body::after {
   .care-check-grid,
   .observation-presets {
     grid-template-columns: 1fr;
+  }
+
+  .quick-inventory-add fieldset {
+    grid-template-columns: minmax(0, 1fr) 88px;
+  }
+
+  .quick-inventory-card-heading {
+    align-items: flex-start;
+  }
+
+  .quick-inventory-change-row {
+    grid-template-columns: minmax(80px, 0.4fr) 1fr;
   }
 
   .amount-divider {

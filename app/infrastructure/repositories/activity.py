@@ -14,6 +14,7 @@ from app.domain.enums import EventType
 from app.infrastructure.db.models import (
     EventMeasurementModel,
     EventModel,
+    PhotoEventDetailModel,
     ReminderModel,
     TankModel,
 )
@@ -36,8 +37,14 @@ class SqlAlchemyActivityRepository:
     ) -> list[ActivityEvent]:
         include_plant_care = plant_care_is_active(self.session, user_id, plant_care_mode)
         statement = (
-            select(EventModel, TankModel.name)
+            select(
+                EventModel,
+                TankModel.name,
+                PhotoEventDetailModel.media_asset_id,
+                PhotoEventDetailModel.caption,
+            )
             .outerjoin(TankModel, TankModel.id == EventModel.tank_id)
+            .outerjoin(PhotoEventDetailModel, PhotoEventDetailModel.event_id == EventModel.id)
             .where(EventModel.user_id == user_id)
             .order_by(EventModel.occurred_at.desc())
             .limit(limit)
@@ -51,8 +58,12 @@ class SqlAlchemyActivityRepository:
                 occurred_at=event.occurred_at,
                 tank_name=tank_name,
                 notes=event.notes,
+                media_asset_id=media_asset_id,
+                photo_caption=photo_caption,
             )
-            for event, tank_name in self.session.execute(statement).all()
+            for event, tank_name, media_asset_id, photo_caption in self.session.execute(
+                statement
+            ).all()
         ]
 
     def get_reports_snapshot(

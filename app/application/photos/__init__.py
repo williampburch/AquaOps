@@ -1,0 +1,1 @@
+"""Photo logging application services."""

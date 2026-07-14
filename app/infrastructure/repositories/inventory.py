@@ -7,6 +7,7 @@ from app.application.ports.inventory import (
     InventoryArchive,
     InventoryGroup,
     InventoryItem,
+    InventoryQuantityChange,
     InventorySnapshot,
     InventorySummary,
     InventoryUpdate,
@@ -227,6 +228,84 @@ class SqlAlchemyInventoryRepository:
         )
         self.session.commit()
         return True
+
+    def change_livestock_quantity(
+        self, user_id: int, item_id: int, data: InventoryQuantityChange
+    ) -> bool:
+        item = self._active_item(user_id, item_id, LivestockModel, LivestockModel.retired_on)
+        if item is None:
+            return False
+        self._change_quantity(
+            user_id=user_id,
+            item=item,
+            data=data,
+            event_type=EventType.LIVESTOCK_CHANGE.value,
+            item_key="livestock_id",
+            inactive_field="retired_on",
+        )
+        return True
+
+    def change_plant_quantity(
+        self, user_id: int, item_id: int, data: InventoryQuantityChange
+    ) -> bool:
+        item = self._active_item(user_id, item_id, PlantModel, PlantModel.removed_on)
+        if item is None:
+            return False
+        self._change_quantity(
+            user_id=user_id,
+            item=item,
+            data=data,
+            event_type=EventType.PLANT_CHANGE.value,
+            item_key="plant_id",
+            inactive_field="removed_on",
+        )
+        return True
+
+    def _change_quantity(
+        self,
+        *,
+        user_id: int,
+        item,
+        data: InventoryQuantityChange,
+        event_type: str,
+        item_key: str,
+        inactive_field: str,
+    ) -> None:
+        quantity_before = item.quantity or 1
+        if data.direction == "remove" and data.quantity > quantity_before:
+            raise ValueError(f"Only {quantity_before} {item.common_name} are currently recorded")
+
+        quantity_after = (
+            quantity_before + data.quantity
+            if data.direction == "add"
+            else quantity_before - data.quantity
+        )
+        if quantity_after == 0:
+            setattr(item, inactive_field, data.occurred_on)
+        else:
+            item.quantity = quantity_after
+
+        if data.direction == "add":
+            title = f"Added {data.quantity} {item.common_name}"
+            action = "acquired"
+        else:
+            title = f"{_reason_label(data.reason or 'removed')}: {data.quantity} {item.common_name}"
+            action = data.reason or "removed"
+        self._record_change(
+            user_id,
+            item.tank_id,
+            event_type,
+            title,
+            data.notes,
+            {
+                "action": action,
+                item_key: item.id,
+                "quantity_changed": data.quantity,
+                "quantity_before": quantity_before,
+                "quantity_after": quantity_after,
+            },
+        )
+        self.session.commit()
 
     def _build_snapshot(
         self,

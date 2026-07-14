@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
 from urllib.parse import urlencode
@@ -11,6 +11,12 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.application.inventory.service import InventoryService
+from app.application.ports.inventory import (
+    InventoryQuantityChange,
+    LivestockCreate,
+    PlantCreate,
+)
 from app.application.ports.tanks import DoseLog, FeedingLog, MaintenanceLog, NoteLog
 from app.application.tanks.service import TankService
 from app.core.config import get_settings
@@ -19,6 +25,7 @@ from app.domain.enums import MaintenanceType
 from app.domain.preferences import volume_from_liters, volume_to_liters
 from app.domain.water import WATER_METRICS
 from app.infrastructure.repositories.feature_flags import plant_care_is_active
+from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
 from app.web.dependencies import AuthenticatedUser, get_db, preferences_for_user
 from app.web.presentation import UserDisplay
@@ -34,6 +41,9 @@ QUICK_LOG_ACTIONS = {
     "feeding",
     "observation",
     "dose",
+    "livestock_change",
+    "plant_change",
+    "photo",
 }
 OBSERVATION_PRESETS = (
     "Behavior change",
@@ -63,7 +73,171 @@ def quick_log(
         action=action,
         tank_id=tank_id,
         saved=request.query_params.get("saved"),
+        error=request.query_params.get("error"),
     )
+
+
+@router.post("/livestock/add")
+async def quick_add_livestock(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    try:
+        tank_id = _required_tank_id(values)
+        item_id = service.add_livestock(
+            current_user.id,
+            LivestockCreate(
+                tank_id=tank_id,
+                catalog_entry_id=_optional_int(values.get("catalog_entry_id")),
+                common_name=values.get("common_name") or None,
+                species=values.get("species") or None,
+                quantity=_optional_int(values.get("quantity")) or 1,
+                sex=None,
+                notes=values.get("notes") or None,
+                acquired_on=_optional_date(values.get("occurred_on")),
+            ),
+        )
+        if item_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="livestock_change",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    return _saved_redirect("livestock_change", tank_id)
+
+
+@router.post("/livestock/change")
+async def quick_change_livestock(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    try:
+        tank_id = _required_tank_id(values)
+        item_id = _required_int(values.get("item_id"), "Choose livestock to update.")
+        _require_item_in_tank(service.get_livestock(current_user.id).items, item_id, tank_id)
+        changed = service.change_livestock_quantity(
+            current_user.id,
+            item_id,
+            InventoryQuantityChange(
+                direction=values.get("direction", ""),
+                quantity=_required_int(values.get("quantity"), "Enter a quantity."),
+                reason=values.get("reason") or None,
+                notes=values.get("notes") or None,
+                occurred_on=_optional_date(values.get("occurred_on")) or date.today(),
+            ),
+        )
+        if not changed:
+            raise ValueError("That livestock entry is no longer available.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="livestock_change",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    return _saved_redirect("livestock_change", tank_id)
+
+
+@router.post("/plants/add")
+async def quick_add_plant(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    try:
+        tank_id = _required_tank_id(values)
+        item_id = service.add_plant(
+            current_user.id,
+            PlantCreate(
+                tank_id=tank_id,
+                catalog_entry_id=_optional_int(values.get("catalog_entry_id")),
+                common_name=values.get("common_name") or None,
+                species=values.get("species") or None,
+                quantity=_optional_int(values.get("quantity")) or 1,
+                notes=values.get("notes") or None,
+                planted_on=_optional_date(values.get("occurred_on")),
+            ),
+        )
+        if item_id is None:
+            raise ValueError("Choose an available aquarium.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="plant_change",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    return _saved_redirect("plant_change", tank_id)
+
+
+@router.post("/plants/change")
+async def quick_change_plant(
+    request: Request,
+    db: DbSession,
+    current_user: AuthenticatedUser,
+):
+    form = await request.form()
+    values = _form_values(form)
+    tank_id = None
+    service = InventoryService(SqlAlchemyInventoryRepository(db))
+    try:
+        tank_id = _required_tank_id(values)
+        item_id = _required_int(values.get("item_id"), "Choose a plant to update.")
+        _require_item_in_tank(service.get_plants(current_user.id).items, item_id, tank_id)
+        changed = service.change_plant_quantity(
+            current_user.id,
+            item_id,
+            InventoryQuantityChange(
+                direction=values.get("direction", ""),
+                quantity=_required_int(values.get("quantity"), "Enter a quantity."),
+                reason=values.get("reason") or None,
+                notes=values.get("notes") or None,
+                occurred_on=_optional_date(values.get("occurred_on")) or date.today(),
+            ),
+        )
+        if not changed:
+            raise ValueError("That plant entry is no longer available.")
+    except ValueError as exc:
+        return _render_quick_log(
+            request,
+            db,
+            current_user,
+            action="plant_change",
+            tank_id=tank_id,
+            error=str(exc),
+            form_values=values,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    return _saved_redirect("plant_change", tank_id)
 
 
 @router.post("/water-change")
@@ -495,6 +669,22 @@ def _render_quick_log(
     )
     preferences = preferences_for_user(db, current_user)
     display = UserDisplay(preferences)
+    inventory_service = InventoryService(SqlAlchemyInventoryRepository(db))
+    livestock_items = []
+    plant_items = []
+    if selected_id is not None:
+        if preferences.enable_livestock:
+            livestock_items = [
+                item
+                for item in inventory_service.get_livestock(current_user.id).items
+                if item.tank_id == selected_id
+            ]
+        if preferences.enable_plants:
+            plant_items = [
+                item
+                for item in inventory_service.get_plants(current_user.id).items
+                if item.tank_id == selected_id
+            ]
     water_change_schedule = None
     quick_context = None
     latest_readings = {}
@@ -560,6 +750,16 @@ def _render_quick_log(
             "recent_dose_locations": (quick_context.recent_dose_locations if quick_context else []),
             "dose_enabled": preferences.enable_plants
             and plant_care_is_active(db, current_user.id, preferences.plant_care_mode),
+            "livestock_enabled": preferences.enable_livestock,
+            "plants_enabled": preferences.enable_plants,
+            "livestock_items": livestock_items,
+            "plant_items": plant_items,
+            "livestock_catalog": (
+                inventory_service.list_livestock_catalog() if preferences.enable_livestock else []
+            ),
+            "plant_catalog": (
+                inventory_service.list_plant_catalog() if preferences.enable_plants else []
+            ),
             "maintenance_types": [
                 (item.value, item.value.replace("_", " ").title())
                 for item in MaintenanceType
@@ -580,6 +780,21 @@ def _required_tank_id(values: dict[str, str]) -> int:
     if tank_id is None:
         raise ValueError("Choose an aquarium.")
     return tank_id
+
+
+def _required_int(value: str | None, message: str) -> int:
+    try:
+        parsed = _optional_int(value)
+    except ValueError as exc:
+        raise ValueError(message) from exc
+    if parsed is None:
+        raise ValueError(message)
+    return parsed
+
+
+def _require_item_in_tank(items, item_id: int, tank_id: int) -> None:
+    if not any(item.id == item_id and item.tank_id == tank_id for item in items):
+        raise ValueError("Choose an active entry from this aquarium.")
 
 
 def _form_values(form) -> dict[str, str]:
@@ -611,6 +826,10 @@ def _optional_datetime(value: str | None) -> datetime | None:
         return None
     parsed = datetime.fromisoformat(value)
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=utc_now().tzinfo)
+
+
+def _optional_date(value: str | None) -> date | None:
+    return date.fromisoformat(value) if value else None
 
 
 def _water_change_notes(values: dict[str, str]) -> str | None:

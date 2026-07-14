@@ -13,6 +13,8 @@ class ActivityEvent:
     occurred_at: datetime
     tank_name: str | None
     notes: str | None
+    media_asset_id: int | None = None
+    photo_caption: str | None = None
 
 
 @dataclass(frozen=True)

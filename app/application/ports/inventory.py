@@ -89,6 +89,15 @@ class InventoryArchive:
     ended_on: date
 
 
+@dataclass(frozen=True)
+class InventoryQuantityChange:
+    direction: str
+    quantity: int
+    reason: str | None
+    notes: str | None
+    occurred_on: date
+
+
 class InventoryReadRepository(Protocol):
     def get_livestock(self, user_id: int) -> InventorySnapshot:
         """Return grouped livestock inventory for a user."""
@@ -116,3 +125,13 @@ class InventoryReadRepository(Protocol):
 
     def archive_plant(self, user_id: int, item_id: int, data: InventoryArchive) -> bool:
         """Remove an active plant entry while preserving history."""
+
+    def change_livestock_quantity(
+        self, user_id: int, item_id: int, data: InventoryQuantityChange
+    ) -> bool:
+        """Add to or remove from an active livestock group."""
+
+    def change_plant_quantity(
+        self, user_id: int, item_id: int, data: InventoryQuantityChange
+    ) -> bool:
+        """Add to or remove from an active plant group."""

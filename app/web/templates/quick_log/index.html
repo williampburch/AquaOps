@@ -27,7 +27,8 @@
     {% endif %}
 
     {% if tanks %}
-      <nav class="quick-log-actions {{ 'has-dose' if dose_enabled or action == 'dose' else '' }}" aria-label="Quick log action">
+      <div class="quick-log-action-launcher">
+      <nav class="quick-log-actions quick-log-primary-actions" aria-label="Primary quick log actions">
         <a class="quick-log-action {{ 'active' if action == 'water_change' else '' }}" href="/quick-log?action=water_change&amp;tank_id={{ selected_tank_id }}">
           <span class="quick-log-action-icon water-change-icon" aria-hidden="true"></span>
           <strong>Water Change</strong>
@@ -38,16 +39,22 @@
           <strong>Water Test</strong>
           <small>Parameters</small>
         </a>
-        <a class="quick-log-action {{ 'active' if action == 'maintenance' else '' }}" href="/quick-log?action=maintenance&amp;tank_id={{ selected_tank_id }}">
-          <span class="quick-log-action-icon maintenance-icon" aria-hidden="true"></span>
-          <strong>Maintenance</strong>
-          <small>Other tasks</small>
-        </a>
         <a class="quick-log-action {{ 'active' if action == 'feeding' else '' }}" href="/quick-log?action=feeding&amp;tank_id={{ selected_tank_id }}">
           <span class="quick-log-action-icon feeding-icon" aria-hidden="true"></span>
           <strong>Feeding</strong>
           <small>Repeat in one tap</small>
         </a>
+        <a class="quick-log-action {{ 'active' if action == 'maintenance' else '' }}" href="/quick-log?action=maintenance&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon maintenance-icon" aria-hidden="true"></span>
+          <strong>Maintenance</strong>
+          <small>Other tasks</small>
+        </a>
+      </nav>
+      <button class="quick-log-more-toggle" type="button" aria-expanded="{{ 'true' if action in ['observation', 'dose', 'photo', 'livestock_change', 'plant_change'] else 'false' }}" aria-controls="quick-log-secondary-actions">
+        <span>More quick actions</span>
+        <small>Photos, observations, dosing, and inventory</small>
+      </button>
+      <nav id="quick-log-secondary-actions" class="quick-log-actions quick-log-secondary-actions {{ 'expanded' if action in ['observation', 'dose', 'photo', 'livestock_change', 'plant_change'] else '' }}" aria-label="More quick log actions">
         <a class="quick-log-action observation-action {{ 'active' if action == 'observation' else '' }}" href="/quick-log?action=observation&amp;tank_id={{ selected_tank_id }}">
           <span class="quick-log-action-icon observation-icon" aria-hidden="true"></span>
           <strong>Observation</strong>
@@ -60,7 +67,27 @@
             <small>Plant care</small>
           </a>
         {% endif %}
+        <a class="quick-log-action {{ 'active' if action == 'photo' else '' }}" href="/quick-log?action=photo&amp;tank_id={{ selected_tank_id }}">
+          <span class="quick-log-action-icon photo-icon" aria-hidden="true"></span>
+          <strong>Photo</strong>
+          <small>Open camera</small>
+        </a>
+        {% if livestock_enabled %}
+          <a class="quick-log-action {{ 'active' if action == 'livestock_change' else '' }}" href="/quick-log?action=livestock_change&amp;tank_id={{ selected_tank_id }}">
+            <span class="quick-log-action-icon livestock-icon" aria-hidden="true"></span>
+            <strong>Livestock</strong>
+            <small>Add or remove</small>
+          </a>
+        {% endif %}
+        {% if plants_enabled %}
+          <a class="quick-log-action {{ 'active' if action == 'plant_change' else '' }}" href="/quick-log?action=plant_change&amp;tank_id={{ selected_tank_id }}">
+            <span class="quick-log-action-icon plant-icon" aria-hidden="true"></span>
+            <strong>Plants</strong>
+            <small>Add or remove</small>
+          </a>
+        {% endif %}
       </nav>
+      </div>
 
       <section class="panel quick-log-form-panel">
         <form class="stack-form" method="get" action="/quick-log">
@@ -408,7 +435,7 @@
             </details>
             <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save observation</button>
           </form>
-        {% else %}
+        {% elif action == "dose" %}
           <div class="quick-log-heading">
             <div>
               <span>Plant care</span>
@@ -484,6 +511,211 @@
             </details>
             <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save dose</button>
           </form>
+        {% elif action == "photo" %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Visual timeline</span>
+              <h3>Tank Photo</h3>
+            </div>
+            <small>Use your camera or choose an existing photo.</small>
+          </div>
+          <form class="stack-form" method="post" action="/quick-log/photo" enctype="multipart/form-data">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <label class="quick-photo-picker" for="quick_photo">
+              <span class="quick-photo-picker-icon" aria-hidden="true"></span>
+              <strong>Take or choose a photo</strong>
+              <small>JPEG, PNG, WebP, HEIC, or HEIF · up to 12 MB</small>
+              <input id="quick_photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" required />
+            </label>
+            <img class="quick-photo-preview" id="quick_photo_preview" alt="Selected photo preview" hidden />
+            <div>
+              <label class="form-label" for="photo_caption">What does this show? <span class="optional-label">Optional</span></label>
+              <input class="form-control form-control-lg" id="photo_caption" name="caption" type="text" maxlength="240" placeholder="New growth, algae progress, full tank view" />
+            </div>
+            <details class="quick-log-details">
+              <summary>Change date and time</summary>
+              <div class="quick-log-details-body">
+                <div><label class="form-label" for="photo_occurred_at">Date and time</label><input class="form-control" id="photo_occurred_at" name="occurred_at" type="datetime-local" /></div>
+              </div>
+            </details>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Save photo</button>
+          </form>
+        {% elif action == "livestock_change" %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Inventory</span>
+              <h3>Livestock Change</h3>
+            </div>
+            <small>Additions and losses stay in tank history.</small>
+          </div>
+          <form class="stack-form quick-inventory-add" method="post" action="/quick-log/livestock/add">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <fieldset>
+              <legend>Add new livestock</legend>
+              <div>
+                <label class="form-label" for="quick_livestock_catalog">Species</label>
+                <select class="form-select form-select-lg" id="quick_livestock_catalog" name="catalog_entry_id">
+                  <option value="">Custom livestock</option>
+                  {% for entry in livestock_catalog %}
+                    <option value="{{ entry.id }}" {% if form_values.get('catalog_entry_id') == entry.id|string %}selected{% endif %}>{{ entry.common_name }}{% if entry.scientific_name %} · {{ entry.scientific_name }}{% endif %}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="quick-inventory-quantity">
+                <label class="form-label" for="quick_livestock_quantity">Quantity</label>
+                <input class="form-control form-control-lg" id="quick_livestock_quantity" name="quantity" type="number" inputmode="numeric" min="1" value="{{ form_values.get('quantity', '1') }}" />
+              </div>
+              <details class="quick-log-details" {% if form_values.get('common_name') %}open{% endif %}>
+                <summary>Custom name or more detail</summary>
+                <div class="quick-log-details-body">
+                  <div class="form-grid">
+                    <div>
+                      <label class="form-label" for="quick_livestock_name">Common name</label>
+                      <input class="form-control" id="quick_livestock_name" name="common_name" type="text" value="{{ form_values.get('common_name', '') }}" />
+                    </div>
+                    <div>
+                      <label class="form-label" for="quick_livestock_species">Scientific name</label>
+                      <input class="form-control" id="quick_livestock_species" name="species" type="text" value="{{ form_values.get('species', '') }}" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label" for="quick_livestock_added_on">Date added</label>
+                    <input class="form-control" id="quick_livestock_added_on" name="occurred_on" type="date" value="{{ form_values.get('occurred_on', '') }}" />
+                  </div>
+                  <div>
+                    <label class="form-label" for="quick_livestock_notes">Notes</label>
+                    <textarea class="form-control" id="quick_livestock_notes" name="notes" rows="2">{{ form_values.get('notes', '') }}</textarea>
+                  </div>
+                </div>
+              </details>
+            </fieldset>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Add livestock</button>
+          </form>
+          <div class="quick-inventory-current">
+            <div class="quick-inventory-section-heading">
+              <strong>Already in this tank</strong>
+              <span>Record an addition or removal without editing the full entry.</span>
+            </div>
+            {% for item in livestock_items %}
+              <form class="quick-inventory-card" method="post" action="/quick-log/livestock/change">
+                <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+                <input name="item_id" type="hidden" value="{{ item.id }}" />
+                <div class="quick-inventory-card-heading">
+                  <div><strong>{{ item.common_name }}</strong>{% if item.species %}<small>{{ item.species }}</small>{% endif %}</div>
+                  <span>{{ item.quantity }} recorded</span>
+                </div>
+                <div class="quick-inventory-change-row">
+                  <div>
+                    <label class="form-label" for="livestock_change_quantity_{{ item.id }}">Quantity</label>
+                    <input class="form-control" id="livestock_change_quantity_{{ item.id }}" name="quantity" type="number" inputmode="numeric" min="1" value="1" />
+                  </div>
+                  <button class="btn btn-outline-primary" name="direction" value="add" type="submit">+ Add</button>
+                </div>
+                <details class="quick-inventory-remove">
+                  <summary>Remove, rehome, or record a loss</summary>
+                  <div class="quick-log-details-body">
+                    <div>
+                      <label class="form-label" for="livestock_reason_{{ item.id }}">What happened?</label>
+                      <select class="form-select" id="livestock_reason_{{ item.id }}" name="reason">
+                        <option value="">Choose a reason</option>
+                        <option value="death">Death</option>
+                        <option value="rehomed">Rehomed</option>
+                        <option value="sold">Sold</option>
+                        <option value="moved_out">Moved out</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div class="form-grid">
+                      <div><label class="form-label">Date</label><input class="form-control" name="occurred_on" type="date" /></div>
+                      <div><label class="form-label">Notes</label><input class="form-control" name="notes" type="text" placeholder="Optional context" /></div>
+                    </div>
+                    <button class="btn btn-outline-danger" name="direction" value="remove" type="submit">Remove quantity</button>
+                  </div>
+                </details>
+              </form>
+            {% else %}
+              <div class="quick-inventory-empty">No livestock recorded in this tank yet.</div>
+            {% endfor %}
+          </div>
+        {% elif action == "plant_change" %}
+          <div class="quick-log-heading">
+            <div>
+              <span>Inventory</span>
+              <h3>Plant Change</h3>
+            </div>
+            <small>Track additions, propagation, melt, and removal.</small>
+          </div>
+          <form class="stack-form quick-inventory-add" method="post" action="/quick-log/plants/add">
+            <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+            <fieldset>
+              <legend>Add a new plant</legend>
+              <div>
+                <label class="form-label" for="quick_plant_catalog">Plant</label>
+                <select class="form-select form-select-lg" id="quick_plant_catalog" name="catalog_entry_id">
+                  <option value="">Custom plant</option>
+                  {% for entry in plant_catalog %}
+                    <option value="{{ entry.id }}" {% if form_values.get('catalog_entry_id') == entry.id|string %}selected{% endif %}>{{ entry.common_name }}{% if entry.scientific_name %} · {{ entry.scientific_name }}{% endif %}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="quick-inventory-quantity">
+                <label class="form-label" for="quick_plant_quantity">Quantity</label>
+                <input class="form-control form-control-lg" id="quick_plant_quantity" name="quantity" type="number" inputmode="numeric" min="1" value="{{ form_values.get('quantity', '1') }}" />
+              </div>
+              <details class="quick-log-details" {% if form_values.get('common_name') %}open{% endif %}>
+                <summary>Custom name or more detail</summary>
+                <div class="quick-log-details-body">
+                  <div class="form-grid">
+                    <div><label class="form-label" for="quick_plant_name">Common name</label><input class="form-control" id="quick_plant_name" name="common_name" type="text" value="{{ form_values.get('common_name', '') }}" /></div>
+                    <div><label class="form-label" for="quick_plant_species">Scientific name</label><input class="form-control" id="quick_plant_species" name="species" type="text" value="{{ form_values.get('species', '') }}" /></div>
+                  </div>
+                  <div><label class="form-label" for="quick_plant_added_on">Date planted</label><input class="form-control" id="quick_plant_added_on" name="occurred_on" type="date" value="{{ form_values.get('occurred_on', '') }}" /></div>
+                  <div><label class="form-label" for="quick_plant_notes">Notes</label><textarea class="form-control" id="quick_plant_notes" name="notes" rows="2">{{ form_values.get('notes', '') }}</textarea></div>
+                </div>
+              </details>
+            </fieldset>
+            <button class="btn btn-primary btn-lg quick-log-submit" type="submit">Add plant</button>
+          </form>
+          <div class="quick-inventory-current">
+            <div class="quick-inventory-section-heading"><strong>Already in this tank</strong><span>Record growth, propagation, or removal.</span></div>
+            {% for item in plant_items %}
+              <form class="quick-inventory-card" method="post" action="/quick-log/plants/change">
+                <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
+                <input name="item_id" type="hidden" value="{{ item.id }}" />
+                <div class="quick-inventory-card-heading">
+                  <div><strong>{{ item.common_name }}</strong>{% if item.species %}<small>{{ item.species }}</small>{% endif %}</div>
+                  <span>{{ item.quantity }} recorded</span>
+                </div>
+                <div class="quick-inventory-change-row">
+                  <div><label class="form-label" for="plant_change_quantity_{{ item.id }}">Quantity</label><input class="form-control" id="plant_change_quantity_{{ item.id }}" name="quantity" type="number" inputmode="numeric" min="1" value="1" /></div>
+                  <button class="btn btn-outline-primary" name="direction" value="add" type="submit">+ Add</button>
+                </div>
+                <details class="quick-inventory-remove">
+                  <summary>Remove, propagate, or record melt</summary>
+                  <div class="quick-log-details-body">
+                    <div>
+                      <label class="form-label" for="plant_reason_{{ item.id }}">What happened?</label>
+                      <select class="form-select" id="plant_reason_{{ item.id }}" name="reason">
+                        <option value="">Choose a reason</option>
+                        <option value="removed">Removed</option>
+                        <option value="melted">Melted</option>
+                        <option value="propagated">Propagated</option>
+                        <option value="moved_out">Moved out</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div class="form-grid">
+                      <div><label class="form-label">Date</label><input class="form-control" name="occurred_on" type="date" /></div>
+                      <div><label class="form-label">Notes</label><input class="form-control" name="notes" type="text" placeholder="Optional context" /></div>
+                    </div>
+                    <button class="btn btn-outline-danger" name="direction" value="remove" type="submit">Remove quantity</button>
+                  </div>
+                </details>
+              </form>
+            {% else %}
+              <div class="quick-inventory-empty">No plants recorded in this tank yet.</div>
+            {% endfor %}
+          </div>
         {% endif %}
       </section>
     {% else %}
@@ -498,6 +730,25 @@
 
 {% block extra_scripts %}
   <script>
+    const moreActionsToggle = document.querySelector(".quick-log-more-toggle");
+    const secondaryActions = document.getElementById("quick-log-secondary-actions");
+    moreActionsToggle?.addEventListener("click", () => {
+      const expanded = moreActionsToggle.getAttribute("aria-expanded") === "true";
+      moreActionsToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      secondaryActions?.classList.toggle("expanded", !expanded);
+    });
+
+    const photoInput = document.getElementById("quick_photo");
+    const photoPreview = document.getElementById("quick_photo_preview");
+    photoInput?.addEventListener("change", () => {
+      const [photo] = photoInput.files;
+      if (!photo || !photoPreview) {
+        return;
+      }
+      photoPreview.src = URL.createObjectURL(photo);
+      photoPreview.hidden = false;
+    });
+
     const tankSelect = document.getElementById("quick_log_tank");
     const query = new URLSearchParams(window.location.search);
     const rememberedTank = localStorage.getItem("aquaops-last-tank");
