@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format migrate revision seed-demo deploy
+.PHONY: install dev test lint format migrate revision seed-demo deploy deploy-image deploy-build
 
 install:
 	python -m pip install --upgrade pip
@@ -28,4 +28,10 @@ seed-demo:
 	aquaops seed-demo
 
 deploy:
+	scripts/deploy-image.sh
+
+deploy-image:
+	scripts/deploy-image.sh
+
+deploy-build:
 	scripts/deploy-container.sh

@@ -6,6 +6,15 @@ This guide assumes AquaOps is one of several sites on the same VM. Each site sho
 its own domain or subdomain, its own Compose project directory, and its own localhost
 port behind Nginx.
 
+Local development continues to use the base Compose file and local Dockerfile:
+
+```bash
+docker compose up --build
+```
+
+Production uses `docker-compose.prod.yml`, which contains an `image:` reference and no
+`build:` section.
+
 ## 1. Prepare the VM
 
 Install Docker, the Docker Compose plugin, Git, and Nginx. On Ubuntu:
@@ -78,20 +87,38 @@ ports:
 
 Then proxy Nginx to the same port, for example `http://127.0.0.1:8020`.
 
-## 4. Run Migrations
+## 4. Authenticate to GHCR
+
+The AquaOps package may require GitHub Container Registry authentication. Create a
+GitHub personal access token with `read:packages`, then authenticate once as the VM user
+that runs deployments:
 
 ```bash
-docker compose build
-docker compose run --rm web alembic upgrade head
+printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u williampburch --password-stdin
 ```
 
-## 5. Start the App
+Do not place the token in the repository or `.env`. Docker stores the login in that
+user's Docker client configuration. A public package can be pulled without logging in.
+
+## 5. Deploy and Start the App
+
+Deploy the most recently published `latest` image:
 
 ```bash
-docker compose up -d
-docker compose ps
-docker compose logs -f web
+make deploy
 ```
+
+The production deployment script pulls the image, runs Alembic migrations from that
+image, recreates the service without building, and health-checks the localhost endpoint.
+The VM no longer builds AquaOps images during normal production deployments.
+For a reproducible deployment, use the short-SHA tag published by GitHub Actions:
+
+```bash
+AQUAOPS_IMAGE_TAG=3dc1580 make deploy
+```
+
+Use the tag shown for the commit you intend to deploy. `latest` is the default when
+`AQUAOPS_IMAGE_TAG` is unset.
 
 Check the app locally from the VM:
 
@@ -206,22 +233,43 @@ script before relying on the app for critical history.
 From `/opt/aquaops`:
 
 ```bash
-scripts/deploy-container.sh
+make deploy
 ```
 
-The deploy script fetches `origin/main`, fast-forwards the local checkout, rebuilds the
-`web` image, runs Alembic migrations, restarts the container, and prints `docker compose ps`.
-It refuses to run when tracked files have local changes unless `--force-dirty` is supplied.
-Untracked reference files, such as local mockups under `assets/`, do not block deployment.
+`make deploy` runs `scripts/deploy-image.sh`. The script:
 
-Useful options:
+- refuses to continue if Docker, the Compose plugin, `curl`, or `flock` is unavailable
+- takes a non-blocking deployment lock so two releases cannot overlap
+- preserves the currently running image under a local rollback tag
+- pulls `ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG:-latest}`
+- runs `alembic upgrade head` in a one-off container using the pulled image
+- recreates `aquaops-web` with `--no-build`
+- retries `http://127.0.0.1:8010/health` and prints container status, logs, and inspect
+  output on failure
+- attempts to recreate and health-check the previous image when restart or health
+  verification fails
+
+Deploy an immutable SHA-tagged image when possible:
 
 ```bash
-scripts/deploy-container.sh --branch main
-scripts/deploy-container.sh --skip-build
-scripts/deploy-container.sh --skip-migrations
-docker compose logs -f web
+AQUAOPS_IMAGE_TAG=<short-sha> make deploy
 ```
+
+The image rollback is best effort. It restores the previous container image, but it does
+not downgrade database migrations already applied to the shared SQLite volume. Keep a
+tested database and media backup before deployments that include schema changes. Local
+`rollback-*` image tags are retained and may be pruned manually after a deployment is
+confirmed healthy.
+
+The former VM-build deployment remains available for troubleshooting, but is not the
+normal production path:
+
+```bash
+make deploy-build
+```
+
+That target runs `scripts/deploy-container.sh` and builds locally. Local development still
+uses `docker compose up --build` with `docker-compose.yml`.
 
 ## GHCR Image Publishing
 
@@ -230,10 +278,9 @@ The separate `Publish Docker image` GitHub Actions workflow now builds the repos
 It can also be started manually with **Actions → Publish Docker image → Run workflow**.
 Published images receive `latest`, `main`, and short commit-SHA tags.
 
-This does not change the current VM runtime or deployment process. Compose still uses
-`build: .`, and `scripts/deploy-container.sh` still builds on the VM. A later deployment
-phase will update the VM to authenticate to GHCR and pull a tested, immutable SHA-tagged
-image instead of building locally.
+Production now consumes these images through `docker-compose.prod.yml` and
+`scripts/deploy-image.sh`. GitHub Actions publishes images but does not connect to or
+modify the VM; an operator still starts each deployment from the VM with `make deploy`.
 
 ## 10. PostgreSQL Later
 

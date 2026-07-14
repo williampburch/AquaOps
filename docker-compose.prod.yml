@@ -1,0 +1,19 @@
+services:
+  web:
+    image: ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG:-latest}
+    container_name: aquaops-web
+    ports:
+      - "127.0.0.1:8010:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:////app/data/aquaops.db
+      MEDIA_ROOT: /app/media
+    volumes:
+      - aquaops_data:/app/data
+      - aquaops_media:/app/media
+    restart: unless-stopped
+
+volumes:
+  aquaops_data:
+  aquaops_media:

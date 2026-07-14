@@ -56,7 +56,11 @@ changes, observations, and photos on one timeline.
   schedules with starter items in the Care Queue
 - Separate GitHub Actions image publishing to GHCR on `main` and manual runs,
   tagged as `latest`, `main`, and the immutable short commit SHA; the VM still
-  uses the existing local-build deployment path
+  deploys only when an operator starts it
+- Pull-only production deployment from GHCR with an isolated production Compose
+  file, a single-deploy lock, Alembic migrations from the pulled image, bounded
+  localhost health checks, failure diagnostics, and best-effort prior-image
+  rollback while preserving the SQLite and media volumes
 - Tank-specific water parameter target ranges
 - Water test logging through the generic event model
 - Latest water readings and per-parameter trend charts
@@ -265,9 +269,8 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
   environment secrets and optional approval, leaving the VM responsible only
   for pulling, backing up, migrating, starting, and health-checking the tested
   image
-- Hardened pull-only deployment with a single-deploy lock, bounded timeouts,
-  automatic failure diagnostics, retained prior-image rollback, and no image
-  builds on the production VM
+- Add automated pre-migration volume backups and a tested database-aware rollback
+  procedure beyond the current best-effort image rollback
 - CSRF protection for all mutating forms
 - Rate limiting on auth routes
 - Backup and restore scripts
