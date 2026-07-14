@@ -6,11 +6,13 @@
     <title>{{ title }} | AquaOps</title>
     <script>
       (() => {
-        const storedTheme = localStorage.getItem("aquaops-theme") || "light";
+        const mobileThemeQuery = window.matchMedia("(max-width: 640px)");
+        const storedTheme = localStorage.getItem("aquaops-theme");
+        const themeChoice = storedTheme || (mobileThemeQuery.matches ? "dark" : "light");
         const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        const activeTheme = storedTheme === "system" ? systemTheme : storedTheme;
+        const activeTheme = themeChoice === "system" ? systemTheme : themeChoice;
         document.documentElement.dataset.bsTheme = activeTheme;
-        document.documentElement.dataset.themeChoice = storedTheme;
+        document.documentElement.dataset.themeChoice = themeChoice;
       })();
     </script>
     <link
@@ -34,6 +36,9 @@
         <strong>{{ title }}</strong>
       </div>
       <div class="mobile-appbar-actions">
+        <button class="icon-button mobile-theme-toggle" type="button" data-theme-toggle title="Switch to light theme" aria-label="Switch to light theme">
+          <span class="theme-icon theme-icon-light" data-theme-toggle-icon aria-hidden="true"></span>
+        </button>
         {% if current_user and (prefs is none or prefs.enable_notifications) %}
           <a class="icon-button notification-button {{ 'active' if active_nav == 'notifications' else '' }}" href="/notifications" title="Notifications" aria-label="Notifications">
             <span class="notification-dot" aria-hidden="true"></span>
@@ -204,28 +209,58 @@
     <script>
       (() => {
         const buttons = document.querySelectorAll("[data-theme-value]");
+        const toggles = document.querySelectorAll("[data-theme-toggle]");
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const mobileThemeQuery = window.matchMedia("(max-width: 640px)");
 
-        const applyTheme = (choice) => {
-          const activeTheme = choice === "system" ? (mediaQuery.matches ? "dark" : "light") : choice;
-          document.documentElement.dataset.bsTheme = activeTheme;
-          document.documentElement.dataset.themeChoice = choice;
-          localStorage.setItem("aquaops-theme", choice);
+        const defaultTheme = () => mobileThemeQuery.matches ? "dark" : "light";
+
+        const updateThemeControls = (choice, activeTheme) => {
           buttons.forEach((button) => {
             button.classList.toggle("active", button.dataset.themeValue === choice);
           });
+          toggles.forEach((toggle) => {
+            const nextTheme = activeTheme === "dark" ? "light" : "dark";
+            const label = `Switch to ${nextTheme} theme`;
+            const icon = toggle.querySelector("[data-theme-toggle-icon]");
+            toggle.setAttribute("aria-label", label);
+            toggle.setAttribute("title", label);
+            icon?.classList.toggle("theme-icon-light", nextTheme === "light");
+            icon?.classList.toggle("theme-icon-dark", nextTheme === "dark");
+          });
+        };
+
+        const applyTheme = (choice, { persist = true } = {}) => {
+          const activeTheme = choice === "system" ? (mediaQuery.matches ? "dark" : "light") : choice;
+          document.documentElement.dataset.bsTheme = activeTheme;
+          document.documentElement.dataset.themeChoice = choice;
+          if (persist) {
+            localStorage.setItem("aquaops-theme", choice);
+          }
+          updateThemeControls(choice, activeTheme);
           window.dispatchEvent(new CustomEvent("aquaops:theme-change", { detail: { activeTheme } }));
         };
 
         buttons.forEach((button) => {
           button.addEventListener("click", () => applyTheme(button.dataset.themeValue));
         });
+        toggles.forEach((toggle) => {
+          toggle.addEventListener("click", () => {
+            const activeTheme = document.documentElement.dataset.bsTheme;
+            applyTheme(activeTheme === "dark" ? "light" : "dark");
+          });
+        });
         mediaQuery.addEventListener("change", () => {
-          if ((localStorage.getItem("aquaops-theme") || "light") === "system") {
-            applyTheme("system");
+          if (localStorage.getItem("aquaops-theme") === "system") {
+            applyTheme("system", { persist: false });
           }
         });
-        applyTheme(localStorage.getItem("aquaops-theme") || "light");
+        mobileThemeQuery.addEventListener("change", () => {
+          if (!localStorage.getItem("aquaops-theme")) {
+            applyTheme(defaultTheme(), { persist: false });
+          }
+        });
+        applyTheme(localStorage.getItem("aquaops-theme") || defaultTheme(), { persist: false });
       })();
     </script>
     {% block extra_scripts %}{% endblock %}

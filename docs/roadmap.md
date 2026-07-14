@@ -40,7 +40,8 @@ changes, observations, and photos on one timeline.
 - Settings and environment loading
 - SQLAlchemy ORM and Alembic migrations
 - Local bcrypt authentication and server-side sessions
-- Dashboard shell with responsive light, dark, and system themes
+- Dashboard shell with responsive light, dark, and system themes, including a
+  dark default and one-tap light/dark swap for new mobile sessions
 - Enterprise-style shell and settings surface with compact/comfortable density
 - AquaOps branding system with wordmark treatment, ocean/teal palette, and branded command dashboard
 - Docker, Docker Compose, and CI
