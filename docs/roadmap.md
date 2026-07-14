@@ -54,6 +54,9 @@ changes, observations, and photos on one timeline.
 - Care profiles that persist on each tank and create immediately useful,
   editable feeding, water-change, water-test, filter, fertilizer, and plant-trim
   schedules with starter items in the Care Queue
+- Separate GitHub Actions image publishing to GHCR on `main` and manual runs,
+  tagged as `latest`, `main`, and the immutable short commit SHA; the VM still
+  uses the existing local-build deployment path
 - Tank-specific water parameter target ranges
 - Water test logging through the generic event model
 - Latest water readings and per-parameter trend charts
@@ -258,10 +261,10 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Production Hardening
 
-- GitHub Actions production delivery that builds and publishes immutable images
-  to GHCR, uses protected production environment secrets and optional approval,
-  and leaves the VM responsible only for pulling, backing up, migrating,
-  starting, and health-checking the tested image
+- Connect the published GHCR images to production delivery with protected
+  environment secrets and optional approval, leaving the VM responsible only
+  for pulling, backing up, migrating, starting, and health-checking the tested
+  image
 - Hardened pull-only deployment with a single-deploy lock, bounded timeouts,
   automatic failure diagnostics, retained prior-image rollback, and no image
   builds on the production VM

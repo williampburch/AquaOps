@@ -223,6 +223,18 @@ scripts/deploy-container.sh --skip-migrations
 docker compose logs -f web
 ```
 
+## GHCR Image Publishing
+
+The separate `Publish Docker image` GitHub Actions workflow now builds the repository
+`Dockerfile` and publishes it to `ghcr.io/williampburch/aquaops` after pushes to `main`.
+It can also be started manually with **Actions → Publish Docker image → Run workflow**.
+Published images receive `latest`, `main`, and short commit-SHA tags.
+
+This does not change the current VM runtime or deployment process. Compose still uses
+`build: .`, and `scripts/deploy-container.sh` still builds on the VM. A later deployment
+phase will update the VM to authenticate to GHCR and pull a tested, immutable SHA-tagged
+image instead of building locally.
+
 ## 10. PostgreSQL Later
 
 SQLite is intentional for the first deployment. To move later, replace `DATABASE_URL` with
