@@ -3142,7 +3142,17 @@ body::after {
   .mobile-appbar-actions {
     align-items: center;
     display: flex;
-    gap: 0.45rem;
+    gap: 0.35rem;
+  }
+
+  .mobile-appbar-actions .icon-button {
+    height: 2.75rem;
+    width: 2.75rem;
+  }
+
+  .mobile-theme-toggle .theme-icon {
+    color: var(--aqua-accent-strong);
+    pointer-events: none;
   }
 
   .mobile-nav-drawer {

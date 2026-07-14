@@ -759,6 +759,21 @@ def test_dashboard_logo_is_bounded_at_phone_and_tablet_breakpoints(client: TestC
     assert "height: 1.75rem" in response.text
 
 
+def test_mobile_theme_defaults_dark_and_has_one_tap_toggle(client: TestClient) -> None:
+    dashboard = client.get("/")
+    stylesheet = client.get("/static/css/app.css")
+
+    assert dashboard.status_code == 200
+    assert 'const mobileThemeQuery = window.matchMedia("(max-width: 640px)")' in dashboard.text
+    assert 'mobileThemeQuery.matches ? "dark" : "light"' in dashboard.text
+    assert "data-theme-toggle" in dashboard.text
+    assert "Switch to light theme" in dashboard.text
+    assert 'localStorage.getItem("aquaops-theme") || defaultTheme()' in dashboard.text
+    assert stylesheet.status_code == 200
+    assert ".mobile-theme-toggle .theme-icon" in stylesheet.text
+    assert "height: 2.75rem" in stylesheet.text
+
+
 def test_quick_log_actions_reflow_before_labels_can_overflow(client: TestClient) -> None:
     response = client.get("/static/css/app.css")
 
