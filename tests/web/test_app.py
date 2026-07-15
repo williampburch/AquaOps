@@ -235,15 +235,164 @@ def test_tank_setup_wizard_applies_editable_care_profile_templates(
     assert response.status_code == 303
 
     detail = client.get("/tanks/1")
+    care_plan = client.get("/tanks/1/care-plan")
     notifications = client.get("/notifications")
     assert "Planted Tank" in detail.text
-    assert 'name="water_change_interval_days"' in detail.text
-    assert 'name="plant_trimming_interval_days"' in detail.text
-    assert 'name="fertilizer_interval_days"' in detail.text
+    assert 'name="schedule__water_change__interval_days"' in care_plan.text
+    assert 'name="schedule__plant_trimming__interval_days"' in care_plan.text
+    assert 'name="schedule__fertilizer__interval_days"' in care_plan.text
     assert "Water changes due" in notifications.text
     assert "Feeding due" in notifications.text
     assert "Fertilizer dosing due" in notifications.text
     assert "Plant trimming" in detail.text
+
+
+def test_care_plan_editor_is_linked_mobile_friendly_and_displays_current_plan(
+    client: TestClient,
+) -> None:
+    _register(client)
+    client.post(
+        "/tanks",
+        data={
+            "name": "Aquascape",
+            "tank_type": "planted",
+            "care_profile": "planted_tank",
+            "reminders_enabled": "on",
+        },
+    )
+
+    tank_detail = client.get("/tanks/1")
+    care_queue = client.get("/notifications")
+    editor = client.get("/tanks/1/care-plan")
+
+    assert 'href="/tanks/1/care-plan"' in tank_detail.text
+    assert 'href="/tanks/1/care-plan"' in care_queue.text
+    assert editor.status_code == 200
+    assert "Aquascape Care Plan" in editor.text
+    assert "Planted Tank" in editor.text
+    assert "Build an Advanced Custom plan" in editor.text
+    assert "Quick Log connected" in editor.text
+    assert "Reminder-only" in editor.text
+    assert 'name="schedule__water_change__interval_days" value="7"' in editor.text
+    assert 'name="schedule__fertilizer__interval_days" value="7"' in editor.text
+    assert 'inputmode="numeric"' in editor.text
+    assert 'class="btn btn-primary btn-lg care-plan-save"' in editor.text
+
+
+def test_care_plan_switches_profiles_and_requires_start_over_confirmation(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    switched = client.post(
+        "/tanks/1/care-plan/profile",
+        data={"profile_key": "water_testing", "strategy": "replace_profile"},
+        follow_redirects=False,
+    )
+    assert switched.status_code == 303
+    assert "saved=profile" in switched.headers["location"]
+    editor = client.get("/tanks/1/care-plan")
+    assert "Water Testing" in editor.text
+
+    unconfirmed = client.post(
+        "/tanks/1/care-plan/profile",
+        data={"profile_key": "simple_care", "strategy": "start_over"},
+    )
+    assert unconfirmed.status_code == 400
+    assert "Confirm that you want to disable the current plan" in unconfirmed.text
+
+    confirmed = client.post(
+        "/tanks/1/care-plan/profile",
+        data={
+            "profile_key": "simple_care",
+            "strategy": "start_over",
+            "confirm_start_over": "on",
+        },
+        follow_redirects=False,
+    )
+    assert confirmed.status_code == 303
+    assert "Simple Care" in client.get("/tanks/1/care-plan").text
+
+
+def test_advanced_custom_plan_saves_cadence_and_validates_custom_tasks(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+
+    saved = client.post(
+        "/tanks/1/care-plan/schedules",
+        data={
+            "schedule__water_change__enabled": "on",
+            "schedule__water_change__interval_days": "10",
+            "schedule__water_change__schedule_mode": "scheduled",
+            "schedule__water_change__preferred_weekday": "5",
+            "schedule__water_change__reminders_enabled": "on",
+            "schedule__water_change__notes": "Use the python hose.",
+            "schedule__equipment_inspection__enabled": "on",
+            "schedule__equipment_inspection__interval_days": "30",
+            "schedule__equipment_inspection__schedule_mode": "scheduled",
+            "schedule__equipment_inspection__reminders_enabled": "on",
+        },
+        follow_redirects=False,
+    )
+    assert saved.status_code == 303
+    editor = client.get("/tanks/1/care-plan")
+    assert "Advanced Custom" in editor.text
+    assert 'name="schedule__water_change__interval_days" value="10"' in editor.text
+    assert "Use the python hose." in editor.text
+
+    invalid = client.post(
+        "/tanks/1/care-plan/custom-tasks",
+        data={
+            "label": "Rinse intake sponge",
+            "schedule_mode": "scheduled",
+            "interval_days": "0",
+            "reminders_enabled": "on",
+        },
+    )
+    assert invalid.status_code == 400
+    assert "Scheduled care must repeat every 1 to 3650 days" in invalid.text
+
+    custom = client.post(
+        "/tanks/1/care-plan/custom-tasks",
+        data={
+            "label": "Rinse intake sponge",
+            "schedule_mode": "scheduled",
+            "interval_days": "21",
+            "reminders_enabled": "on",
+        },
+        follow_redirects=False,
+    )
+    assert custom.status_code == 303
+    assert "Rinse intake sponge" in client.get("/tanks/1/care-plan").text
+
+
+def test_another_user_cannot_open_or_change_a_tank_care_plan(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+    client.post("/logout")
+    client.post(
+        "/register",
+        data={
+            "username": "other-aquarist",
+            "email": "other@example.com",
+            "password": "a-long-test-password",
+        },
+    )
+
+    editor = client.get("/tanks/1/care-plan", follow_redirects=False)
+    update = client.post(
+        "/tanks/1/care-plan/profile",
+        data={"profile_key": "simple_care", "strategy": "merge"},
+        follow_redirects=False,
+    )
+
+    assert editor.status_code == 303
+    assert editor.headers["location"] == "/tanks"
+    assert update.status_code == 303
+    assert update.headers["location"] == "/tanks"
 
 
 def test_water_testing_profile_refreshes_its_starter_reminder(client: TestClient) -> None:
@@ -1253,6 +1402,10 @@ def test_settings_export_downloads_portable_user_data(client: TestClient) -> Non
         assert "Community flakes" in export_zip.read("feeding_details.csv").decode()
         assert "Easy Green" in export_zip.read("fertilizer_details.csv").decode()
         assert "Green spot algae" in export_zip.read("problems.csv").decode()
+        schedule_export = export_zip.read("maintenance_schedules.csv").decode()
+        assert "config_key" in schedule_export
+        assert "provenance" in schedule_export
+        assert "reminders_enabled" in schedule_export
         manifest = json.loads(export_zip.read("manifest.json"))
         assert manifest["format"] == "aquaops-portable-export"
         event_manifest = next(

@@ -106,6 +106,7 @@ class SqlAlchemyTankRepository:
         self._seed_maintenance_profile(
             user_id,
             tank.id,
+            profile.key,
             profile.schedule_intervals,
             data.reminders_enabled,
         )
@@ -198,6 +199,7 @@ class SqlAlchemyTankRepository:
             if model is None:
                 model = TankMaintenanceConfigModel(
                     tank_id=tank_id,
+                    config_key=config.config_type,
                     config_type=config.config_type,
                     enabled=config.enabled,
                     interval_days=config.interval_days,
@@ -206,6 +208,9 @@ class SqlAlchemyTankRepository:
             else:
                 model.enabled = config.enabled
                 model.interval_days = config.interval_days
+            model.reminders_enabled = config.enabled
+            model.provenance = "manual"
+            model.profile_key = None
 
         self.session.commit()
         return True
@@ -624,9 +629,12 @@ class SqlAlchemyTankRepository:
                 self.session.add(
                     TankMaintenanceConfigModel(
                         tank_id=tank_id,
+                        config_key=config_type,
                         config_type=config_type,
                         enabled=False,
                         interval_days=interval_days,
+                        reminders_enabled=False,
+                        provenance="system",
                     )
                 )
 
@@ -634,6 +642,7 @@ class SqlAlchemyTankRepository:
         self,
         user_id: int,
         tank_id: int,
+        profile_key: str,
         schedule_intervals: dict[str, int],
         reminders_enabled: bool,
     ) -> None:
@@ -642,14 +651,18 @@ class SqlAlchemyTankRepository:
         for config_type, default_interval in MAINTENANCE_CONFIG_DEFAULT_INTERVALS.items():
             enabled = reminders_enabled and config_type in schedule_intervals
             interval_days = schedule_intervals.get(config_type, default_interval)
-            self.session.add(
-                TankMaintenanceConfigModel(
-                    tank_id=tank_id,
-                    config_type=config_type,
-                    enabled=enabled,
-                    interval_days=interval_days,
-                )
+            config = TankMaintenanceConfigModel(
+                tank_id=tank_id,
+                config_key=config_type,
+                config_type=config_type,
+                enabled=enabled,
+                interval_days=interval_days,
+                reminders_enabled=enabled,
+                provenance="profile" if enabled else "system",
+                profile_key=profile_key if enabled else None,
             )
+            self.session.add(config)
+            self.session.flush()
             if enabled:
                 due_at = (
                     now if config_type in immediate_types else now + timedelta(days=interval_days)
@@ -658,6 +671,7 @@ class SqlAlchemyTankRepository:
                     ReminderModel(
                         user_id=user_id,
                         tank_id=tank_id,
+                        maintenance_config_id=config.id,
                         reminder_type=config_type,
                         title=f"{MAINTENANCE_CONFIG_LABELS[config_type]} due",
                         due_at=due_at,
@@ -721,6 +735,7 @@ class SqlAlchemyTankRepository:
                 ReminderModel.tank_id == tank_id,
                 ReminderModel.reminder_type == config_type,
                 ReminderModel.completed_at.is_(None),
+                ReminderModel.superseded_at.is_(None),
             )
         )
 
@@ -870,27 +885,36 @@ class SqlAlchemyTankRepository:
                 TankMaintenanceConfigModel.tank_id == tank_id,
                 TankMaintenanceConfigModel.config_type == config_type,
                 TankMaintenanceConfigModel.enabled.is_(True),
+                TankMaintenanceConfigModel.schedule_mode == "scheduled",
+                TankMaintenanceConfigModel.reminders_enabled.is_(True),
             )
         ).scalar_one_or_none()
         if config is None or not config.interval_days:
             return
 
         due_at = occurred_at + timedelta(days=config.interval_days)
-        reminder = self._open_reminder(user_id, tank_id, config_type)
+        reminder = self._open_reminder(
+            user_id,
+            tank_id,
+            config.config_key,
+            maintenance_config_id=config.id,
+        )
         reminder_title = f"{title} due"
         if reminder is None:
             self.session.add(
                 ReminderModel(
                     user_id=user_id,
                     tank_id=tank_id,
+                    maintenance_config_id=config.id,
                     source_event_id=source_event_id,
-                    reminder_type=config_type,
+                    reminder_type=config.config_key,
                     title=reminder_title,
                     due_at=due_at,
                 )
             )
         else:
             reminder.source_event_id = source_event_id
+            reminder.maintenance_config_id = config.id
             reminder.title = reminder_title
             reminder.due_at = due_at
             reminder.snoozed_until = None
@@ -948,15 +972,23 @@ class SqlAlchemyTankRepository:
         user_id: int,
         tank_id: int,
         reminder_type: str,
+        maintenance_config_id: int | None = None,
     ) -> ReminderModel | None:
-        return self.session.execute(
-            select(ReminderModel).where(
-                ReminderModel.user_id == user_id,
-                ReminderModel.tank_id == tank_id,
-                ReminderModel.reminder_type == reminder_type,
-                ReminderModel.completed_at.is_(None),
+        statement = select(ReminderModel).where(
+            ReminderModel.user_id == user_id,
+            ReminderModel.tank_id == tank_id,
+            ReminderModel.reminder_type == reminder_type,
+            ReminderModel.completed_at.is_(None),
+            ReminderModel.superseded_at.is_(None),
+        )
+        if maintenance_config_id is not None:
+            statement = statement.where(
+                (ReminderModel.maintenance_config_id == maintenance_config_id)
+                | (ReminderModel.maintenance_config_id.is_(None))
             )
-        ).scalar_one_or_none()
+        return self.session.scalar(
+            statement.order_by(ReminderModel.created_at, ReminderModel.id).limit(1)
+        )
 
 
 def _classify_reading(value: Decimal, target: ParameterTarget | None) -> str:

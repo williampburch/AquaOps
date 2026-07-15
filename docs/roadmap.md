@@ -55,6 +55,15 @@ changes, observations, and photos on one timeline.
 - Care profiles that persist on each tank and create immediately useful,
   editable feeding, water-change, water-test, filter, fertilizer, and plant-trim
   schedules with starter items in the Care Queue
+- Mobile-first Care Plan Editor available from aquarium details and each Care
+  Queue tank item, with safe preset merge/replace/start-fresh choices, explicit
+  profile/manual/legacy provenance, and Advanced Custom progressive disclosure
+- Advanced Custom schedules for all currently supported care types, including
+  scheduled/as-needed modes, cadence, optional weekday/start date, notes,
+  reminder controls, and user-named recurring tasks
+- Non-destructive reminder reconciliation that supersedes obsolete or duplicate
+  open reminders, preserves completed history, and schedules the next occurrence
+  when a linked Care Queue item is completed
 - Separate GitHub Actions image publishing to GHCR on `main` and manual runs,
   tagged as `latest`, `main`, and the immutable short commit SHA; the VM still
   deploys only when an operator starts it
@@ -177,8 +186,6 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Next: Tank-Specific Maintenance Config
 
-- Custom trimming, root-tab, and CO2 check cadences per tank
-- Expanded reminder generation from all configured maintenance rules
 - Ability to pause or skip generated maintenance reminders
 - Maintenance configs that respect enabled modules, so fertilizer reminders only
   appear for tanks using planted care workflows
@@ -200,15 +207,11 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 - Extend the current user preferences, dashboard density options, feature
   toggles, and progressive disclosure into onboarding defaults
 
-## Next: Care Schedule Templates
+## Next: Reusable Care Templates
 
-- Weekly fasting day template
-- Prefilter sponge cleaning template
-- Canister cleaning template
-- Water testing schedule while cycling
-- Root tab replacement schedule
-- CO2 check schedule
-- Custom recurring care templates
+- Save a user-built care plan as a reusable template
+- Named cycling, prefilter, canister, root-tab, CO₂, and fasting-day templates
+- Preview template changes before applying them across several tanks
 
 ## Next: Planted Tank Workflows
 
@@ -264,6 +267,13 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 - Import, backup automation, and restore workflows
 - Photo timeline export
 - Optional public portfolio or demo tank page
+
+## Later: Controlled Beta and Tank Sharing
+
+- Controlled beta registration with explicit operator approval or an allowlist
+- Private tank sharing with clear viewer/editor roles
+- Invitations, revocation, and an audit trail for shared-tank changes
+- No billing, subscription, or entitlement model until real usage justifies it
 
 ## Later: Photos and Richer Reports
 

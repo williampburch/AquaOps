@@ -118,7 +118,11 @@ class SqlAlchemyActivityRepository:
         statement = (
             select(func.count())
             .select_from(ReminderModel)
-            .where(ReminderModel.user_id == user_id, ReminderModel.completed_at.is_(None))
+            .where(
+                ReminderModel.user_id == user_id,
+                ReminderModel.completed_at.is_(None),
+                ReminderModel.superseded_at.is_(None),
+            )
         )
         statement = filter_plant_care_reminders(statement, include_plant_care)
         return int(self.session.scalar(statement) or 0)

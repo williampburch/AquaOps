@@ -152,16 +152,26 @@ class TankParameterTargetModel(TimestampMixin, Base):
 class TankMaintenanceConfigModel(TimestampMixin, Base):
     __tablename__ = "tank_maintenance_configs"
     __table_args__ = (
-        UniqueConstraint("tank_id", "config_type", name="uq_tank_maintenance_config_type"),
+        UniqueConstraint("tank_id", "config_key", name="uq_tank_maintenance_config_key"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tank_id: Mapped[int] = mapped_column(ForeignKey("tanks.id", ondelete="CASCADE"), index=True)
+    config_key: Mapped[str] = mapped_column(String(120))
     config_type: Mapped[str] = mapped_column(String(80), index=True)
+    task_label: Mapped[str | None] = mapped_column(String(160))
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     interval_days: Mapped[int | None] = mapped_column(Integer)
+    schedule_mode: Mapped[str] = mapped_column(String(20), default="scheduled")
+    preferred_weekday: Mapped[int | None] = mapped_column(Integer)
+    start_date: Mapped[date | None] = mapped_column(Date)
+    reminders_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[str | None] = mapped_column(Text)
+    provenance: Mapped[str] = mapped_column(String(20), default="manual", index=True)
+    profile_key: Mapped[str | None] = mapped_column(String(40), index=True)
 
     tank: Mapped[TankModel] = relationship(back_populates="maintenance_configs")
+    reminders: Mapped[list[ReminderModel]] = relationship(back_populates="maintenance_config")
 
 
 class SpeciesCatalogModel(TimestampMixin, Base):
@@ -496,11 +506,20 @@ class ReminderModel(Base):
     source_event_id: Mapped[int | None] = mapped_column(
         ForeignKey("events.id", ondelete="SET NULL")
     )
+    maintenance_config_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tank_maintenance_configs.id", ondelete="SET NULL"),
+        index=True,
+    )
     reminder_type: Mapped[str] = mapped_column(String(80), index=True)
     title: Mapped[str] = mapped_column(String(180))
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    superseded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    superseded_reason: Mapped[str | None] = mapped_column(String(240))
     snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     source_event: Mapped[EventModel | None] = relationship(back_populates="reminders")
+    maintenance_config: Mapped[TankMaintenanceConfigModel | None] = relationship(
+        back_populates="reminders"
+    )

@@ -39,7 +39,7 @@ TEMPERATURE_UNIT_LABELS = {
 }
 
 PLANT_CARE_MODES = {"auto", "on", "off"}
-PLANT_CARE_REMINDER_TYPES = {"fertilizer", "root_tabs"}
+PLANT_CARE_REMINDER_TYPES = {"fertilizer", "root_tabs", "plant_trimming", "co2_check"}
 
 
 def normalize_preferences(preferences: UserPreferences) -> UserPreferences:

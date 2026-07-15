@@ -54,6 +54,34 @@ Each tank can carry its own acceptable ranges for ammonia, nitrite, nitrate, pH,
 temperature, KH, GH, and TDS. The dashboard and tank detail pages can then classify
 readings against the tank's actual goals.
 
+## Care Plans and Reminder Reconciliation
+
+`tank_maintenance_configs` is the durable care-plan model. Standard schedules use
+stable task keys; user-created recurring tasks receive unique keys so several custom
+tasks can coexist. Each schedule records whether it came from a profile, was manually
+managed, or predates provenance tracking. Existing rows migrated into provenance support
+are marked `legacy`, which prevents AquaOps from assuming they are safe to overwrite.
+
+Profile application is intentionally non-destructive:
+
+- **Add missing suggestions** preserves existing rows and enables only unconfigured
+  profile tasks.
+- **Replace previous preset items** changes only rows explicitly marked as
+  profile-managed; manual and legacy rows remain unchanged.
+- **Start fresh** requires confirmation and disables existing schedules before enabling
+  the selected profile. Rows and history remain stored.
+
+Schedule changes reconcile only open future reminders. Active schedules retain one linked
+open reminder; disabled or duplicate reminders receive `superseded_at` and a reason.
+Completed reminders are never rewritten. Events, water tests, feedings, photos, problems,
+and other timeline records are outside this reconciliation and are never deleted. A linked
+reminder completed from the Care Queue creates the next occurrence when the schedule is
+still active.
+
+Some task types are connected to structured Quick Log events; generic tasks currently use
+recurring Care Queue reminders only. The editor labels that distinction so reminder-only
+tasks are not presented as dedicated logging workflows.
+
 ## Species Catalog
 
 The `species_catalog` table is the local starter database for livestock and plants. It

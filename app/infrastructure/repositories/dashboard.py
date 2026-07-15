@@ -131,6 +131,7 @@ class SqlAlchemyDashboardRepository:
             .where(
                 ReminderModel.user_id == user_id,
                 ReminderModel.completed_at.is_(None),
+                ReminderModel.superseded_at.is_(None),
                 ReminderModel.due_at <= soon,
             )
             .order_by(ReminderModel.due_at.asc())
