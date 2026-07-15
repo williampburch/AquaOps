@@ -57,6 +57,43 @@ def test_health_check(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_installable_pwa_assets_are_available_and_conservative(client: TestClient) -> None:
+    manifest_response = client.get("/manifest.webmanifest")
+    worker_response = client.get("/service-worker.js")
+    offline_response = client.get("/offline")
+    icon_response = client.get("/static/brand/aquaops-icon-192.png")
+    script_response = client.get("/static/js/pwa.js")
+    dashboard_response = client.get("/")
+
+    assert manifest_response.status_code == 200
+    assert manifest_response.headers["content-type"].startswith("application/manifest+json")
+    manifest = manifest_response.json()
+    assert manifest["name"] == "AquaOps Aquarium Care"
+    assert manifest["start_url"] == "/?source=pwa"
+    assert manifest["scope"] == "/"
+    assert manifest["display"] == "standalone"
+    assert {icon["sizes"] for icon in manifest["icons"]} == {"192x192", "512x512"}
+
+    assert worker_response.status_code == 200
+    assert worker_response.headers["service-worker-allowed"] == "/"
+    assert worker_response.headers["cache-control"] == "no-cache, no-store, must-revalidate"
+    assert 'request.method !== "GET"' in worker_response.text
+    assert 'request.mode === "navigate"' in worker_response.text
+    assert 'caches.match("/offline")' in worker_response.text
+    assert 'url.pathname.startsWith("/static/")' in worker_response.text
+
+    assert offline_response.status_code == 200
+    assert "AquaOps does not store private care pages offline" in offline_response.text
+    assert icon_response.status_code == 200
+    assert icon_response.headers["content-type"] == "image/png"
+    assert script_response.status_code == 200
+    assert "Add to Home Screen" in script_response.text
+    assert 'navigator.serviceWorker.register("/service-worker.js"' in script_response.text
+    assert 'rel="manifest" href="/manifest.webmanifest"' in dashboard_response.text
+    assert "/static/js/pwa.js?v=" in dashboard_response.text
+    assert "viewport-fit=cover" in dashboard_response.text
+
+
 def test_dashboard_renders_public_empty_state(client: TestClient) -> None:
     response = client.get("/")
 
@@ -1157,6 +1194,8 @@ def test_notifications_and_settings_pages_render(client: TestClient) -> None:
     assert "Water Alerts" in settings_response.text
     assert "Plant Care" in settings_response.text
     assert "Download Your Data" in settings_response.text
+    assert "Install AquaOps" in settings_response.text
+    assert "data-pwa-install" in settings_response.text
 
 
 def test_settings_export_downloads_portable_user_data(client: TestClient) -> None:

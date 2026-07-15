@@ -19,6 +19,7 @@ from app.web.routes import (
     notifications,
     photos,
     problems,
+    pwa,
     quick_log,
     reports,
     tanks,
@@ -42,7 +43,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
     app = FastAPI(title=app_settings.app_name, version="0.1.0", lifespan=lifespan)
     app.state.settings = app_settings
-    app.state.static_version = str((app_settings.static_dir / "css" / "app.css").stat().st_mtime_ns)
+    app.state.static_version = str(
+        max(
+            (
+                path.stat().st_mtime_ns
+                for path in app_settings.static_dir.rglob("*")
+                if path.is_file()
+            ),
+            default=0,
+        )
+    )
 
     app.mount(
         "/static",
@@ -51,6 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(pwa.router)
     app.include_router(auth.router)
     app.include_router(tanks.router)
     app.include_router(inventory.router)

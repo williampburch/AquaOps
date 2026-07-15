@@ -94,6 +94,10 @@ changes, observations, and photos on one timeline.
   dashboard quick-log priority
 - Public, mobile-first in-app user guide with quick-start steps, task-focused
   feature guidance, daily routines, and direct links into core workflows
+- Installable PWA behavior with AquaOps home-screen icons, standalone display,
+  Android/desktop install prompting, iPhone/iPad Add to Home Screen guidance,
+  safe-area-aware mobile chrome, and a privacy-conscious offline fallback that
+  never caches authenticated aquarium pages or form submissions
 - Mobile-first Quick Log for focused water changes, water tests, feeding,
   observations, and maintenance, with tank selection, optional detail
   disclosure, and visible save errors
@@ -153,7 +157,7 @@ Near-term work should follow this order:
 4. Photo capture and tank, plant, and livestock timelines
 5. Import, backup automation, and restore so long-term data remains trustworthy
 6. Historical explanations that help connect a problem with preceding changes
-7. Hosted, installable PWA behavior and a low-friction onboarding path
+7. Low-friction post-registration onboarding and install education
 
 Reef-specific breadth is not an immediate priority. If AquaOps later targets reef
 keepers, that should be an intentional expansion covering salinity, alkalinity,

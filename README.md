@@ -27,6 +27,9 @@ This repository contains a publishable, working foundation:
 - Branded enterprise-style UI with AquaOps wordmark, ocean/teal palette, responsive command surfaces, and persisted light, dark, and system theme choices
 - Public, mobile-first in-app user guide covering setup, daily care, inventory,
   problems, history, reports, preferences, and data export
+- Installable PWA shell with branded home-screen icons, standalone mobile
+  display, safe-area support, browser install controls, and a privacy-conscious
+  offline connection fallback
 - Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - Example Nginx reverse proxy config for hosting behind a domain
@@ -143,6 +146,8 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Maintenance schedules: per-tank reminder cadences for water changes, feeding, filter cleaning, and fertilizer
 - Recommendations: nitrate-based water change suggestions from tank-specific target ranges, with care queue explanations
 - Mobile UX: compact app bar, bottom tab navigation, mobile drawer, and dashboard quick-log priority
+- PWA: install from Settings or the browser home-screen menu; private aquarium
+  pages and care submissions remain network-only instead of being cached offline
 - Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
 - Plant Care mode: `Auto`, `On`, or `Off` filtering for fertilizer, root-tab, and plant-care noise
 - Problem tracking: open, monitor, and resolve tank issues while connecting tests,
@@ -153,6 +158,6 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 
 The next product phase continues daily usefulness through reusable logging values,
 richer maintenance automation, configurable onboarding, problem follow-ups,
-notification delivery, photo timelines, installable PWA behavior, and dependable
-backup/restore workflows. See [docs/roadmap.md](docs/roadmap.md) for the full staged
-direction and product principles.
+notification delivery, photo timelines, and dependable backup/restore workflows.
+See [docs/roadmap.md](docs/roadmap.md) for the full staged direction and product
+principles.
