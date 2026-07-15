@@ -20,6 +20,24 @@
     <section class="settings-panel">
       <div class="settings-heading">
         <div>
+          <span>Mobile app</span>
+          <h2>Install AquaOps</h2>
+        </div>
+        <button class="btn btn-primary btn-sm" type="button" data-pwa-install hidden>Install app</button>
+      </div>
+      <div class="pwa-install-card">
+        <img src="{{ url_for('static', path='/brand/aquaops-icon-192.png') }}" alt="" aria-hidden="true" />
+        <div>
+          <strong>Keep tank care one tap away</strong>
+          <p class="mb-0 text-body-secondary" data-pwa-install-status>Checking installation options…</p>
+        </div>
+      </div>
+      <p class="pwa-privacy-note mb-0">For privacy and reliable history, aquarium pages and unsaved forms are not stored offline. A connection is required to view or save care.</p>
+    </section>
+
+    <section class="settings-panel">
+      <div class="settings-heading">
+        <div>
           <span>Global</span>
           <h2>Measurement System</h2>
         </div>

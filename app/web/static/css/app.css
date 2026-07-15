@@ -3567,6 +3567,37 @@ body::after {
   margin: 0.1rem 0 0;
 }
 
+.pwa-install-card {
+  align-items: center;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--aqua-brand-teal) 14%, var(--aqua-panel)), var(--aqua-panel-soft));
+  border: 1px solid color-mix(in srgb, var(--aqua-brand-teal) 34%, var(--aqua-border));
+  border-radius: 12px;
+  display: flex;
+  gap: 0.9rem;
+  padding: 0.85rem;
+}
+
+.pwa-install-card img {
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgb(3 30 42 / 18%);
+  flex: 0 0 auto;
+  height: 64px;
+  width: 64px;
+}
+
+.pwa-install-card strong {
+  color: var(--aqua-text);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.pwa-privacy-note {
+  color: var(--aqua-text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.7rem;
+}
+
 .save-indicator {
   background: color-mix(in srgb, var(--aqua-accent) 12%, var(--aqua-panel));
   border: 1px solid color-mix(in srgb, var(--aqua-accent) 36%, var(--aqua-border));
@@ -3943,7 +3974,7 @@ body::after {
 
 @media (max-width: 640px) {
   body {
-    padding: 4.35rem 0 5.1rem;
+    padding: calc(4.35rem + env(safe-area-inset-top)) 0 5.1rem;
   }
 
   .main-panel {
@@ -4105,8 +4136,8 @@ body::after {
     display: flex;
     gap: 0.7rem;
     inset: 0 0 auto;
-    min-height: 4.1rem;
-    padding: 0.55rem 0.75rem;
+    min-height: calc(4.1rem + env(safe-area-inset-top));
+    padding: calc(0.55rem + env(safe-area-inset-top)) 0.75rem 0.55rem;
     position: fixed;
     z-index: 60;
   }

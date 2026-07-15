@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="application-name" content="AquaOps" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AquaOps" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#073b4c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eaf8f8" media="(prefers-color-scheme: light)" />
     <title>{{ title }} | AquaOps</title>
     <script>
       (() => {
@@ -20,8 +27,10 @@
       rel="stylesheet"
     />
     <link rel="icon" href="{{ url_for('static', path='/brand/aquaops-app-icon.png') }}" />
-    <link rel="apple-touch-icon" href="{{ url_for('static', path='/brand/aquaops-app-icon.png') }}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', path='/brand/aquaops-apple-touch-icon.png') }}" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link href="{{ url_for('static', path='/css/app.css') }}?v={{ request.app.state.static_version }}" rel="stylesheet" />
+    <script defer src="{{ url_for('static', path='/js/pwa.js') }}?v={{ request.app.state.static_version }}"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     {% block extra_head %}{% endblock %}
   </head>
