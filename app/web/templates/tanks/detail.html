@@ -16,7 +16,7 @@
         {% endif %}
       </div>
     </div>
-    <a class="btn btn-outline-light" href="/tanks">All tanks</a>
+    <div class="tank-header-actions"><a class="btn btn-primary" href="/tanks/{{ tank.id }}/care-plan">Manage care plan</a><a class="btn btn-outline-light" href="/tanks">All tanks</a></div>
   </section>
 
   <section class="parameter-grid mt-4">
@@ -315,43 +315,20 @@
   <section class="panel mt-4">
     <div class="panel-heading">
       <h2>Maintenance Schedules</h2>
+      <a class="btn btn-primary btn-sm" href="/tanks/{{ tank.id }}/care-plan">Manage care plan</a>
     </div>
-    <form class="stack-form" method="post" action="/tanks/{{ tank.id }}/maintenance-configs">
-      <div class="maintenance-config-grid">
-        {% for config in tank.maintenance_configs %}
-          {% if config.config_type not in ["fertilizer", "plant_trimming"] or display.module_enabled("plants") %}
-            <label class="maintenance-config-card" for="{{ config.config_type }}_enabled">
-              <span>
-                <strong>{{ config.label }}</strong>
-                <small>{{ config.status.replace("_", " ")|title }}</small>
-              </span>
-              <input
-                class="form-check-input"
-                id="{{ config.config_type }}_enabled"
-                name="{{ config.config_type }}_enabled"
-                type="checkbox"
-                {% if config.enabled %}checked{% endif %}
-              />
-              <div class="input-group">
-                <input
-                  class="form-control"
-                  name="{{ config.config_type }}_interval_days"
-                  type="number"
-                  min="1"
-                  value="{{ config.interval_days or '' }}"
-                />
-                <span class="input-group-text">days</span>
-              </div>
-              <div class="maintenance-config-meta">
-                <span>Last: {{ display.format_date(config.last_completed_at, include_year=false) }}</span>
-                <span>Next: {{ display.format_date(config.next_due_at, include_year=false) }}</span>
-              </div>
-            </label>
-          {% endif %}
-        {% endfor %}
-      </div>
-      <button class="btn btn-primary" type="submit">Save schedules</button>
-    </form>
+    <div class="maintenance-config-grid">
+      {% set active_configs = tank.maintenance_configs|selectattr('enabled')|list %}
+      {% for config in tank.maintenance_configs %}
+        {% if config.enabled and (config.config_type not in ["fertilizer", "plant_trimming", "root_tabs", "co2_check"] or display.module_enabled("plants")) %}
+          <div class="maintenance-config-card">
+            <span><strong>{{ config.label }}</strong><small>{{ config.status.replace("_", " ")|title }} · every {{ config.interval_days }} days</small></span>
+            <div class="maintenance-config-meta"><span>Last: {{ display.format_date(config.last_completed_at, include_year=false) }}</span><span>Next: {{ display.format_date(config.next_due_at, include_year=false) }}</span></div>
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if not active_configs %}<div class="empty-state"><strong>No scheduled care</strong><span>Choose a preset or build a custom plan when you are ready.</span></div>{% endif %}
+    </div>
   </section>
 
   <section class="panel mt-4">

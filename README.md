@@ -23,6 +23,8 @@ This repository contains a publishable, working foundation:
 - Mobile-friendly livestock and plant lifecycle management with quantity edits,
   tank moves, reasoned removals, and preserved change history
 - Notifications page for open reminders with configurable due-soon windows and plant-care filtering
+- Mobile-first Care Plan Editor for reviewing an existing tank, safely applying
+  presets, building an Advanced Custom plan, and adding generic recurring tasks
 - Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior
 - Branded enterprise-style UI with AquaOps wordmark, ocean/teal palette, responsive command surfaces, and persisted light, dark, and system theme choices
 - Public, mobile-first in-app user guide covering setup, daily care, inventory,
@@ -143,7 +145,9 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
   thumb-friendly controls, optional details, and visible validation feedback
 - Recent Quick Log context: last water-change volume, previous readings, recent
   maintenance equipment, and remembered tank selection
-- Maintenance schedules: per-tank reminder cadences for water changes, feeding, filter cleaning, and fertilizer
+- Maintenance schedules: per-tank Care Plan Editor with preset provenance,
+  scheduled/as-needed modes, optional weekdays/start dates, custom tasks, and
+  non-destructive reminder reconciliation
 - Recommendations: nitrate-based water change suggestions from tank-specific target ranges, with care queue explanations
 - Mobile UX: compact app bar, bottom tab navigation, mobile drawer, and dashboard quick-log priority
 - PWA: install from Settings or the browser home-screen menu; private aquarium

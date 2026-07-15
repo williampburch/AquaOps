@@ -44,6 +44,7 @@
               {% if item.reason %}
                 <small class="notification-reason">{{ item.reason }}</small>
               {% endif %}
+              {% if item.tank_id %}<a class="care-plan-inline-link" href="/tanks/{{ item.tank_id }}/care-plan">Manage care plan</a>{% endif %}
             </div>
             <div class="notification-actions">
               <div class="notification-meta">

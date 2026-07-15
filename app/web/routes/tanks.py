@@ -77,7 +77,9 @@ def new_tank_form(request: Request, db: DbSession, current_user: AuthenticatedUs
             "display": UserDisplay(preferences),
             "error": None,
             "form_values": {},
-            "care_profiles": list(CARE_PROFILES.values()),
+            "care_profiles": [
+                profile for profile in CARE_PROFILES.values() if not profile.advanced
+            ],
         },
     )
 
@@ -127,7 +129,9 @@ async def create_tank(
                 "display": UserDisplay(preferences),
                 "error": str(exc),
                 "form_values": form_values,
-                "care_profiles": list(CARE_PROFILES.values()),
+                "care_profiles": [
+                    profile for profile in CARE_PROFILES.values() if not profile.advanced
+                ],
             },
             status_code=status.HTTP_400_BAD_REQUEST,
         )

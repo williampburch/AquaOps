@@ -15,6 +15,7 @@ erDiagram
   TANKS ||--o{ TANK_PARAMETER_TARGETS : defines
   TANKS ||--o{ EVENTS : records
   TANKS ||--o{ REMINDERS : schedules
+  TANKS ||--o{ TANK_MAINTENANCE_CONFIGS : configures
   TANKS ||--o{ PROBLEMS : experiences
 
   SPECIES_CATALOG ||--o{ SPECIES_ALIASES : names
@@ -28,6 +29,8 @@ erDiagram
   EVENTS ||--o| PHOTO_EVENT_DETAILS : describes
   EVENTS ||--o{ REMINDERS : creates
   EVENTS ||--o{ PROBLEM_EVENT_LINKS : connected_to
+
+  TANK_MAINTENANCE_CONFIGS ||--o{ REMINDERS : generates
 
   PROBLEMS ||--o{ PROBLEM_EVENT_LINKS : includes
 
@@ -46,6 +49,8 @@ erDiagram
 - `livestock`: fish, shrimp, snails, and other aquatic animals, optionally linked to catalog entries
 - `plants`: aquatic plants per tank, optionally linked to catalog entries
 - `tank_parameter_targets`: acceptable per-tank ranges for water parameters
+- `tank_maintenance_configs`: standard and custom care schedules with cadence,
+  reminder behavior, optional timing/notes, and profile/manual/legacy provenance
 - `events`: generic chronological record
 - `event_measurements`: ammonia, nitrite, nitrate, pH, temperature, KH, GH, TDS
 - `maintenance_event_details`: water changes, cleaning, filter work, substrate vacuum, equipment replacement, plant trimming
@@ -56,4 +61,5 @@ erDiagram
 - `photo_event_details`: photo captions linked to events
 - `problems`: structured tank issues with type, severity, status, resolution, and retained history
 - `problem_event_links`: connects relevant tests, care, observations, photos, and status events to a problem
-- `reminders`: upcoming and completed operational reminders
+- `reminders`: upcoming and completed operational reminders, including linked schedule
+  provenance and non-destructive supersession state

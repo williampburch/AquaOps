@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="care-plan-shell">
+    <section class="care-plan-hero">
+      <div>
+        <p class="eyebrow mb-1">{{ plan.tank_name }}</p>
+        <h2>Care plan</h2>
+        <p>Review what is due, borrow a preset, or build a plan around how you actually keep this aquarium.</p>
+      </div>
+      <div class="care-plan-hero-actions">
+        <span><small>Current plan</small><strong>{{ current_profile.label }}</strong></span>
+        <a class="btn btn-outline-light" href="/tanks/{{ plan.tank_id }}">Tank details</a>
+      </div>
+    </section>
+
+    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+    {% if saved %}<div class="alert alert-success" role="status">Care plan saved. Future reminders were reconciled without deleting history.</div>{% endif %}
+
+    <section class="care-plan-panel preset-plan-panel">
+      <div class="care-plan-heading"><div><span>Simple starting points</span><h2>Apply a proven profile</h2><p>Choose how much of the current plan AquaOps is allowed to change.</p></div></div>
+      <form class="care-profile-apply-form" method="post" action="/tanks/{{ plan.tank_id }}/care-plan/profile">
+        <div class="care-plan-profile-grid">
+          {% for profile in care_profiles %}
+            <label class="care-plan-profile-card">
+              <input type="radio" name="profile_key" value="{{ profile.key }}" {% if profile.key == plan.care_profile %}checked{% endif %} required />
+              <span><strong>{{ profile.label }}</strong><small>{{ profile.summary }}</small><em>{{ profile.schedule_intervals|length }} suggested tasks</em></span>
+            </label>
+          {% endfor %}
+        </div>
+        <fieldset class="profile-strategy-picker">
+          <legend>How should this profile be applied?</legend>
+          <label><input type="radio" name="strategy" value="merge" checked /><span><strong>Add missing suggestions</strong><small>Keep every existing schedule and add only recommendations that are not configured yet.</small></span></label>
+          <label><input type="radio" name="strategy" value="replace_profile" /><span><strong>Replace previous preset items</strong><small>Update only tasks AquaOps knows came from a preset. Manual and legacy schedules stay intact.</small></span></label>
+          <label class="start-over-choice"><input type="radio" name="strategy" value="start_over" /><span><strong>Start fresh with this profile</strong><small>Disable the current schedules, retain their records, and enable the selected preset.</small></span></label>
+        </fieldset>
+        <label class="care-plan-confirm" hidden data-start-over-confirm><input class="form-check-input" type="checkbox" name="confirm_start_over" /><span><strong>I understand this disables my current schedules.</strong><small>Completed care, events, photos, problems, and reminder history are never deleted.</small></span></label>
+        <button class="btn btn-primary btn-lg" type="submit">Apply selected profile</button>
+      </form>
+    </section>
+
+    <details class="care-plan-advanced" {% if plan.care_profile == 'advanced_custom' %}open{% endif %}>
+      <summary><span><small>Progressive disclosure</small><strong>Build an Advanced Custom plan</strong><em>All supported schedules and custom tasks</em></span></summary>
+      <div class="care-plan-advanced-body">
+        <div class="care-plan-capability-note"><strong>Know what is connected</strong><span>“Quick Log connected” tasks automatically move their reminder after a matching log. “Reminder-only” tasks recur when completed from the Care Queue.</span></div>
+        <form method="post" action="/tanks/{{ plan.tank_id }}/care-plan/schedules">
+          <div class="care-task-list">
+            {% for schedule in plan.schedules %}
+              {% set definition = task_definitions.get(schedule.config_type) %}
+              {% set prefix = 'schedule__' ~ schedule.config_key ~ '__' %}
+              <article class="care-task-card {{ 'enabled' if schedule.enabled else '' }}" data-care-task>
+                <div class="care-task-card-head">
+                  <label class="care-task-toggle"><input class="form-check-input" type="checkbox" name="{{ prefix }}enabled" data-care-task-enabled {% if schedule.enabled %}checked{% endif %} /><span><strong>{{ schedule.label }}</strong><small>{{ definition.group if definition else 'Custom task' }} · {{ 'Quick Log connected' if definition and definition.quick_log_connected else 'Reminder-only' }}</small></span></label>
+                  <span class="care-task-origin">{{ schedule.provenance|title }}</span>
+                </div>
+                {% if schedule.config_type == 'custom' %}<input type="hidden" name="{{ prefix }}label" value="{{ schedule.label }}" />{% endif %}
+                <div class="care-task-options" data-care-task-options>
+                  <div class="care-task-core-grid">
+                    <div><label class="form-label">Care style</label><select class="form-select" name="{{ prefix }}schedule_mode" data-schedule-mode><option value="scheduled" {% if schedule.schedule_mode == 'scheduled' %}selected{% endif %}>On a schedule</option><option value="as_needed" {% if schedule.schedule_mode == 'as_needed' %}selected{% endif %}>As needed</option></select></div>
+                    <div data-scheduled-field><label class="form-label">Repeat every</label><div class="input-group"><input class="form-control" type="number" inputmode="numeric" min="1" max="3650" name="{{ prefix }}interval_days" value="{{ schedule.interval_days or '' }}" /><span class="input-group-text">days</span></div></div>
+                  </div>
+                  <label class="care-reminder-toggle" data-scheduled-field><input class="form-check-input" type="checkbox" name="{{ prefix }}reminders_enabled" {% if schedule.reminders_enabled %}checked{% endif %} /><span><strong>Show in Care Queue</strong><small>Only one future reminder is kept open.</small></span></label>
+                  <details class="care-task-more"><summary>Timing and notes</summary><div class="care-task-more-grid"><div data-scheduled-field><label class="form-label">Preferred weekday</label><select class="form-select" name="{{ prefix }}preferred_weekday"><option value="">Any day</option>{% for weekday in weekday_labels %}<option value="{{ loop.index0 }}" {% if schedule.preferred_weekday == loop.index0 %}selected{% endif %}>{{ weekday }}</option>{% endfor %}</select></div><div data-scheduled-field><label class="form-label">Start no earlier than</label><input class="form-control" type="date" name="{{ prefix }}start_date" value="{{ schedule.start_date or '' }}" /></div><div class="care-task-notes"><label class="form-label">Plan notes</label><textarea class="form-control" name="{{ prefix }}notes" rows="2" maxlength="1000" placeholder="Products, equipment, or instructions">{{ schedule.notes or '' }}</textarea></div></div></details>
+                  {% if definition %}<p class="care-task-description">{{ definition.description }}</p>{% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+          <button class="btn btn-primary btn-lg care-plan-save" type="submit">Save Advanced Custom plan</button>
+        </form>
+
+        <section class="custom-care-task-panel">
+          <div><span>Add your own</span><h3>Custom recurring task</h3><p>Use this for a reminder that does not need a dedicated AquaOps log type yet.</p></div>
+          <form class="stack-form" method="post" action="/tanks/{{ plan.tank_id }}/care-plan/custom-tasks">
+            <div><label class="form-label" for="custom_task_label">Task name</label><input class="form-control form-control-lg" id="custom_task_label" name="label" maxlength="160" placeholder="Rinse intake sponge" required /></div>
+            <div class="care-task-core-grid"><div><label class="form-label" for="custom_schedule_mode">Care style</label><select class="form-select" id="custom_schedule_mode" name="schedule_mode"><option value="scheduled">On a schedule</option><option value="as_needed">As needed</option></select></div><div><label class="form-label" for="custom_interval_days">Repeat every</label><div class="input-group"><input class="form-control" id="custom_interval_days" name="interval_days" type="number" inputmode="numeric" min="1" max="3650" value="30" /><span class="input-group-text">days</span></div></div></div>
+            <label class="care-reminder-toggle"><input class="form-check-input" type="checkbox" name="reminders_enabled" checked /><span><strong>Show in Care Queue</strong><small>Completing it schedules the next occurrence.</small></span></label>
+            <div><label class="form-label" for="custom_task_notes">Notes <span class="optional-label">Optional</span></label><textarea class="form-control" id="custom_task_notes" name="notes" rows="2" maxlength="1000"></textarea></div>
+            <button class="btn btn-outline-light" type="submit">Add custom task</button>
+          </form>
+        </section>
+      </div>
+    </details>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    (() => {
+      const confirmation = document.querySelector("[data-start-over-confirm]");
+      const strategies = document.querySelectorAll('input[name="strategy"]');
+      const updateConfirmation = () => {
+        const startOver = document.querySelector('input[name="strategy"]:checked')?.value === "start_over";
+        confirmation.hidden = !startOver;
+        if (!startOver) confirmation.querySelector("input").checked = false;
+      };
+      strategies.forEach((choice) => choice.addEventListener("change", updateConfirmation));
+      updateConfirmation();
+
+      document.querySelectorAll("[data-care-task]").forEach((card) => {
+        const enabled = card.querySelector("[data-care-task-enabled]");
+        const mode = card.querySelector("[data-schedule-mode]");
+        const update = () => {
+          card.classList.toggle("enabled", enabled.checked);
+          card.querySelector("[data-care-task-options]").hidden = !enabled.checked;
+          card.querySelectorAll("[data-scheduled-field]").forEach((field) => {
+            field.hidden = mode.value !== "scheduled";
+          });
+        };
+        enabled.addEventListener("change", update);
+        mode.addEventListener("change", update);
+        update();
+      });
+    })();
+  </script>
+{% endblock %}

@@ -9,6 +9,7 @@ class CareProfile:
     label: str
     summary: str
     schedule_intervals: dict[str, int]
+    advanced: bool = False
 
 
 CARE_PROFILES = {
@@ -83,6 +84,13 @@ CARE_PROFILES = {
             "Custom",
             "Start with schedules off and configure each one yourself.",
             {},
+        ),
+        CareProfile(
+            "advanced_custom",
+            "Advanced Custom",
+            "Build a detailed plan from every currently supported schedule.",
+            {},
+            True,
         ),
     )
 }

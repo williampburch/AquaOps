@@ -11,6 +11,7 @@ class NotificationItem:
     title: str
     reminder_type: str
     due_at: datetime
+    tank_id: int | None
     tank_name: str | None
     status: str
     reason: str | None = None
