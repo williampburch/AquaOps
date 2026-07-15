@@ -11,7 +11,7 @@ a clean, maintainable Python web application.
 This repository contains a publishable, working foundation:
 
 - Layered FastAPI application structure with web, application, domain, and infrastructure boundaries
-- SQLAlchemy ORM models for users, preferences, sessions, tanks, livestock, plants, species catalog data, generic events, event details, media, and reminders
+- SQLAlchemy ORM models for users, preferences, sessions, tanks, livestock, plants, species catalog data, generic events, event details, media, reminders, and problem tracking
 - Alembic migration environment with schema revisions for initial tables, tank targets, user preferences, and the built-in species catalog
 - Local bcrypt authentication with hashed server-side session tokens
 - Tank creation, tank detail, and tank-specific water parameter targets
@@ -26,7 +26,7 @@ This repository contains a publishable, working foundation:
 - Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior
 - Branded enterprise-style UI with AquaOps wordmark, ocean/teal palette, responsive command surfaces, and persisted light, dark, and system theme choices
 - Public, mobile-first in-app user guide covering setup, daily care, inventory,
-  history, reports, preferences, and data export
+  problems, history, reports, preferences, and data export
 - Demo seed data for portfolio review and screenshots
 - Dockerfile and Docker Compose setup for an Azure Linux VM
 - Example Nginx reverse proxy config for hosting behind a domain
@@ -85,11 +85,14 @@ make migrate
 make seed-demo
 ```
 
-Deploy an existing Docker Compose host from the repo directory:
+Production deploys pull an immutable GHCR image and do not build on the VM:
 
 ```bash
-scripts/deploy-container.sh
+AQUAOPS_IMAGE_TAG=<short-sha> make deploy
 ```
+
+See the [Deployment Guide](docs/deployment.md) before running migrations or a
+production deployment.
 
 ## Demo Login
 
@@ -142,14 +145,14 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Mobile UX: compact app bar, bottom tab navigation, mobile drawer, and dashboard quick-log priority
 - Preferences: US/metric display, gallons/liters, Fahrenheit/Celsius, date format, compact/comfortable density, and feature module toggles
 - Plant Care mode: `Auto`, `On`, or `Off` filtering for fertilizer, root-tab, and plant-care noise
+- Problem tracking: open, monitor, and resolve tank issues while connecting tests,
+  maintenance, observations, photos, and other relevant timeline events
 - Demo data: realistic fictional tanks and event history for screenshots and review
 
 ## Roadmap
 
-The next product phase continues daily usefulness: a universal quick-log flow,
-dropdown-first task logging with free-text fallback, edit/archive workflows for
-livestock and plants, richer maintenance automation, and configurable care modes.
-From there, the roadmap expands into reusable care schedule templates, planted tank
-workflows, observation/problem tracking, water alerts, photo timelines, richer catalog
-intelligence, exports, and production hardening. See [docs/roadmap.md](docs/roadmap.md)
-for the full staged direction and product principles.
+The next product phase continues daily usefulness through reusable logging values,
+richer maintenance automation, configurable onboarding, problem follow-ups,
+notification delivery, photo timelines, installable PWA behavior, and dependable
+backup/restore workflows. See [docs/roadmap.md](docs/roadmap.md) for the full staged
+direction and product principles.

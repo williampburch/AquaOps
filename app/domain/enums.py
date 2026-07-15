@@ -12,6 +12,7 @@ class EventType(StrEnum):
     PHOTO = "photo"
     LIVESTOCK_CHANGE = "livestock_change"
     PLANT_CHANGE = "plant_change"
+    PROBLEM_CHANGE = "problem_change"
 
 
 class MeasurementMetric(StrEnum):

@@ -54,6 +54,11 @@ class UserDisplay:
             else f"{month_name} {value.day}"
         )
 
+    def format_datetime(self, value: datetime | None) -> str:
+        if value is None:
+            return "--"
+        return f"{self.format_date(value)} at {value.strftime('%-I:%M %p')}"
+
     def module_enabled(self, module: str, *, feature_needed: bool = False) -> bool:
         return {
             "livestock": self.preferences.enable_livestock,

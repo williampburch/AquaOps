@@ -52,9 +52,14 @@
       </nav>
       <button class="quick-log-more-toggle" type="button" aria-expanded="{{ 'true' if action in ['observation', 'dose', 'photo', 'livestock_change', 'plant_change'] else 'false' }}" aria-controls="quick-log-secondary-actions">
         <span>More quick actions</span>
-        <small>Photos, observations, dosing, and inventory</small>
+        <small>Problems, photos, observations, dosing, and inventory</small>
       </button>
       <nav id="quick-log-secondary-actions" class="quick-log-actions quick-log-secondary-actions {{ 'expanded' if action in ['observation', 'dose', 'photo', 'livestock_change', 'plant_change'] else '' }}" aria-label="More quick log actions">
+        <a class="quick-log-action" href="/problems/new{% if selected_tank_id %}?tank_id={{ selected_tank_id }}{% endif %}">
+          <span class="quick-log-action-icon problem-icon" aria-hidden="true"></span>
+          <strong>Problem</strong>
+          <small>Track what changed</small>
+        </a>
         <a class="quick-log-action observation-action {{ 'active' if action == 'observation' else '' }}" href="/quick-log?action=observation&amp;tank_id={{ selected_tank_id }}">
           <span class="quick-log-action-icon observation-icon" aria-hidden="true"></span>
           <strong>Observation</strong>

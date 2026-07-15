@@ -18,6 +18,7 @@ from app.web.routes import (
     inventory,
     notifications,
     photos,
+    problems,
     quick_log,
     reports,
     tanks,
@@ -56,6 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(events.router)
     app.include_router(notifications.router)
     app.include_router(photos.router)
+    app.include_router(problems.router)
     app.include_router(quick_log.router)
     app.include_router(reports.router)
     app.include_router(settings_routes.router)

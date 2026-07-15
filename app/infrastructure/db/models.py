@@ -52,6 +52,10 @@ class UserModel(TimestampMixin, Base):
     )
     tanks: Mapped[list[TankModel]] = relationship(back_populates="user")
     events: Mapped[list[EventModel]] = relationship(back_populates="user")
+    problems: Mapped[list[ProblemModel]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class UserPreferenceModel(TimestampMixin, Base):
@@ -123,6 +127,10 @@ class TankModel(TimestampMixin, Base):
         cascade="all, delete-orphan",
     )
     events: Mapped[list[EventModel]] = relationship(back_populates="tank")
+    problems: Mapped[list[ProblemModel]] = relationship(
+        back_populates="tank",
+        cascade="all, delete-orphan",
+    )
 
 
 class TankParameterTargetModel(TimestampMixin, Base):
@@ -298,6 +306,59 @@ class EventModel(TimestampMixin, Base):
         back_populates="source_event",
         cascade="all, delete-orphan",
     )
+    problem_links: Mapped[list[ProblemEventLinkModel]] = relationship(
+        back_populates="event",
+        cascade="all, delete-orphan",
+    )
+
+
+class ProblemModel(TimestampMixin, Base):
+    __tablename__ = "problems"
+    __table_args__ = (Index("ix_problems_user_status_started", "user_id", "status", "started_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+    )
+    tank_id: Mapped[int] = mapped_column(
+        ForeignKey("tanks.id", ondelete="CASCADE"),
+        index=True,
+    )
+    problem_type: Mapped[str] = mapped_column(String(60), index=True)
+    title: Mapped[str] = mapped_column(String(180))
+    description: Mapped[str | None] = mapped_column(Text)
+    severity: Mapped[str] = mapped_column(String(20), index=True, default="medium")
+    status: Mapped[str] = mapped_column(String(20), index=True, default="open")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    resolution_notes: Mapped[str | None] = mapped_column(Text)
+
+    user: Mapped[UserModel] = relationship(back_populates="problems")
+    tank: Mapped[TankModel] = relationship(back_populates="problems")
+    event_links: Mapped[list[ProblemEventLinkModel]] = relationship(
+        back_populates="problem",
+        cascade="all, delete-orphan",
+    )
+
+
+class ProblemEventLinkModel(Base):
+    __tablename__ = "problem_event_links"
+    __table_args__ = (UniqueConstraint("problem_id", "event_id", name="uq_problem_event_link"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    problem_id: Mapped[int] = mapped_column(
+        ForeignKey("problems.id", ondelete="CASCADE"),
+        index=True,
+    )
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"),
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    problem: Mapped[ProblemModel] = relationship(back_populates="event_links")
+    event: Mapped[EventModel] = relationship(back_populates="problem_links")
 
 
 class EventMeasurementModel(Base):
