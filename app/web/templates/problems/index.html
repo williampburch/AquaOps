@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set open_problems = problems|rejectattr('status', 'equalto', 'resolved')|list %}
+  {% set resolved_problems = problems|selectattr('status', 'equalto', 'resolved')|list %}
+  <div class="problem-shell">
+    <section class="problem-hero">
+      <div>
+        <p class="eyebrow mb-2">Tank health journal</p>
+        <h2>Track the problem, not just the symptom.</h2>
+        <p>Connect tests, maintenance, observations, and photos so you can see what changed before—and what helped afterward.</p>
+      </div>
+      <div class="problem-hero-actions">
+        <span><strong>{{ open_problems|length }}</strong> active</span>
+        <a class="btn btn-primary" href="/problems/new">Start a problem</a>
+      </div>
+    </section>
+
+    <section class="problem-section">
+      <div class="problem-section-heading"><div><span>Needs attention</span><h2>Open and monitoring</h2></div></div>
+      {% if open_problems %}
+        <div class="problem-card-grid">
+          {% for problem in open_problems %}
+            <a class="problem-card severity-{{ problem.severity }}" href="/problems/{{ problem.id }}">
+              <div class="problem-card-meta"><span>{{ status_labels[problem.status] }}</span><time>{{ display.format_datetime(problem.started_at) }}</time></div>
+              <h3>{{ problem.title }}</h3>
+              <p>{{ problem.description or problem_types[problem.problem_type] }}</p>
+              <div class="problem-card-footer"><strong>{{ problem.tank_name }}</strong><span>{{ severity_labels[problem.severity] }} · {{ problem.linked_event_count }} linked</span></div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="problem-empty"><strong>No active problems.</strong><span>When something looks wrong, start a record from here or Quick Log.</span><a class="btn btn-primary" href="/problems/new">Start a problem</a></div>
+      {% endif %}
+    </section>
+
+    {% if resolved_problems %}
+      <section class="problem-section">
+        <div class="problem-section-heading"><div><span>History</span><h2>Resolved problems</h2></div></div>
+        <div class="problem-card-grid resolved-problem-grid">
+          {% for problem in resolved_problems %}
+            <a class="problem-card severity-{{ problem.severity }}" href="/problems/{{ problem.id }}">
+              <div class="problem-card-meta"><span>Resolved</span><time>{{ display.format_datetime(problem.resolved_at) }}</time></div>
+              <h3>{{ problem.title }}</h3>
+              <p>{{ problem.resolution_notes or problem.description or "Resolution retained in history." }}</p>
+              <div class="problem-card-footer"><strong>{{ problem.tank_name }}</strong><span>{{ problem.linked_event_count }} linked events</span></div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

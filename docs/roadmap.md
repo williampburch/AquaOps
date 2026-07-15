@@ -123,7 +123,14 @@ changes, observations, and photos on one timeline.
   dosing
 - Portable account data export as a ZIP of CSV datasets covering tanks, care
   events and details, water measurements, schedules, reminders, livestock,
-  plants, fertilizer products, preferences, and a machine-readable manifest
+  plants, fertilizer products, problem records and event links, preferences,
+  and a machine-readable manifest
+- Mobile-first problem records for algae, illness, livestock loss, cloudy water,
+  ammonia spikes, parameter swings, equipment failures, and plant decline, with
+  severity and open, monitoring, or resolved states
+- Problem timelines that connect existing tests, maintenance, observations,
+  photos, and other tank events while preserving opening, status, and resolution
+  updates in the shared chronological history
 - Persisted user preferences for units, date format, dashboard density, notification window, and feature modules
 - Plant Care auto/on/off mode that suppresses fertilizer and root-tab noise unless needed
 
@@ -186,10 +193,8 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 - Hobby-style setup questions for tank type, plants, fertilizer, CO2,
   reminders, units, and desired tracking detail
 - Tank-level module configuration
-- User-level default preferences
-- Dashboard density options
-- Feature and module toggles
-- Progressive disclosure so simple users are not overwhelmed
+- Extend the current user preferences, dashboard density options, feature
+  toggles, and progressive disclosure into onboarding defaults
 
 ## Next: Care Schedule Templates
 
@@ -215,14 +220,12 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Next: Observations and Problem Tracking
 
-- General observations such as cloudy water, algae, fish flashing, hiding,
-  spawning behavior, plant melt, new growth, snail eggs, unusual behavior, or
-  water clarity changes
-- Problem and issue records for algae outbreaks, illness, livestock loss,
-  cloudy water, ammonia spikes, and parameter swings
-- Ability to attach water tests, maintenance events, notes, and photos to a
-  problem record
-- Ability to close or resolve a problem while keeping full history
+- Dedicated problem filters and tank-level active-problem summaries
+- Faster follow-up logging directly from a problem record
+- Structured treatments, affected livestock or plants, outcomes, and recurrence
+  tracking without losing the connected event timeline
+- Assisted "what changed before this problem?" comparisons across connected and
+  nearby history
 
 ## Later: Species Catalog Intelligence
 
@@ -268,10 +271,8 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
 
 ## Production Hardening
 
-- Connect the published GHCR images to production delivery with protected
-  environment secrets and optional approval, leaving the VM responsible only
-  for pulling, backing up, migrating, starting, and health-checking the tested
-  image
+- Add optional protected-environment approval around the existing manual,
+  pull-only GHCR production delivery path
 - Add automated pre-migration volume backups and a tested database-aware rollback
   procedure beyond the current best-effort image rollback
 - CSRF protection for all mutating forms

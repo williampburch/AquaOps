@@ -111,6 +111,7 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     settings_response = client.get("/settings", follow_redirects=False)
     export_response = client.get("/settings/export", follow_redirects=False)
     quick_log_response = client.get("/quick-log", follow_redirects=False)
+    problems_response = client.get("/problems", follow_redirects=False)
 
     assert events_response.status_code == 303
     assert events_response.headers["location"] == "/login"
@@ -127,6 +128,8 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
     assert export_response.headers["location"] == "/login"
     assert quick_log_response.status_code == 303
     assert quick_log_response.headers["location"] == "/login"
+    assert problems_response.status_code == 303
+    assert problems_response.headers["location"] == "/login"
     assert settings_response.headers["location"] == "/login"
 
 
@@ -696,6 +699,66 @@ def test_quick_log_observation_requires_a_title_or_details(client: TestClient) -
     assert "A note title or body is required" in response.text
 
 
+def test_problem_tracking_connects_context_and_preserves_resolution_history(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+    observation = client.post(
+        "/quick-log/observation",
+        data={
+            "tank_id": "1",
+            "title": "Fish hiding",
+            "notes": "Started after the filter cleaning.",
+        },
+        follow_redirects=False,
+    )
+    assert observation.status_code == 303
+
+    new_problem = client.get("/problems/new?tank_id=1")
+    assert new_problem.status_code == 200
+    assert "Attach recent context" in new_problem.text
+    assert "Fish hiding" in new_problem.text
+
+    created = client.post(
+        "/problems",
+        data={
+            "tank_id": "1",
+            "problem_type": "illness",
+            "severity": "high",
+            "title": "Tetras acting stressed",
+            "description": "Several fish are hiding and breathing quickly.",
+            "started_at": "2026-07-15T09:30",
+            "event_ids": "1",
+        },
+        follow_redirects=False,
+    )
+    assert created.status_code == 303
+    assert created.headers["location"] == "/problems/1"
+
+    detail = client.get("/problems/1")
+    assert detail.status_code == 200
+    assert "Tetras acting stressed" in detail.text
+    assert "Fish hiding" in detail.text
+    assert "Problem opened: Tetras acting stressed" in detail.text
+
+    resolved = client.post(
+        "/problems/1/status",
+        data={
+            "status": "resolved",
+            "resolution_notes": "Improved aeration and reduced feeding.",
+        },
+        follow_redirects=False,
+    )
+    assert resolved.status_code == 303
+
+    resolved_detail = client.get("/problems/1")
+    activity = client.get("/events")
+    assert "Resolved" in resolved_detail.text
+    assert "Improved aeration and reduced feeding." in resolved_detail.text
+    assert "Problem resolved: Tetras acting stressed" in activity.text
+
+
 def test_quick_log_dose_reuses_product_location_and_last_amount(client: TestClient) -> None:
     _register(client)
     _create_tank(client)
@@ -1116,6 +1179,16 @@ def test_settings_export_downloads_portable_user_data(client: TestClient) -> Non
             "dose_unit": "mL",
         },
     )
+    client.post(
+        "/problems",
+        data={
+            "tank_id": "1",
+            "problem_type": "algae",
+            "severity": "medium",
+            "title": "Green spot algae",
+            "event_ids": "1",
+        },
+    )
 
     response = client.get("/settings/export")
 
@@ -1134,16 +1207,19 @@ def test_settings_export_downloads_portable_user_data(client: TestClient) -> Non
             "fertilizer_details.csv",
             "livestock.csv",
             "plants.csv",
+            "problems.csv",
+            "problem_event_links.csv",
         }.issubset(filenames)
         assert "Display Tank" in export_zip.read("tanks.csv").decode()
         assert "Community flakes" in export_zip.read("feeding_details.csv").decode()
         assert "Easy Green" in export_zip.read("fertilizer_details.csv").decode()
+        assert "Green spot algae" in export_zip.read("problems.csv").decode()
         manifest = json.loads(export_zip.read("manifest.json"))
         assert manifest["format"] == "aquaops-portable-export"
         event_manifest = next(
             item for item in manifest["files"] if item["filename"] == "events.csv"
         )
-        assert event_manifest["row_count"] == 3
+        assert event_manifest["row_count"] == 4
 
 
 def test_settings_preferences_affect_new_tank_units(client: TestClient) -> None:

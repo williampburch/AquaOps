@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set problem = detail.problem %}
+  <div class="problem-shell">
+    <section class="problem-detail-hero severity-{{ problem.severity }}">
+      <div><div class="problem-detail-labels"><span>{{ status_labels[problem.status] }}</span><span>{{ severity_labels[problem.severity] }} severity</span></div><h2>{{ problem.title }}</h2><p>{{ problem.description or problem_types[problem.problem_type] }}</p><small>{{ problem.tank_name }} · first noticed {{ display.format_datetime(problem.started_at) }}</small></div>
+      <a class="btn btn-outline-light" href="/problems">All problems</a>
+    </section>
+    <section class="problem-detail-grid">
+      <div class="problem-timeline-panel">
+        <div class="problem-section-heading"><div><span>Connected history</span><h2>Problem timeline</h2></div><strong>{{ detail.linked_events|length }} events</strong></div>
+        {% if detail.linked_events %}
+          <div class="problem-linked-events">
+            {% for event in detail.linked_events %}
+              <article>
+                {% if event.media_asset_id %}<img src="/media/{{ event.media_asset_id }}" alt="{{ event.photo_caption or event.title }}" loading="lazy" />{% endif %}
+                <div><span>{{ event.event_type|replace('_', ' ')|title }}</span><h3>{{ event.title }}</h3><time>{{ display.format_datetime(event.occurred_at) }}</time>{% if event.notes %}<p>{{ event.notes }}</p>{% endif %}</div>
+                {% if event.event_type != 'problem_change' %}<form method="post" action="/problems/{{ problem.id }}/events/{{ event.id }}/unlink"><button class="btn btn-sm btn-outline-secondary" type="submit">Unlink</button></form>{% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}<div class="problem-empty compact"><strong>No connected events yet.</strong><span>Add recent tank activity below.</span></div>{% endif %}
+      </div>
+      <aside class="problem-status-panel">
+        <span>Current state</span><h2>{{ status_labels[problem.status] }}</h2>
+        <form class="stack-form" method="post" action="/problems/{{ problem.id }}/status">
+          <div><label class="form-label" for="problem_status">Status</label><select class="form-select" id="problem_status" name="status">{% for value, label in status_labels.items() %}<option value="{{ value }}" {{ 'selected' if value == problem.status else '' }}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label class="form-label" for="resolution_notes">Update or resolution notes</label><textarea class="form-control" id="resolution_notes" name="resolution_notes" rows="4" placeholder="What changed? What helped?">{{ problem.resolution_notes or '' }}</textarea></div>
+          <button class="btn btn-primary" type="submit">Save status update</button>
+        </form>
+        {% if problem.resolved_at %}<small>Resolved {{ display.format_datetime(problem.resolved_at) }}</small>{% endif %}
+      </aside>
+    </section>
+    <section class="problem-section">
+      <div class="problem-section-heading"><div><span>Surrounding activity</span><h2>What happened around this problem?</h2></div></div>
+      {% if detail.context_events %}
+        <form method="post" action="/problems/{{ problem.id }}/events">
+          <div class="problem-event-picker context-picker">
+            {% for event in detail.context_events %}<label><input class="form-check-input" type="checkbox" name="event_ids" value="{{ event.id }}" /><span><strong>{{ event.title }}</strong><small>{{ display.format_datetime(event.occurred_at) }} · {{ event.event_type|replace('_', ' ')|title }}</small>{% if event.notes %}<em>{{ event.notes }}</em>{% endif %}</span></label>{% endfor %}
+          </div>
+          <button class="btn btn-primary mt-3" type="submit">Attach selected events</button>
+        </form>
+      {% else %}<p class="text-body-secondary mb-0">Everything in the recent context window is already connected.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}

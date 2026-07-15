@@ -66,6 +66,7 @@
         <a class="nav-link {{ 'active' if active_nav == 'tanks' else '' }}" href="/tanks">Aquariums</a>
         <a class="nav-link {{ 'active' if active_nav == 'quick_log' else '' }}" href="/quick-log">Quick Log</a>
         <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">Events</a>
+        <a class="nav-link {{ 'active' if active_nav == 'problems' else '' }}" href="/problems">Problems</a>
         {% if prefs is none or prefs.enable_livestock %}
           <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">Livestock</a>
         {% endif %}
@@ -120,6 +121,10 @@
           <a class="nav-link {{ 'active' if active_nav == 'events' else '' }}" href="/events">
             <span class="nav-glyph nav-glyph-events" aria-hidden="true"></span>
             Events
+          </a>
+          <a class="nav-link {{ 'active' if active_nav == 'problems' else '' }}" href="/problems">
+            <span class="nav-glyph nav-glyph-problems" aria-hidden="true"></span>
+            Problems
           </a>
           {% if prefs is none or prefs.enable_livestock %}
             <a class="nav-link {{ 'active' if active_nav == 'livestock' else '' }}" href="/livestock">

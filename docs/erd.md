@@ -8,12 +8,14 @@ erDiagram
   USERS ||--o{ EVENTS : creates
   USERS ||--o{ MEDIA_ASSETS : uploads
   USERS ||--o{ REMINDERS : receives
+  USERS ||--o{ PROBLEMS : tracks
 
   TANKS ||--o{ LIVESTOCK : contains
   TANKS ||--o{ PLANTS : contains
   TANKS ||--o{ TANK_PARAMETER_TARGETS : defines
   TANKS ||--o{ EVENTS : records
   TANKS ||--o{ REMINDERS : schedules
+  TANKS ||--o{ PROBLEMS : experiences
 
   SPECIES_CATALOG ||--o{ SPECIES_ALIASES : names
   SPECIES_CATALOG ||--o{ LIVESTOCK : classifies
@@ -25,6 +27,9 @@ erDiagram
   EVENTS ||--o| FEEDING_EVENT_DETAILS : describes
   EVENTS ||--o| PHOTO_EVENT_DETAILS : describes
   EVENTS ||--o{ REMINDERS : creates
+  EVENTS ||--o{ PROBLEM_EVENT_LINKS : connected_to
+
+  PROBLEMS ||--o{ PROBLEM_EVENT_LINKS : includes
 
   FERTILIZER_PRODUCTS ||--o{ FERTILIZER_EVENT_DETAILS : used_by
   MEDIA_ASSETS ||--o| PHOTO_EVENT_DETAILS : attached_to
@@ -49,4 +54,6 @@ erDiagram
 - `feeding_event_details`: food and amount
 - `media_assets`: local media metadata
 - `photo_event_details`: photo captions linked to events
+- `problems`: structured tank issues with type, severity, status, resolution, and retained history
+- `problem_event_links`: connects relevant tests, care, observations, photos, and status events to a problem
 - `reminders`: upcoming and completed operational reminders

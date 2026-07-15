@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="problem-shell problem-form-shell">
+    <section class="problem-form-intro">
+      <div><p class="eyebrow mb-2">Start in seconds</p><h2>What are you seeing?</h2><p>Record the essentials now. You can attach more tests, care, notes, and photos as the situation develops.</p></div>
+      <a class="btn btn-outline-light" href="/problems">All problems</a>
+    </section>
+    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+    {% if tanks %}
+      <form class="problem-create-form" method="post" action="/problems">
+        <section class="problem-form-panel">
+          <div class="problem-form-heading"><span>1</span><div><strong>Choose the aquarium</strong><small>The problem stays connected to this tank's history.</small></div></div>
+          <select class="form-select form-select-lg" name="tank_id" onchange="location.href='/problems/new?tank_id=' + this.value" required>
+            {% for tank in tanks %}<option value="{{ tank.id }}" {{ 'selected' if tank.id == selected_tank_id else '' }}>{{ tank.name }}</option>{% endfor %}
+          </select>
+        </section>
+        <section class="problem-form-panel">
+          <div class="problem-form-heading"><span>2</span><div><strong>Describe the problem</strong><small>Only type what helps you recognize it later.</small></div></div>
+          <div class="problem-form-grid">
+            <div><label class="form-label" for="problem_type">Type</label><select class="form-select form-select-lg" id="problem_type" name="problem_type" required>{% for value, label in problem_types.items() %}<option value="{{ value }}" {{ 'selected' if form_values.get('problem_type') == value else '' }}>{{ label }}</option>{% endfor %}</select></div>
+            <div><label class="form-label" for="severity">Severity</label><select class="form-select form-select-lg" id="severity" name="severity" required>{% for value, label in severity_labels.items() %}<option value="{{ value }}" {{ 'selected' if form_values.get('severity', 'medium') == value else '' }}>{{ label }}</option>{% endfor %}</select></div>
+          </div>
+          <div><label class="form-label" for="problem_title">Short title <span class="optional-label">Optional</span></label><input class="form-control form-control-lg" id="problem_title" name="title" maxlength="180" placeholder="Uses the problem type when blank" value="{{ form_values.get('title', '') }}" /></div>
+          <div><label class="form-label" for="problem_description">What did you notice? <span class="optional-label">Optional</span></label><textarea class="form-control" id="problem_description" name="description" rows="3" placeholder="When it started, what changed, affected livestock or plants">{{ form_values.get('description', '') }}</textarea></div>
+          <div><label class="form-label" for="problem_started_at">First noticed</label><input class="form-control" id="problem_started_at" name="started_at" type="datetime-local" value="{{ form_values.get('started_at', '') }}" /></div>
+        </section>
+        <section class="problem-form-panel">
+          <div class="problem-form-heading"><span>3</span><div><strong>Attach recent context</strong><small>Optional. Select anything that may explain what changed.</small></div></div>
+          {% if context_events %}
+            <div class="problem-event-picker">
+              {% for event in context_events %}
+                <label><input class="form-check-input" type="checkbox" name="event_ids" value="{{ event.id }}" /><span><strong>{{ event.title }}</strong><small>{{ display.format_datetime(event.occurred_at) }} · {{ event.event_type|replace('_', ' ')|title }}</small></span></label>
+              {% endfor %}
+            </div>
+          {% else %}<p class="text-body-secondary mb-0">No recent events are available for this aquarium yet.</p>{% endif %}
+        </section>
+        <button class="btn btn-primary btn-lg problem-submit" type="submit">Start problem record</button>
+      </form>
+    {% else %}
+      <div class="problem-empty"><strong>Add an aquarium first.</strong><span>Problem records need a tank so their surrounding history is meaningful.</span><a class="btn btn-primary" href="/tanks/new">Add an aquarium</a></div>
+    {% endif %}
+  </div>
+{% endblock %}

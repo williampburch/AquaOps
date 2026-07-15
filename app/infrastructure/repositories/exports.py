@@ -15,6 +15,8 @@ from app.infrastructure.db.models import (
     MediaAssetModel,
     PhotoEventDetailModel,
     PlantModel,
+    ProblemEventLinkModel,
+    ProblemModel,
     ReminderModel,
     TankMaintenanceConfigModel,
     TankModel,
@@ -201,6 +203,52 @@ class SqlAlchemyDataExportRepository:
                     PlantModel.updated_at,
                 ),
                 PlantModel.tank_id,
+            ),
+            self._table(
+                "problems.csv",
+                (
+                    "id",
+                    "tank_id",
+                    "problem_type",
+                    "title",
+                    "description",
+                    "severity",
+                    "status",
+                    "started_at",
+                    "resolved_at",
+                    "resolution_notes",
+                    "created_at",
+                    "updated_at",
+                ),
+                select(
+                    ProblemModel.id,
+                    ProblemModel.tank_id,
+                    ProblemModel.problem_type,
+                    ProblemModel.title,
+                    ProblemModel.description,
+                    ProblemModel.severity,
+                    ProblemModel.status,
+                    ProblemModel.started_at,
+                    ProblemModel.resolved_at,
+                    ProblemModel.resolution_notes,
+                    ProblemModel.created_at,
+                    ProblemModel.updated_at,
+                )
+                .where(ProblemModel.user_id == user_id)
+                .order_by(ProblemModel.started_at, ProblemModel.id),
+            ),
+            self._table(
+                "problem_event_links.csv",
+                ("id", "problem_id", "event_id", "created_at"),
+                select(
+                    ProblemEventLinkModel.id,
+                    ProblemEventLinkModel.problem_id,
+                    ProblemEventLinkModel.event_id,
+                    ProblemEventLinkModel.created_at,
+                )
+                .join(ProblemModel, ProblemModel.id == ProblemEventLinkModel.problem_id)
+                .where(ProblemModel.user_id == user_id)
+                .order_by(ProblemEventLinkModel.id),
             ),
             self._table(
                 "events.csv",
