@@ -13,7 +13,7 @@ flowchart LR
   Domain[app.domain Rules + Value Types]
   Ports[Repository Protocols]
   Infrastructure[app.infrastructure SQLAlchemy + Storage]
-  Database[(SQLite now, PostgreSQL later)]
+  Database[(PostgreSQL 17)]
 
   Browser --> Web
   Web --> Application
@@ -22,6 +22,12 @@ flowchart LR
   Ports --> Infrastructure
   Infrastructure --> Database
 ```
+
+PostgreSQL is the canonical application database. Local and production Compose run it as
+an internal `db` service with a persistent named volume. The application uses Psycopg 3
+through SQLAlchemy, while Alembic is the only production schema-management path. This
+keeps a later move to Azure Database for PostgreSQL configuration-only at the application
+boundary; Azure-managed services are not part of the current deployment.
 
 ## Package Responsibilities
 

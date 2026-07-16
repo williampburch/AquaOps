@@ -278,6 +278,7 @@ def _optional_datetime(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value)
+        parsed = datetime.fromisoformat(value)
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=utc_now().tzinfo)
     except ValueError:
         return None

@@ -81,7 +81,9 @@ Do not bypass repositories or persistence patterns without a good reason.
 
 Avoid unnecessary abstractions, but do not collapse everything into route functions.
 
-Preserve the SQLite-now, PostgreSQL-later path.
+PostgreSQL 17 is the canonical application database. Keep database access portable enough
+that a managed PostgreSQL service can replace the container through configuration and
+deployment changes, without application rewrites.
 
 ## Event and history model
 
@@ -106,12 +108,12 @@ Do not rely on `AUTO_CREATE_TABLES` for production schema changes.
 When changing models:
 
 * Add or update Alembic migrations.
-* Keep migrations safe for existing SQLite production data.
-* Consider how the change would later translate to PostgreSQL.
+* Keep migrations safe for existing PostgreSQL production data.
+* Test the full migration chain on PostgreSQL.
 * Add tests when practical.
 * Update docs if setup, deployment, export, or user-visible behavior changes.
 
-Be careful with production SQLite. Assume the user cares about preserving long-term aquarium history.
+Be careful with the production PostgreSQL volume. Assume the user cares about preserving long-term aquarium history.
 
 ## Authentication and security
 
@@ -181,7 +183,7 @@ When adding new user-owned data, consider whether it belongs in account export.
 
 Backup and restore are high-priority production-hardening areas.
 
-Do not make changes that put SQLite data or uploaded media at unnecessary risk.
+Do not make changes that put PostgreSQL data or uploaded media at unnecessary risk.
 
 ## Production deployment
 
@@ -225,18 +227,21 @@ Nginx reverse proxies public HTTPS traffic to:
 
 `http://127.0.0.1:8010`
 
-Health check:
+Readiness check:
 
-`http://127.0.0.1:8010/health`
+`http://127.0.0.1:8010/health/ready`
+
+PostgreSQL runs as the internal `db` Compose service and must not publish a production
+host port.
 
 Persistent Docker volumes:
 
-* `aquaops_data`
+* `aquaops_postgres`
 * `aquaops_media`
 
 On the VM these may be Compose-prefixed, for example:
 
-* `aquaops_aquaops_data`
+* `aquaops_aquaops_postgres`
 * `aquaops_aquaops_media`
 
 Use immutable short SHA image tags for production deployments whenever possible.
@@ -245,11 +250,13 @@ Avoid recommending `latest` for production except to explain why it is less repr
 
 ## Deployment safety
 
-The deployment script pulls the target GHCR image, runs Alembic migrations from that image, recreates the container without building, and health-checks the localhost endpoint.
+The deployment script pulls the target GHCR image, starts and waits for PostgreSQL, runs
+Alembic migrations from that image, recreates the web container without building, and
+checks database-aware readiness on the localhost endpoint.
 
 The script preserves the previous image with a timestamped rollback tag before deploying.
 
-Important limitation: rolling back the container image does not automatically roll back database migrations already applied to the shared SQLite volume.
+Important limitation: rolling back the container image does not automatically roll back database migrations already applied to the shared PostgreSQL database.
 
 Before production deployments that may run migrations, remind the operator to confirm a current backup.
 

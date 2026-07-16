@@ -2,14 +2,17 @@
 set -Eeuo pipefail
 
 IMAGE_REPOSITORY="${AQUAOPS_IMAGE_REPOSITORY:-ghcr.io/williampburch/aquaops}"
-IMAGE_TAG="${AQUAOPS_IMAGE_TAG:-latest}"
+IMAGE_TAG="${AQUAOPS_IMAGE_TAG:?AQUAOPS_IMAGE_TAG must be set to an immutable short SHA}"
 TARGET_IMAGE="${IMAGE_REPOSITORY}:${IMAGE_TAG}"
 COMPOSE_FILE="${AQUAOPS_PROD_COMPOSE_FILE:-docker-compose.prod.yml}"
 SERVICE="${AQUAOPS_DEPLOY_SERVICE:-web}"
+DB_SERVICE="${AQUAOPS_DB_SERVICE:-db}"
 CONTAINER_NAME="${AQUAOPS_CONTAINER_NAME:-aquaops-web}"
-HEALTH_URL="${AQUAOPS_HEALTH_URL:-http://127.0.0.1:8010/health}"
+HEALTH_URL="${AQUAOPS_HEALTH_URL:-http://127.0.0.1:8010/health/ready}"
 HEALTH_ATTEMPTS="${AQUAOPS_HEALTH_ATTEMPTS:-30}"
 HEALTH_DELAY_SECONDS="${AQUAOPS_HEALTH_DELAY_SECONDS:-2}"
+DB_HEALTH_ATTEMPTS="${AQUAOPS_DB_HEALTH_ATTEMPTS:-30}"
+DB_HEALTH_DELAY_SECONDS="${AQUAOPS_DB_HEALTH_DELAY_SECONDS:-2}"
 LOCK_FILE="${AQUAOPS_DEPLOY_LOCK_FILE:-/tmp/aquaops-image-deploy.lock}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,9 +46,24 @@ diagnostics() {
   log "Deployment diagnostics"
   "${COMPOSE[@]}" ps >&2 || true
   "${COMPOSE[@]}" logs --tail 120 "$SERVICE" >&2 || true
+  "${COMPOSE[@]}" logs --tail 120 "$DB_SERVICE" >&2 || true
   docker inspect \
     --format 'container={{.Name}} image={{.Config.Image}} status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' \
     "$CONTAINER_NAME" >&2 || true
+}
+
+database_health_check() {
+  local attempt
+  for ((attempt = 1; attempt <= DB_HEALTH_ATTEMPTS; attempt += 1)); do
+    if "${COMPOSE[@]}" exec -T "$DB_SERVICE" sh -c \
+      'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+      printf 'PostgreSQL is ready on attempt %s/%s.\n' "$attempt" "$DB_HEALTH_ATTEMPTS"
+      return 0
+    fi
+    printf 'Waiting for PostgreSQL (%s/%s)...\n' "$attempt" "$DB_HEALTH_ATTEMPTS"
+    sleep "$DB_HEALTH_DELAY_SECONDS"
+  done
+  return 1
 }
 
 health_check() {
@@ -127,6 +145,17 @@ fi
 
 log "Pulling ${TARGET_IMAGE}"
 run docker pull "$TARGET_IMAGE"
+
+log "Starting PostgreSQL"
+run "${COMPOSE[@]}" pull "$DB_SERVICE"
+run "${COMPOSE[@]}" up -d --no-build "$DB_SERVICE"
+
+log "Waiting for PostgreSQL readiness"
+if ! database_health_check; then
+  printf 'PostgreSQL did not become ready.\n' >&2
+  diagnostics
+  exit 1
+fi
 
 log "Running database migrations with ${TARGET_IMAGE}"
 run env AQUAOPS_IMAGE_TAG="$IMAGE_TAG" "${COMPOSE[@]}" run --rm "$SERVICE" alembic upgrade head

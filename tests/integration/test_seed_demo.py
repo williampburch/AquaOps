@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Generator
-
 import pytest
-from sqlalchemy import create_engine, func, select
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.security import verify_password
 from app.demo.seed import DEMO_EMAIL, DEMO_PASSWORD, seed_demo_data
-from app.infrastructure.db import models  # noqa: F401
 from app.infrastructure.db.base import Base
 from app.infrastructure.db.models import (
     EventMeasurementModel,
@@ -21,22 +17,6 @@ from app.infrastructure.db.models import (
     TankModel,
     UserModel,
 )
-
-
-@pytest.fixture
-def session() -> Generator[Session]:
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    with TestingSessionLocal() as db_session:
-        yield db_session
-
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_seed_demo_creates_realistic_demo_account(session: Session) -> None:

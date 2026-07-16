@@ -7,7 +7,7 @@ Create Date: 2026-07-09
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from alembic import op
@@ -129,7 +129,6 @@ def downgrade() -> None:
 def _seed_species_catalog() -> None:
     species_catalog = sa.table(
         "species_catalog",
-        sa.column("id", sa.Integer),
         sa.column("category", sa.String),
         sa.column("common_name", sa.String),
         sa.column("scientific_name", sa.String),
@@ -152,7 +151,7 @@ def _seed_species_catalog() -> None:
         sa.column("created_at", sa.DateTime),
         sa.column("updated_at", sa.DateTime),
     )
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     op.bulk_insert(
         species_catalog,
         [
@@ -639,7 +638,7 @@ def _seed_species_catalog() -> None:
 
 
 def _row(
-    id_: int,
+    _id: int,
     category: str,
     common_name: str,
     scientific_name: str,
@@ -660,7 +659,6 @@ def _row(
     now: datetime,
 ) -> dict:
     return {
-        "id": id_,
         "category": category,
         "common_name": common_name,
         "scientific_name": scientific_name,

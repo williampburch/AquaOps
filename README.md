@@ -1,7 +1,7 @@
 # AquaOps
 
 AquaOps is a production-minded personal aquarium tracker built with FastAPI,
-SQLAlchemy, Jinja2, Bootstrap 5, HTMX, Chart.js, Alembic, and Docker.
+SQLAlchemy, PostgreSQL, Jinja2, Bootstrap 5, HTMX, Chart.js, Alembic, and Docker.
 
 It is designed as a real long-lived personal app and as a portfolio-quality example of
 a clean, maintainable Python web application.
@@ -62,11 +62,14 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
+docker compose up -d db
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Open <http://127.0.0.1:8000>.
+Set the same local development password in `POSTGRES_PASSWORD` and `DATABASE_URL` in
+`.env`, then open <http://127.0.0.1:8000>. PostgreSQL 17 is the canonical database;
+Alembic, not application startup, creates and upgrades its schema.
 
 ## Docker
 
@@ -75,9 +78,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app will be available at <http://127.0.0.1:8010>. SQLite data and uploaded media are
-stored in Docker volumes. The Compose file binds the app to `127.0.0.1` so it can sit
-behind Nginx without exposing Uvicorn directly to the public internet.
+The app will be available at <http://127.0.0.1:8010>. PostgreSQL data and uploaded media
+are stored in separate Docker volumes. Development exposes PostgreSQL only on
+`127.0.0.1:5432` for local inspection; production does not publish the database port.
+The app port remains bound to `127.0.0.1` so it can sit behind Nginx.
 
 ## Development Commands
 
@@ -127,6 +131,7 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - [Database ERD](docs/erd.md)
 - [Developer Setup](docs/developer-setup.md)
 - [Deployment Guide](docs/deployment.md)
+- [Backup and Restore](docs/backup-restore.md)
 - [In-app User Guide](https://aquaops.william-burch.com/guide)
 - [Roadmap](docs/roadmap.md)
 

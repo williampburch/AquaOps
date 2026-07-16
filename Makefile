@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format migrate revision seed-demo deploy deploy-image deploy-build
+.PHONY: install dev test lint format migrate revision seed-demo backup restore deploy deploy-image deploy-build
 
 install:
 	python -m pip install --upgrade pip
@@ -26,6 +26,12 @@ revision:
 
 seed-demo:
 	aquaops seed-demo
+
+backup:
+	scripts/postgres-backup.sh $(BACKUP)
+
+restore:
+	scripts/postgres-restore.sh "$(DUMP)" --confirm-db "$(CONFIRM_DB)"
 
 deploy:
 	scripts/deploy-image.sh
