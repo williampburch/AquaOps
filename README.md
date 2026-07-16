@@ -22,7 +22,8 @@ This repository contains a publishable, working foundation:
 - Catalog-backed livestock and plant entry from tank detail pages, plus inventory summaries grouped by species with quantity totals
 - Mobile-friendly livestock and plant lifecycle management with quantity edits,
   tank moves, reasoned removals, and preserved change history
-- Notifications page for open reminders with configurable due-soon windows and plant-care filtering
+- Actionable Care Queue with clickable overdue, due-today, and upcoming filters,
+  task-specific Quick Log links, configurable due-soon windows, and plant-care filtering
 - Mobile-first Care Plan Editor for reviewing an existing tank, safely applying
   presets, building an Advanced Custom plan, and adding generic recurring tasks
 - Persistent user settings for US/metric display, volume and temperature units, date format, dashboard density, feature modules, and Plant Care auto/on/off behavior

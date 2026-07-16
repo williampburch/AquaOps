@@ -15,6 +15,8 @@ class NotificationItem:
     tank_name: str | None
     status: str
     reason: str | None = None
+    quick_log_action: str | None = None
+    maintenance_type: str | None = None
 
 
 @dataclass(frozen=True)

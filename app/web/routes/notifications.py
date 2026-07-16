@@ -17,6 +17,14 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 templates = Jinja2Templates(directory=get_settings().templates_dir)
 
 DbSession = Annotated[Session, Depends(get_db)]
+CARE_QUEUE_STATUSES = {"overdue", "due_today", "upcoming"}
+QUICK_LOG_LABELS = {
+    "water_change": "Log water change",
+    "water_test": "Log water test",
+    "feeding": "Log feeding",
+    "maintenance": "Log maintenance",
+    "dose": "Log dose",
+}
 
 
 @router.get("")
@@ -27,6 +35,19 @@ def notifications_index(
 ):
     service = NotificationService(SqlAlchemyNotificationRepository(db))
     preferences = preferences_for_user(db, current_user)
+    status_filter = request.query_params.get("status")
+    if status_filter not in CARE_QUEUE_STATUSES:
+        status_filter = None
+    snapshot = service.get_notifications(
+        current_user.id,
+        preferences.reminder_window_days,
+        preferences.plant_care_mode,
+    )
+    visible_items = (
+        [item for item in snapshot.items if item.status == status_filter]
+        if status_filter
+        else snapshot.items
+    )
     return templates.TemplateResponse(
         request,
         "notifications/index.html",
@@ -36,11 +57,10 @@ def notifications_index(
             "current_user": current_user,
             "preferences": preferences,
             "display": UserDisplay(preferences),
-            "snapshot": service.get_notifications(
-                current_user.id,
-                preferences.reminder_window_days,
-                preferences.plant_care_mode,
-            ),
+            "snapshot": snapshot,
+            "visible_items": visible_items,
+            "status_filter": status_filter,
+            "quick_log_labels": QUICK_LOG_LABELS,
         },
     )
 

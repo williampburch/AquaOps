@@ -66,6 +66,13 @@ def quick_log(
     if action not in QUICK_LOG_ACTIONS:
         action = "water_change"
     tank_id = _query_int(request.query_params.get("tank_id"))
+    form_values = {}
+    maintenance_type = request.query_params.get("maintenance_type")
+    valid_maintenance_types = {
+        item.value for item in MaintenanceType if item is not MaintenanceType.WATER_CHANGE
+    }
+    if action == "maintenance" and maintenance_type in valid_maintenance_types:
+        form_values["maintenance_type"] = maintenance_type
     return _render_quick_log(
         request,
         db,
@@ -74,6 +81,7 @@ def quick_log(
         tank_id=tank_id,
         saved=request.query_params.get("saved"),
         error=request.query_params.get("error"),
+        form_values=form_values,
     )
 
 

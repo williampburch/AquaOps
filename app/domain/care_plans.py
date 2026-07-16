@@ -132,6 +132,17 @@ CARE_TASKS = {
     )
 }
 
+QUICK_LOG_ACTION_BY_TASK = {
+    "water_change": "water_change",
+    "water_test": "water_test",
+    "feeding": "feeding",
+    "filter_cleaning": "maintenance",
+    "glass_cleaning": "maintenance",
+    "substrate_vacuum": "maintenance",
+    "fertilizer": "dose",
+    "plant_trimming": "maintenance",
+}
+
 WEEKDAY_LABELS = (
     "Monday",
     "Tuesday",
@@ -148,6 +159,13 @@ def task_label(config_type: str, custom_label: str | None = None) -> str:
         return custom_label
     task = CARE_TASKS.get(config_type)
     return task.label if task else config_type.replace("_", " ").title()
+
+
+def quick_log_action(config_type: str) -> str | None:
+    task = CARE_TASKS.get(config_type)
+    if task is None or not task.quick_log_connected:
+        return None
+    return QUICK_LOG_ACTION_BY_TASK.get(config_type)
 
 
 def next_schedule_due_at(
