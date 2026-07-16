@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import date
 
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.application.ports.inventory import (
     InventoryArchive,
@@ -15,8 +12,6 @@ from app.application.ports.inventory import (
     PlantCreate,
 )
 from app.core.security import hash_password
-from app.infrastructure.db import models  # noqa: F401
-from app.infrastructure.db.base import Base
 from app.infrastructure.db.models import (
     EventModel,
     LivestockModel,
@@ -26,22 +21,6 @@ from app.infrastructure.db.models import (
     UserModel,
 )
 from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
-
-
-@pytest.fixture
-def session() -> Generator[Session]:
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    with TestingSessionLocal() as db_session:
-        yield db_session
-
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_inventory_repository_groups_species_and_sums_quantities(session: Session) -> None:
@@ -121,36 +100,25 @@ def test_inventory_repository_adds_entries_from_catalog(session: Session) -> Non
         password_hash=hash_password("a-long-test-password"),
     )
     tank = TankModel(user=user, name="Display Tank", tank_type="planted")
-    fish = SpeciesCatalogModel(
-        category="fish",
-        common_name="Neon Tetra",
-        scientific_name="Paracheirodon innesi",
-        care_level="beginner",
-        social_group_min=6,
-        source="test",
-        is_builtin=True,
-        external_refs={},
+    fish = session.scalar(
+        select(SpeciesCatalogModel).where(SpeciesCatalogModel.common_name == "Neon Tetra")
     )
-    plant = SpeciesCatalogModel(
-        category="plant",
-        common_name="Java Fern",
-        scientific_name="Microsorum pteropus",
-        care_level="beginner",
-        light_requirement="low",
-        source="test",
-        is_builtin=True,
-        external_refs={},
+    plant = session.scalar(
+        select(SpeciesCatalogModel).where(SpeciesCatalogModel.common_name == "Java Fern")
     )
-    session.add_all([user, tank, fish, plant])
+    assert fish is not None
+    assert plant is not None
+    session.add_all([user, tank])
     session.commit()
 
     repository = SqlAlchemyInventoryRepository(session)
     livestock_catalog = repository.list_catalog(("fish", "invertebrate"))
     plant_catalog = repository.list_catalog(("plant",))
 
-    assert livestock_catalog[0].common_name == "Neon Tetra"
-    assert livestock_catalog[0].detail == "Beginner - Group 6+"
-    assert plant_catalog[0].detail == "Beginner - Low light"
+    neon_tetra = next(item for item in livestock_catalog if item.common_name == "Neon Tetra")
+    java_fern = next(item for item in plant_catalog if item.common_name == "Java Fern")
+    assert neon_tetra.detail == "Beginner - Group 6+"
+    assert java_fern.detail == "Beginner - Low light"
 
     livestock_id = repository.add_livestock(
         user.id,

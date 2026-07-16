@@ -3,10 +3,13 @@
 ## Prerequisites
 
 - Python 3.13
-- Docker and Docker Compose
-- SQLite, bundled with Python
+- Docker with Docker Compose
+- PostgreSQL 17, normally through the local Compose `db` service
 
-## Local Setup
+PostgreSQL is the canonical development and integration database. AquaOps does not keep
+a second complete SQLite integration path.
+
+## Local setup with a host Python process
 
 ```bash
 cp .env.example .env
@@ -14,104 +17,78 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
+docker compose up -d db
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+Choose a local-only password and set it consistently in both `POSTGRES_PASSWORD` and the
+password component of `DATABASE_URL` in `.env`. The host connection uses
+`localhost:5432`; the Compose web service overrides that host with the internal service
+name `db`. Do not commit `.env`.
+
 Open <http://127.0.0.1:8000>.
 
-## Quality Checks
+## Fully containerized development
 
 ```bash
-ruff check .
-black --check .
-pytest
+cp .env.example .env
+docker compose up --build
+docker compose run --rm web alembic upgrade head
 ```
 
-Or use the Makefile:
+The application is available at <http://127.0.0.1:8010>. The development database port
+is bound only to `127.0.0.1` for local inspection. PostgreSQL data persists in
+`aquaops_postgres`; media persists separately in `aquaops_media`.
 
-```bash
-make lint
-make test
-```
+## Schema management
 
-Format local changes:
-
-```bash
-make format
-```
-
-## Migrations
-
-Create a migration after model changes:
-
-```bash
-alembic revision --autogenerate -m "Describe change"
-```
-
-Apply migrations:
+Alembic is authoritative in every environment. `AUTO_CREATE_TABLES=false` is the normal
+setting and is mandatory in production.
 
 ```bash
 alembic upgrade head
+alembic check
+alembic revision --autogenerate -m "Describe change"
 ```
 
-The app can auto-create tables in development through `AUTO_CREATE_TABLES=true`, but
-production deployments should use Alembic migrations with `AUTO_CREATE_TABLES=false`.
+After model or migration changes, validate from an empty PostgreSQL database rather than
+assuming an already-upgraded local volume proves the full history.
 
-## Current Product Slice
+## Tests and quality checks
 
-After creating an account, the current app supports:
+The integration and web fixtures require a disposable PostgreSQL database URL:
 
-- Dashboard cards for tanks, events, livestock, and plants
-- Tank creation and tank detail pages
-- Branded AquaOps shell with responsive sidebar navigation, command dashboard, light/dark/system themes, and compact/comfortable density
-- Per-tank water parameter targets
-- Water test logging from a tank detail page
-- Latest readings and per-parameter trend charts
-- `/events` activity stream
-- `/reports` event mix and nitrate trend charts
-- Catalog-backed livestock and plant add forms on tank detail pages
-- `/livestock` inventory summary grouped by species
-- `/plants` inventory summary grouped by species
-- `/notifications` open reminder queue
-- `/settings` persisted workspace preferences for units, dates, dashboard density, modules, and Plant Care mode
+```bash
+createdb aquaops_test
+export TEST_DATABASE_URL=postgresql+psycopg://aquaops:<password>@localhost:5432/aquaops_test
+export DATABASE_URL="$TEST_DATABASE_URL"
+alembic upgrade head
+alembic check
+pytest
+ruff check .
+black --check .
+```
 
-The settings flow stores per-user preferences in `user_preferences`. Volumes remain
-canonical in liters in the database, while the UI can display and accept either gallons or
-liters. New tank target presets honor the user's preferred temperature unit.
+The fixture drops and recreates the test database's `public` schema. Never point
+`TEST_DATABASE_URL` at development or production data. Without `TEST_DATABASE_URL`,
+PostgreSQL integration and web tests are skipped while pure unit tests can still run.
 
-Feature modules can be simplified per workspace. Plant Care supports `Auto`, `On`, and
-`Off`; in auto mode, fertilizer and root-tab reminders stay hidden until the app detects
-active plants, a planted tank, or fertilizer history.
-
-The local species catalog is seeded by Alembic with common freshwater fish,
-invertebrates, and plants. Tank detail forms use that catalog for dropdowns while still
-allowing custom common and scientific names when an entry is not listed.
-
-Some domain tables already exist before full UI workflows do. Maintenance, fertilizer,
-feeding, media, and reminder detail models are present, while complete user-facing CRUD
-flows for those areas are still roadmap work.
-
-## Demo Data
-
-Seed a realistic demo account:
+## Demo data
 
 ```bash
 aquaops seed-demo
-```
-
-Alternative module form:
-
-```bash
+# or
 python -m app.scripts.seed_demo
 ```
 
-Login:
+The seed runs against the configured PostgreSQL database, replaces only the demo account,
+and is idempotent. It refuses production unless `--allow-production` is explicit.
 
 ```text
 demo@example.com
 demo-password
 ```
 
-The command replaces only the demo account on each run. It will not run in production
-unless `--allow-production` is supplied.
+The local species catalog is seeded by Alembic. Demo data is portfolio-only; normal
+production user data remains primary.

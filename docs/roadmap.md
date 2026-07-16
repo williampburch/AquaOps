@@ -67,10 +67,11 @@ changes, observations, and photos on one timeline.
 - Separate GitHub Actions image publishing to GHCR on `main` and manual runs,
   tagged as `latest`, `main`, and the immutable short commit SHA; the VM still
   deploys only when an operator starts it
-- Pull-only production deployment from GHCR with an isolated production Compose
-  file, a single-deploy lock, Alembic migrations from the pulled image, bounded
-  localhost health checks, failure diagnostics, and best-effort prior-image
-  rollback while preserving the SQLite and media volumes
+- Pull-only production deployment from GHCR with PostgreSQL 17 on the existing VM,
+  an isolated production Compose file, a single-deploy lock, database readiness waits,
+  Alembic migrations from the pulled image, bounded localhost health checks, failure
+  diagnostics, and best-effort prior-image rollback while preserving database and media
+  volumes
 - Tank-specific water parameter target ranges
 - Water test logging through the generic event model
 - Latest water readings and per-parameter trend charts
@@ -291,6 +292,5 @@ calcium, magnesium, phosphate, dosing, equipment, and controller integrations.
   procedure beyond the current best-effort image rollback
 - CSRF protection for all mutating forms
 - Rate limiting on auth routes
-- Backup and restore scripts
-- PostgreSQL deployment profile
+- Expand PostgreSQL backup verification and off-VM retention automation
 - Media storage abstraction for Azure Blob Storage

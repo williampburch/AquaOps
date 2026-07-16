@@ -1,4 +1,21 @@
 services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aquaops}
+      POSTGRES_USER: ${POSTGRES_USER:-aquaops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aquaops}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - aquaops_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
   web:
     build: .
     container_name: aquaops-web
@@ -7,13 +24,21 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: sqlite:////app/data/aquaops.db
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aquaops}:${POSTGRES_PASSWORD:-aquaops}@db:5432/${POSTGRES_DB:-aquaops}
+      AUTO_CREATE_TABLES: "false"
       MEDIA_ROOT: /app/media
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
-      - aquaops_data:/app/data
       - aquaops_media:/app/media
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped
 
 volumes:
-  aquaops_data:
+  aquaops_postgres:
   aquaops_media:

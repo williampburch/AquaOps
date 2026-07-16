@@ -383,7 +383,7 @@ class SqlAlchemyInventoryRepository:
                 model.common_name,
                 model.species,
                 func.sum(quantity_expression),
-                func.group_concat(func.distinct(TankModel.name)),
+                func.aggregate_strings(func.distinct(TankModel.name), ","),
             )
             .select_from(model)
             .join(TankModel, TankModel.id == model.tank_id)

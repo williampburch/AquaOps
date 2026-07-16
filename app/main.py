@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.engine import Engine
 
 from app.core.config import Settings, get_settings
 from app.infrastructure.db.base import Base
@@ -36,14 +37,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     settings.media_root.mkdir(parents=True, exist_ok=True)
     if settings.auto_create_tables:
-        Base.metadata.create_all(bind=engine)
+        Base.metadata.create_all(bind=app.state.database_engine)
     yield
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    database_engine: Engine | None = None,
+) -> FastAPI:
     app_settings = settings or get_settings()
     app = FastAPI(title=app_settings.app_name, version="0.1.0", lifespan=lifespan)
     app.state.settings = app_settings
+    app.state.database_engine = database_engine or engine
     app.state.static_version = str(
         max(
             (
