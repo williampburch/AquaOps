@@ -87,8 +87,10 @@ changes, observations, and photos on one timeline.
 - Mobile Quick Log livestock and plant changes for catalog-backed or custom
   additions, one-tap quantity increases, partial-group reductions, and reasoned
   removals that automatically archive an entry when its quantity reaches zero
-- Notifications page for open reminders
-- Reminder completion and snoozing from the care queue
+- Actionable Care Queue with clickable overdue, due-today, and upcoming status
+  cards plus task-specific Quick Log links
+- Reminder completion and snoozing from the care queue, with matching logged care
+  automatically satisfying connected reminders and recommendations
 - Quick logging for feedings, maintenance, water changes, and observations from
   tank detail pages
 - Dashboard quick links into focused tank-level water change, water test,

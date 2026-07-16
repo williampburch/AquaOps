@@ -484,6 +484,14 @@ class SqlAlchemyTankRepository:
                 equipment_name=data.equipment_name,
             )
         )
+        if data.maintenance_type == MaintenanceType.WATER_CHANGE.value:
+            recommendation = self._open_reminder(
+                user_id,
+                tank_id,
+                "water_change_recommendation",
+            )
+            if recommendation is not None:
+                recommendation.completed_at = data.occurred_at
         self._refresh_scheduled_reminder(
             user_id=user_id,
             tank_id=tank_id,

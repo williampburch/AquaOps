@@ -65,6 +65,40 @@ def test_notification_repository_classifies_open_reminders(session: Session) -> 
         "Feed fish",
         "Root tabs",
     ]
+    assert [item.quick_log_action for item in snapshot.items] == [
+        "water_change",
+        "feeding",
+        None,
+    ]
+
+
+def test_notification_repository_routes_maintenance_to_the_matching_quick_log(
+    session: Session,
+) -> None:
+    now = utc_now()
+    user = UserModel(
+        email="maintenance-queue@example.com",
+        username="maintenance-queue",
+        password_hash=hash_password("a-long-test-password"),
+    )
+    tank = TankModel(user=user, name="Display Tank", tank_type="freshwater")
+    session.add_all([user, tank])
+    session.flush()
+    session.add(
+        ReminderModel(
+            user_id=user.id,
+            tank_id=tank.id,
+            reminder_type="filter_cleaning",
+            title="Filter cleaning",
+            due_at=now,
+        )
+    )
+    session.commit()
+
+    item = SqlAlchemyNotificationRepository(session).get_snapshot(user.id).items[0]
+
+    assert item.quick_log_action == "maintenance"
+    assert item.maintenance_type == "filter_cleaning"
 
 
 def test_notification_repository_auto_hides_plant_care_without_plant_signal(

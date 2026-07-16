@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.application.ports.notifications import NotificationItem, NotificationSnapshot
 from app.core.time import utc_now
-from app.domain.care_plans import next_schedule_due_at, task_label
+from app.domain.care_plans import next_schedule_due_at, quick_log_action, task_label
 from app.domain.maintenance import MAINTENANCE_CONFIG_LABELS
 from app.infrastructure.db.models import (
     EventMeasurementModel,
@@ -48,19 +48,26 @@ class SqlAlchemyNotificationRepository:
             .limit(40)
         )
         statement = filter_plant_care_reminders(statement, include_plant_care)
-        items = [
-            NotificationItem(
-                id=reminder.id,
-                title=reminder.title,
-                reminder_type=reminder.reminder_type,
-                due_at=reminder.due_at,
-                tank_id=reminder.tank_id,
-                tank_name=tank_name,
-                status=self._status(reminder.due_at, now),
-                reason=self._reason(reminder),
+        items = []
+        for reminder, tank_name in self.session.execute(statement).all():
+            task_type = self._task_type(reminder)
+            action = quick_log_action(task_type)
+            if reminder.reminder_type == "water_change_recommendation":
+                action = "water_change"
+            items.append(
+                NotificationItem(
+                    id=reminder.id,
+                    title=reminder.title,
+                    reminder_type=reminder.reminder_type,
+                    due_at=reminder.due_at,
+                    tank_id=reminder.tank_id,
+                    tank_name=tank_name,
+                    status=self._status(reminder.due_at, now),
+                    reason=self._reason(reminder),
+                    quick_log_action=action,
+                    maintenance_type=task_type if action == "maintenance" else None,
+                )
             )
-            for reminder, tank_name in self.session.execute(statement).all()
-        ]
         return NotificationSnapshot(
             overdue_count=sum(1 for item in items if item.status == "overdue"),
             due_today_count=sum(1 for item in items if item.status == "due_today"),
@@ -156,6 +163,11 @@ class SqlAlchemyNotificationRepository:
             f"Generated from the {label.lower()} schedule after "
             f"{event.title} on {event.occurred_at.date().isoformat()}."
         )
+
+    def _task_type(self, reminder: ReminderModel) -> str:
+        if reminder.maintenance_config is not None:
+            return reminder.maintenance_config.config_type
+        return reminder.reminder_type
 
     def _nitrate_reason(self, reminder: ReminderModel) -> str | None:
         if reminder.source_event_id is None or reminder.tank_id is None:

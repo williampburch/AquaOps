@@ -322,6 +322,15 @@ def test_care_plan_editor_is_linked_mobile_friendly_and_displays_current_plan(
 
     assert 'href="/tanks/1/care-plan"' in tank_detail.text
     assert 'href="/tanks/1/care-plan"' in care_queue.text
+    assert 'href="/notifications?status=overdue#open-items"' in care_queue.text
+    assert 'href="/notifications?status=due_today#open-items"' in care_queue.text
+    assert 'href="/notifications?status=upcoming#open-items"' in care_queue.text
+    assert 'href="/quick-log?action=water_change&amp;tank_id=1"' in care_queue.text
+    assert 'href="/quick-log?action=feeding&amp;tank_id=1"' in care_queue.text
+    due_today = client.get("/notifications?status=due_today")
+    assert 'aria-current="true"' in due_today.text
+    assert "Due today" in due_today.text
+    assert 'href="/notifications#open-items">Show all</a>' in due_today.text
     assert editor.status_code == 200
     assert "Aquascape Care Plan" in editor.text
     assert "Planted Tank" in editor.text
@@ -733,6 +742,11 @@ def test_quick_log_saves_non_water_maintenance(client: TestClient) -> None:
     assert response.status_code == 303
     events = client.get("/events")
     assert "Filter Cleaning" in events.text
+
+    prefilled = client.get(
+        "/quick-log?action=maintenance&tank_id=1&maintenance_type=filter_cleaning"
+    )
+    assert 'option value="filter_cleaning" selected' in prefilled.text
 
 
 def test_quick_log_surfaces_recent_values_without_relogging_old_tests(
@@ -1233,6 +1247,14 @@ def test_high_nitrate_recommends_water_change_without_ammonia_noise(
     assert "Water change recommended" in nitrate_notifications.text
     assert "nitrate 25" in nitrate_notifications.text
     assert "Nitrate was 25 ppm, above target max 20 ppm." in nitrate_notifications.text
+    assert 'href="/quick-log?action=water_change&amp;tank_id=1"' in nitrate_notifications.text
+
+    client.post(
+        "/quick-log/water-change",
+        data={"tank_id": "1", "volume_changed": "10"},
+    )
+    completed_notifications = client.get("/notifications")
+    assert "Water change recommended" not in completed_notifications.text
 
 
 def test_events_page_renders_recent_activity(client: TestClient) -> None:

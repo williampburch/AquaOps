@@ -2731,6 +2731,55 @@ body::after {
   margin: 0.35rem 0;
 }
 
+.care-queue-filter-card {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.care-queue-filter-card:hover {
+  border-color: color-mix(in srgb, var(--aqua-brand-teal) 70%, var(--aqua-border));
+  box-shadow: var(--aqua-shadow-lg);
+  color: inherit;
+  transform: translateY(-2px);
+}
+
+.care-queue-filter-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--aqua-brand-teal) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.care-queue-filter-card.active {
+  background: color-mix(in srgb, var(--aqua-brand-teal) 10%, var(--aqua-panel));
+  border-color: var(--aqua-brand-teal);
+}
+
+.care-queue-filter-card.overdue::before {
+  background: var(--aqua-danger);
+}
+
+.care-queue-filter-card.due-today::before {
+  background: var(--aqua-warning);
+}
+
+.care-queue-filter-card small {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.care-queue-heading-count {
+  color: var(--aqua-text-muted);
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.care-queue-filter-clear {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
 .report-grid {
   display: grid;
   gap: 1rem;
