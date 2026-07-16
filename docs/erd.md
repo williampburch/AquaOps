@@ -1,5 +1,9 @@
 # Database ERD
 
+This schema is managed by Alembic and runs canonically on PostgreSQL 17. Timestamps use
+timezone-aware PostgreSQL values, measurements use fixed-precision `NUMERIC`, and event
+metadata remains structured JSON. Local media files are stored outside the database.
+
 ```mermaid
 erDiagram
   USERS ||--o{ SESSIONS : has

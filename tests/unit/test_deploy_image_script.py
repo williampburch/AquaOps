@@ -22,9 +22,12 @@ def test_image_deploy_pulls_migrates_and_never_builds(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     calls = call_log.read_text()
     assert "docker pull ghcr.io/williampburch/aquaops:abc1234" in calls
+    assert "compose -f docker-compose.prod.yml up -d --no-build db" in calls
+    assert "compose -f docker-compose.prod.yml exec -T db sh -c" in calls
     assert "run --rm web alembic upgrade head" in calls
     assert "up -d --no-build --force-recreate --remove-orphans web" in calls
     assert " build " not in f" {calls} "
+    assert calls.index("up -d --no-build db") < calls.index("run --rm web alembic upgrade head")
 
 
 def test_image_deploy_rolls_back_previous_image_after_failed_health(

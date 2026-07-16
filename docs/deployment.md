@@ -1,257 +1,201 @@
 # AquaOps Production Deployment
 
-AquaOps production runs on an Azure Linux VM from a prebuilt Docker image published
-to GitHub Container Registry (GHCR):
+AquaOps runs on the existing Azure Linux VM from the immutable GHCR application image:
 
 ```text
-ghcr.io/williampburch/aquaops
+ghcr.io/williampburch/aquaops:<short-sha>
 ```
 
-The repository checkout is `/opt/aquaops`. Production uses
-`docker-compose.prod.yml`, and `make deploy` runs `scripts/deploy-image.sh`.
-The VM does **not** build an application image during a normal production deployment.
+The checkout is `/opt/aquaops`. Normal deployment uses `docker-compose.prod.yml` and
+`AQUAOPS_IMAGE_TAG=<short-sha> make deploy`; the VM never builds the production image.
 
 ## Production architecture
 
-- The `aquaops-web` container binds `127.0.0.1:8010:8000`. The application port is
-  not exposed directly to the internet.
-- Nginx terminates public HTTPS traffic and proxies it to
-  `http://127.0.0.1:8010`.
-- The local health endpoint is `http://127.0.0.1:8010/health`.
-- SQLite data is stored in the `aquaops_data` Docker volume.
-- Uploaded media is stored in the `aquaops_media` Docker volume.
-- Docker Compose may prefix the physical volume names with the project name, such as
-  `aquaops_aquaops_data` and `aquaops_aquaops_media`.
-- Production settings and secrets are stored in `/opt/aquaops/.env`.
+```text
+Azure Linux VM
+├── Nginx -> 127.0.0.1:8010
+├── AquaOps web container
+├── PostgreSQL 17 container (internal Compose network only)
+├── aquaops_postgres named volume
+└── aquaops_media named volume
+```
 
-Never commit `.env`, print its contents, or copy its secrets into deployment logs or
-support chats. Confirm that the file exists without displaying it:
+The `db` service has no host port in production. The web container connects through the
+Compose service name `db`. Local media storage is unchanged. Azure Container Apps, Azure
+Database for PostgreSQL, and Azure Blob Storage are intentionally outside this reset.
+
+## Production environment
+
+Store settings and secrets in `/opt/aquaops/.env`. Never commit or print this file.
+It must contain at least:
+
+```dotenv
+APP_ENV=production
+SECRET_KEY=<long-random-secret>
+POSTGRES_DB=aquaops
+POSTGRES_USER=aquaops
+POSTGRES_PASSWORD=<strong-random-password>
+DATABASE_URL=postgresql+psycopg://aquaops:<url-encoded-password>@db:5432/aquaops
+AUTO_CREATE_TABLES=false
+MEDIA_ROOT=/app/media
+```
+
+If the password contains URL-reserved characters, percent-encode only the password in
+`DATABASE_URL`; `POSTGRES_PASSWORD` retains its original value. Check presence without
+displaying values:
 
 ```bash
 cd /opt/aquaops
 test -f .env && echo ".env exists" || echo "ERROR: .env is missing"
+docker compose -f docker-compose.prod.yml config --quiet
 ```
 
-## Image tags
+Compose must show no published port for `db`. `AUTO_CREATE_TABLES=true` and a non-
+PostgreSQL production URL are rejected by application settings.
 
-GitHub Actions publishes the application image after a successful build. Production
-deployments should use the immutable short Git commit SHA for the desired release:
+## Health semantics
 
-```bash
-AQUAOPS_IMAGE_TAG=ed8ab8a make deploy
-```
+- `/health/live` confirms that the application process can respond and does not query the
+  database.
+- `/health/ready` performs `SELECT 1`; database failure returns HTTP 503 without internal
+  exception details.
+- `/health` is a compatibility alias for database-aware readiness.
 
-Replace `ed8ab8a` with the tag for the commit being deployed. A short-SHA tag makes
-the deployed version explicit and repeatable. The `latest` tag can move whenever a
-new image is published, so it is less safe and should not be used for routine
-production deployments.
+Nginx continues to proxy public HTTPS to `http://127.0.0.1:8010`. PostgreSQL port 5432
+must not be opened in Compose, the VM firewall, or the Azure network security group.
 
-## GHCR access
+## One-time SQLite to PostgreSQL reset
 
-Public GHCR images can be pulled without authentication. If the AquaOps package is
-private, authenticate once as the same Linux user that performs deployments. Use a
-GitHub personal access token (classic) with only the `read:packages` scope. Do not put
-the token in this repository or in `.env`.
+This reset intentionally starts PostgreSQL with an empty application database. It does
+not import SQLite rows. Preserve the old database archive untouched for safety.
 
-```bash
-read -rsp "GitHub package token: " CR_PAT
-echo
-printf '%s' "$CR_PAT" | docker login ghcr.io -u williampburch --password-stdin
-unset CR_PAT
-```
+### 1. Stop writes and identify the existing volumes
 
-Docker saves the registry login in that Linux user's Docker client configuration.
-
-## Before every deployment
-
-### 1. Connect and run preflight checks
+Announce the maintenance window, stop using AquaOps, then run against the old deployment:
 
 ```bash
 cd /opt/aquaops
-pwd
-docker --version
-docker compose version
-curl --version
-flock --version
-test -f .env && echo ".env exists" || echo "ERROR: .env is missing"
-```
-
-The expected working directory is `/opt/aquaops`. Stop if `.env` is missing or Docker
-is unavailable.
-
-Check the current container, health endpoint, and persistent volumes:
-
-```bash
-docker ps --filter "name=aquaops-web"
-curl -fsS http://127.0.0.1:8010/health
-docker volume ls --format '{{.Name}}' | grep aquaops
-```
-
-### 2. Back up data and media
-
-Back up both persistent volumes before any deployment that may run migrations. The
-following example discovers the actual volume names from the running container, stops
-the application for a consistent SQLite backup, and creates timestamped compressed
-archives. It does not print `.env`.
-
-```bash
-cd /opt/aquaops
-
-DATA_VOLUME="$(docker inspect aquaops-web --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}')"
+OLD_DATA_VOLUME="$(docker inspect aquaops-web --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}')"
 MEDIA_VOLUME="$(docker inspect aquaops-web --format '{{range .Mounts}}{{if eq .Destination "/app/media"}}{{.Name}}{{end}}{{end}}')"
-BACKUP_DIR="$HOME/aquaops-backups/$(date -u +%Y%m%dT%H%M%SZ)"
-
-test -n "$DATA_VOLUME" || { echo "Could not find the /app/data volume" >&2; exit 1; }
-test -n "$MEDIA_VOLUME" || { echo "Could not find the /app/media volume" >&2; exit 1; }
-mkdir -p "$BACKUP_DIR"
-
-docker pull alpine:3.20
+test -n "$OLD_DATA_VOLUME" || { echo "SQLite data volume not found" >&2; exit 1; }
+test -n "$MEDIA_VOLUME" || { echo "Media volume not found" >&2; exit 1; }
 docker compose -f docker-compose.prod.yml stop web
-docker run --rm \
-  -v "$DATA_VOLUME:/source:ro" \
-  -v "$BACKUP_DIR:/backup" \
-  alpine:3.20 tar -C /source -czf /backup/aquaops_data.tar.gz .
-docker run --rm \
-  -v "$MEDIA_VOLUME:/source:ro" \
-  -v "$BACKUP_DIR:/backup" \
-  alpine:3.20 tar -C /source -czf /backup/aquaops_media.tar.gz .
+```
 
-ls -lh "$BACKUP_DIR"
+Do not accept any more writes after this point.
+
+### 2. Archive SQLite and preserve media
+
+```bash
+BACKUP_DIR="$HOME/aquaops-backups/postgresql-cutover-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$BACKUP_DIR"
+docker pull alpine:3.20
+docker run --rm -v "$OLD_DATA_VOLUME:/source:ro" -v "$BACKUP_DIR:/backup" \
+  alpine:3.20 tar -C /source -czf /backup/sqlite-data-volume.tar.gz .
+docker run --rm -v "$MEDIA_VOLUME:/source:ro" -v "$BACKUP_DIR:/backup" \
+  alpine:3.20 tar -C /source -czf /backup/media-volume-pre-cutover.tar.gz .
+test -s "$BACKUP_DIR/sqlite-data-volume.tar.gz"
+test -s "$BACKUP_DIR/media-volume-pre-cutover.tar.gz"
 sha256sum "$BACKUP_DIR"/*.tar.gz
-docker compose -f docker-compose.prod.yml start web
-curl -fsS http://127.0.0.1:8010/health
 ```
 
-Pulling the small backup helper image before stopping the service limits downtime. Both
-archives must exist and have plausible, nonzero sizes, the checksums must be recorded,
-and the existing application must be healthy before proceeding. If an archive command
-fails and leaves the service stopped, restart the existing container with:
+Copy the archives and checksums off the VM. Do not delete or repurpose the SQLite volume.
+The existing media volume remains mounted by the new web container.
+
+### 3. Install the new deployment definition and environment
 
 ```bash
-docker compose -f docker-compose.prod.yml start web
-curl -fsS http://127.0.0.1:8010/health
+git pull --ff-only origin main
 ```
 
-Copy backups off the VM and periodically test restoration. A backup stored only on the
-production VM is not sufficient disaster recovery. Restoring a volume overwrites live
-state, so perform restoration only during a planned outage and retain the current
-volumes until the restored application has been verified.
+Update `.env` with the PostgreSQL variables above. Confirm the target image uses an
+immutable short SHA and that no PostgreSQL volume from a failed trial exists. Let Compose
+create the fresh `aquaops_postgres` volume; do not reuse the archived SQLite volume.
 
-## Deploy a release
-
-Choose the short-SHA tag for the release and use the same value in every command below.
-This example uses `ed8ab8a`:
-
-### 1. Confirm that the image is available
+### 4. Start PostgreSQL and migrate the empty database
 
 ```bash
-docker pull ghcr.io/williampburch/aquaops:ed8ab8a
+export AQUAOPS_IMAGE_TAG=<short-sha>
+docker pull "ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG}"
+docker compose -f docker-compose.prod.yml pull db
+docker compose -f docker-compose.prod.yml up -d db
+until docker compose -f docker-compose.prod.yml exec -T db sh -c \
+  'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; do sleep 2; done
+docker compose -f docker-compose.prod.yml run --rm web alembic upgrade head
+docker compose -f docker-compose.prod.yml run --rm web alembic current
 ```
 
-If this fails with an authorization error, complete the GHCR authentication step above.
-Do not proceed if the requested image cannot be pulled.
+### 5. Start and verify AquaOps
 
-### 2. Update the deployment files
+```bash
+docker compose -f docker-compose.prod.yml up -d --no-build web
+curl -fsS http://127.0.0.1:8010/health/live
+curl -fsS http://127.0.0.1:8010/health/ready
+```
+
+Create the initial user through normal `/register`; no special password or direct SQL
+bootstrap is required. Then verify all of the following before ending the maintenance
+window:
+
+1. Login and logout.
+2. Create a tank.
+3. Quick Log a water test, feeding, maintenance item, and observation.
+4. Open the Care Queue and complete or snooze a reminder.
+5. Add livestock and a plant, then confirm inventory ownership and totals.
+6. Upload and retrieve a photo from the preserved media volume.
+7. Open a problem, link timeline events, update its status, and confirm history.
+8. Confirm `/health/ready`, local HTTPS through Nginx, and container health.
+
+Leave the SQLite archive and old volume untouched. There is no automatic SQLite import.
+
+## Routine deployment
+
+Before a migration-bearing deployment, create a PostgreSQL dump and media backup as
+described in [Backup and Restore](backup-restore.md).
 
 ```bash
 cd /opt/aquaops
 git pull --ff-only origin main
+AQUAOPS_IMAGE_TAG=<short-sha> make deploy
 ```
 
-The fast-forward-only pull stops instead of silently merging unexpected VM-side Git
-changes. Resolve any reported local changes deliberately before deploying.
+`scripts/deploy-image.sh`:
 
-### 3. Deploy the selected image
+1. Acquires the existing deployment lock.
+2. Preserves the current application image with a timestamped rollback tag.
+3. Pulls the requested immutable application image.
+4. Pulls and starts PostgreSQL, then retries `pg_isready` independently of Compose
+   `depends_on`.
+5. Runs `alembic upgrade head` using the pulled application image.
+6. Recreates the web container without building.
+7. Retries database-aware `/health/ready`.
+8. Prints web and database diagnostics on failure and attempts an application-image
+   rollback when possible.
 
-```bash
-AQUAOPS_IMAGE_TAG=ed8ab8a make deploy
-```
-
-`make deploy` runs `scripts/deploy-image.sh`, which:
-
-1. Takes a deployment lock so two deployments cannot overlap.
-2. Preserves the previously running image with a timestamped local `rollback-*` tag.
-3. Pulls `ghcr.io/williampburch/aquaops:<tag>` from GHCR.
-4. Runs `alembic upgrade head` using the pulled image.
-5. Recreates `aquaops-web` with Docker Compose and `--no-build`.
-6. Retries `http://127.0.0.1:8010/health` and prints diagnostics on failure.
-7. Attempts to recreate the previous image if restart or health verification fails.
-
-## Verify the deployment
-
-Run all of these checks after `make deploy` succeeds:
+Useful verification:
 
 ```bash
-curl -fsS http://127.0.0.1:8010/health
-docker ps --filter "name=aquaops-web"
-docker compose -f docker-compose.prod.yml logs --tail 80 web
-curl -fsS -o /dev/null -w "public_https=%{http_code}\n" https://aquaops.william-burch.com/
-```
-
-The local health request must succeed, `aquaops-web` should be running, and the public
-HTTPS check should report a successful HTTP status. If verification fails, retain the
-command output and inspect the diagnostics printed by the deploy script.
-
-To confirm which image reference the container was created from:
-
-```bash
+curl -fsS http://127.0.0.1:8010/health/live
+curl -fsS http://127.0.0.1:8010/health/ready
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs --tail 80 web db
 docker inspect aquaops-web --format 'image={{.Config.Image}} id={{.Image}} status={{.State.Status}}'
+curl -fsS -o /dev/null -w 'public_https=%{http_code}\n' https://aquaops.william-burch.com/
 ```
 
-## Rollback behavior and limitation
+## Rollback limitation
 
-Before replacing an existing container, the deploy script tags its image locally as:
+The deploy script can recreate the previous application image, but application-image
+rollback does not undo Alembic migrations already applied to PostgreSQL. Restore the
+pre-deployment dump or follow a reviewed migration-specific downgrade plan during an
+outage when schema recovery is required. Never assume starting an old image restores the
+old schema or data.
 
-```text
-ghcr.io/williampburch/aquaops:rollback-<UTC timestamp>
-```
+## Legacy path
 
-If the new container cannot start or pass its health check, the script makes a
-best-effort attempt to recreate the service from that preserved image. Keep these local
-rollback tags until the new release and its data are confirmed healthy.
+`make deploy-build` remains a local troubleshooting fallback only. Normal VM deployment
+must use the prebuilt GHCR image. Do not use `docker compose build`, `up --build`, or
+`make deploy-build` as the production release path.
 
-**Image rollback does not reverse database migrations.** Alembic may already have
-changed the SQLite database in the shared data volume before a container failure is
-detected. If a release requires a database rollback, use the migration-specific recovery
-plan or restore the pre-deployment data backup during a planned outage. Do not assume
-that starting the old image also restores the old schema.
-
-## Nginx and TLS
-
-Nginx is the only public entry point. It reverse proxies AquaOps HTTPS traffic to:
-
-```nginx
-proxy_pass http://127.0.0.1:8010;
-```
-
-The application port must remain bound to localhost in `docker-compose.prod.yml`:
-
-```yaml
-ports:
-  - "127.0.0.1:8010:8000"
-```
-
-After an intentional Nginx configuration change, validate before reloading:
-
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-Do not expose port `8010` through the Azure network security group or VM firewall.
-
-## Local and legacy deployment paths
-
-Local development may continue to use `docker-compose.yml` and build the repository's
-Dockerfile on a development machine. This is separate from production.
-
-`make deploy-build` remains only as a legacy/local troubleshooting fallback. It builds
-an image on the machine where it is run and is **not** the normal or recommended Azure
-VM deployment path. Production releases must use the prebuilt GHCR image through
-`AQUAOPS_IMAGE_TAG=<short-sha> make deploy`.
-
-## Documentation maintenance
-
-Any future change to deployment behavior, ports, Compose files, image registry, volume
-names, health checks, rollback behavior, or the backup/restore process must update
-`docs/deployment.md` in the same pull request.
+Any change to Compose, database initialization, ports, images, migrations, health checks,
+backup/restore, or rollback behavior must update this guide in the same PR.

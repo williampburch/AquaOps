@@ -1,35 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Generator
-
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.orm import Session
 
 from app.application.ports.problems import ProblemCreate
 from app.core.security import hash_password
 from app.core.time import utc_now
-from app.infrastructure.db import models  # noqa: F401
-from app.infrastructure.db.base import Base
 from app.infrastructure.db.models import EventModel, TankModel, UserModel
 from app.infrastructure.repositories.problems import SqlAlchemyProblemRepository
-
-
-@pytest.fixture
-def session() -> Generator[Session]:
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    testing_session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    with testing_session() as db_session:
-        yield db_session
-
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_problem_repository_keeps_records_and_links_inside_the_owned_tank(

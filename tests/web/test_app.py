@@ -2,41 +2,43 @@ from __future__ import annotations
 
 import json
 from collections.abc import Generator
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.core.config import Settings
-from app.infrastructure.db import models  # noqa: F401
+from app.core.time import utc_now
 from app.infrastructure.db.base import Base
 from app.main import create_app
 from app.web.dependencies import get_db
 
 
 @pytest.fixture
-def client(tmp_path: Path) -> Generator[TestClient]:
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+def client(
+    tmp_path: Path,
+    postgres_engine: Engine,
+    clean_database: None,
+) -> Generator[TestClient]:
+    TestingSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=postgres_engine,
     )
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
 
     settings = Settings(
         secret_key="test-secret-key-that-is-long-enough",
-        database_url="sqlite+pysqlite:///:memory:",
+        database_url=str(postgres_engine.url),
         auto_create_tables=False,
         data_dir=tmp_path / "data",
         media_root=tmp_path / "media",
     )
-    app = create_app(settings)
+    app = create_app(settings, database_engine=postgres_engine)
 
     def override_get_db() -> Generator[Session]:
         with TestingSessionLocal() as session:
@@ -47,14 +49,67 @@ def client(tmp_path: Path) -> Generator[TestClient]:
     with TestClient(app) as test_client:
         yield test_client
 
-    Base.metadata.drop_all(bind=engine)
-
 
 def test_health_check(client: TestClient) -> None:
+    live_response = client.get("/health/live")
+    ready_response = client.get("/health/ready")
     response = client.get("/health")
 
+    assert live_response.status_code == 200
+    assert live_response.json() == {"status": "ok"}
+    assert ready_response.status_code == 200
+    assert ready_response.json() == {"status": "ok"}
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_readiness_hides_database_errors_and_liveness_stays_available(
+    client: TestClient,
+) -> None:
+    class FailedSession:
+        def execute(self, _statement) -> None:
+            from sqlalchemy.exc import SQLAlchemyError
+
+            raise SQLAlchemyError("secret database detail")
+
+        def rollback(self) -> None:
+            pass
+
+    def failed_database():
+        yield FailedSession()
+
+    client.app.dependency_overrides[get_db] = failed_database
+    try:
+        ready_response = client.get("/health/ready")
+        live_response = client.get("/health/live")
+    finally:
+        client.app.dependency_overrides.pop(get_db, None)
+
+    assert ready_response.status_code == 503
+    assert ready_response.json() == {"status": "unavailable"}
+    assert "secret" not in ready_response.text
+    assert live_response.status_code == 200
+
+
+def test_startup_does_not_create_tables_when_disabled(
+    tmp_path: Path,
+    postgres_engine: Engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_create_all(*_args, **_kwargs) -> None:
+        raise AssertionError("create_all must not run when AUTO_CREATE_TABLES=false")
+
+    monkeypatch.setattr(Base.metadata, "create_all", unexpected_create_all)
+    settings = Settings(
+        secret_key="test-secret-key-that-is-long-enough",
+        database_url=str(postgres_engine.url),
+        auto_create_tables=False,
+        data_dir=tmp_path / "data",
+        media_root=tmp_path / "media",
+    )
+
+    with TestClient(create_app(settings, database_engine=postgres_engine)) as startup_client:
+        assert startup_client.get("/health/live").status_code == 200
 
 
 def test_installable_pwa_assets_are_available_and_conservative(client: TestClient) -> None:
@@ -1097,6 +1152,8 @@ def test_tank_detail_quick_logs_daily_care_events(client: TestClient) -> None:
 def test_tank_schedules_generate_next_care_reminder(client: TestClient) -> None:
     _register(client)
     _create_tank(client)
+    occurred_at = utc_now().replace(second=0, microsecond=0)
+    next_due_at = occurred_at + timedelta(days=7)
 
     detail = client.get("/tanks/1")
     assert "Maintenance Schedules" in detail.text
@@ -1115,7 +1172,7 @@ def test_tank_schedules_generate_next_care_reminder(client: TestClient) -> None:
     maintenance_response = client.post(
         "/tanks/1/maintenance",
         data={
-            "occurred_at": "2026-07-09T10:00",
+            "occurred_at": occurred_at.strftime("%Y-%m-%dT%H:%M"),
             "maintenance_type": "water_change",
             "volume_changed": "10",
         },
@@ -1127,13 +1184,13 @@ def test_tank_schedules_generate_next_care_reminder(client: TestClient) -> None:
 
     notifications = client.get("/notifications")
     assert "Water Change due" in notifications.text
-    assert "Jul 16, 2026" in notifications.text
+    assert next_due_at.strftime("%b %-d, %Y") in notifications.text
     assert "Generated from the water changes schedule" in notifications.text
 
     detail = client.get("/tanks/1")
     assert "Upcoming" in detail.text
-    assert "Last: Jul 9" in detail.text
-    assert "Next: Jul 16" in detail.text
+    assert f"Last: {occurred_at.strftime('%b %-d')}" in detail.text
+    assert f"Next: {next_due_at.strftime('%b %-d')}" in detail.text
 
 
 def test_high_nitrate_recommends_water_change_without_ammonia_noise(

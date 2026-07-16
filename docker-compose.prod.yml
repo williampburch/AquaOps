@@ -1,19 +1,42 @@
 services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - aquaops_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    restart: unless-stopped
+
   web:
-    image: ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG:-latest}
+    image: ghcr.io/williampburch/aquaops:${AQUAOPS_IMAGE_TAG:?AQUAOPS_IMAGE_TAG must be set}
     container_name: aquaops-web
     ports:
       - "127.0.0.1:8010:8000"
     env_file:
       - .env
     environment:
-      DATABASE_URL: sqlite:////app/data/aquaops.db
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be set}
+      AUTO_CREATE_TABLES: "false"
       MEDIA_ROOT: /app/media
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
-      - aquaops_data:/app/data
       - aquaops_media:/app/media
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped
 
 volumes:
-  aquaops_data:
+  aquaops_postgres:
   aquaops_media:
