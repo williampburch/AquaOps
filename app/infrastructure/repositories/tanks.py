@@ -8,7 +8,7 @@ from hashlib import sha256
 from itertools import chain
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.application.ports.tanks import (
     ChartPoint,
@@ -22,6 +22,8 @@ from app.application.ports.tanks import (
     ParameterReading,
     ParameterTarget,
     QuickLogContext,
+    RecentCareAction,
+    RecentCareMeasurement,
     RecentDose,
     RecentFeeding,
     TankCreate,
@@ -303,6 +305,67 @@ class SqlAlchemyTankRepository:
             .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
             .limit(20)
         )
+        maintenance_rows = list(
+            self.session.execute(
+                select(MaintenanceEventDetailModel, EventModel)
+                .join(EventModel, EventModel.id == MaintenanceEventDetailModel.event_id)
+                .where(
+                    EventModel.user_id == user_id,
+                    EventModel.tank_id == tank_id,
+                )
+                .distinct(MaintenanceEventDetailModel.maintenance_type)
+                .order_by(
+                    MaintenanceEventDetailModel.maintenance_type,
+                    EventModel.occurred_at.desc(),
+                    EventModel.id.desc(),
+                )
+            )
+        )
+        last_maintenance_by_type: dict[str, RecentCareAction] = {}
+        for detail, event in maintenance_rows:
+            if detail.maintenance_type not in last_maintenance_by_type:
+                last_maintenance_by_type[detail.maintenance_type] = RecentCareAction(
+                    event_id=event.id,
+                    title=event.title,
+                    occurred_at=event.occurred_at,
+                    notes=event.notes,
+                    maintenance_type=detail.maintenance_type,
+                    duration_minutes=detail.duration_minutes,
+                    volume_changed_liters=detail.volume_changed_liters,
+                    equipment_name=detail.equipment_name,
+                )
+        last_water_test_event = self.session.scalar(
+            select(EventModel)
+            .where(
+                EventModel.user_id == user_id,
+                EventModel.tank_id == tank_id,
+                EventModel.event_type == EventType.WATER_TEST.value,
+            )
+            .options(selectinload(EventModel.measurements))
+            .order_by(EventModel.occurred_at.desc(), EventModel.id.desc())
+            .limit(1)
+        )
+        last_water_test = (
+            RecentCareAction(
+                event_id=last_water_test_event.id,
+                title=last_water_test_event.title,
+                occurred_at=last_water_test_event.occurred_at,
+                notes=last_water_test_event.notes,
+                measurements=tuple(
+                    RecentCareMeasurement(
+                        metric_key=measurement.metric_key,
+                        value=measurement.value,
+                        unit=measurement.unit,
+                    )
+                    for measurement in sorted(
+                        last_water_test_event.measurements,
+                        key=lambda item: item.metric_key,
+                    )
+                ),
+            )
+            if last_water_test_event
+            else None
+        )
         recent_equipment = []
         for equipment_name in equipment_rows:
             normalized = (equipment_name or "").strip()
@@ -401,6 +464,9 @@ class SqlAlchemyTankRepository:
                 )
             ),
             recent_dose_locations=_recent_distinct(detail.location for detail, _ in dose_rows),
+            last_water_change=last_maintenance_by_type.get(MaintenanceType.WATER_CHANGE.value),
+            last_water_test=last_water_test,
+            last_maintenance_by_type=last_maintenance_by_type,
         )
 
     def log_feeding(self, user_id: int, tank_id: int, data: FeedingLog) -> int | None:

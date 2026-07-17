@@ -77,6 +77,11 @@ changes, observations, and photos on one timeline.
 - Latest water readings and per-parameter trend charts
 - Dashboard cards linking to detailed views
 - Activity stream page
+- Mobile-first tank Care History with event-type filters, maintenance task
+  filtering, structured care details, and older/newer pagination beyond the
+  compact recent-event preview
+- Contextual "Last time" summaries in Water Change, Water Test, and Maintenance
+  Quick Log, with direct links into the matching tank history
 - Reports page with event mix and nitrate trend charts
 - Built-in species catalog seeded with common fish, invertebrates, and plants
 - Catalog-backed livestock and plant add forms with custom-entry fallback
@@ -165,11 +170,12 @@ Near-term work should follow this order:
 
 1. Frictionless mobile logging and inventory lifecycle management
 2. Recently used values and repeat-last-action shortcuts
-3. Notification delivery outside the app through push or email
-4. Photo capture and tank, plant, and livestock timelines
-5. Import, backup automation, and restore so long-term data remains trustworthy
-6. Historical explanations that help connect a problem with preceding changes
-7. Low-friction post-registration onboarding and install education
+3. Tank-specific care history and contextual last-action visibility
+4. Notification delivery outside the app through push or email
+5. Photo capture and tank, plant, and livestock timelines
+6. Import, backup automation, and restore so long-term data remains trustworthy
+7. Historical explanations that help connect a problem with preceding changes
+8. Low-friction post-registration onboarding and install education
 
 Reef-specific breadth is not an immediate priority. If AquaOps later targets reef
 keepers, that should be an intentional expansion covering salinity, alkalinity,

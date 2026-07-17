@@ -120,6 +120,20 @@
               </div>
             {% endif %}
           </div>
+          {% if last_water_change %}
+            <aside class="last-action-card">
+              <div>
+                <span>Last water change</span>
+                <strong>{{ display.format_datetime(last_water_change.occurred_at) }}</strong>
+                <small>
+                  {% if last_water_change.volume_changed_liters is not none %}{{ display.format_volume(last_water_change.volume_changed_liters) }}{% endif %}
+                  {% if last_water_change.duration_minutes is not none %} · {{ last_water_change.duration_minutes }} minutes{% endif %}
+                  {% if last_water_change.notes %} · {{ last_water_change.notes }}{% endif %}
+                </small>
+              </div>
+              <a href="/tanks/{{ selected_tank_id }}/history?filter=maintenance&amp;task=water_change">View water changes →</a>
+            </aside>
+          {% endif %}
           <form class="stack-form" method="post" action="/quick-log/water-change">
             <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
             <fieldset>
@@ -260,6 +274,18 @@
             </div>
             <small>Enter only what you tested.</small>
           </div>
+          {% if last_water_test %}
+            <aside class="last-action-card">
+              <div>
+                <span>Last water test</span>
+                <strong>{{ display.format_datetime(last_water_test.occurred_at) }}</strong>
+                {% if last_water_test.measurements %}
+                  <small>{% for measurement in last_water_test.measurements %}{{ metric_label(measurement.metric_key) }} {{ measurement.value }} {{ measurement.unit }}{% if not loop.last %} · {% endif %}{% endfor %}</small>
+                {% endif %}
+              </div>
+              <a href="/tanks/{{ selected_tank_id }}/history?filter=water_tests">View water tests →</a>
+            </aside>
+          {% endif %}
           <form class="stack-form" method="post" action="/quick-log/water-test">
             <input name="tank_id" type="hidden" value="{{ selected_tank_id }}" />
             <div class="mobile-water-test-grid">
@@ -310,6 +336,26 @@
                 {% endfor %}
               </select>
             </div>
+            {% for maintenance_type, last_action in last_maintenance_by_type.items() %}
+              {% if maintenance_type != "water_change" %}
+                <aside class="last-action-card maintenance-last-action" data-last-maintenance="{{ maintenance_type }}" {% if form_values.get('maintenance_type') != maintenance_type %}hidden{% endif %}>
+                  <div>
+                    <span>Last {{ maintenance_type.replace('_', ' ') }}</span>
+                    <strong>{{ display.format_datetime(last_action.occurred_at) }}</strong>
+                    <small>
+                      {% if last_action.equipment_name %}{{ last_action.equipment_name }}{% endif %}
+                      {% if last_action.duration_minutes is not none %} · {{ last_action.duration_minutes }} minutes{% endif %}
+                      {% if last_action.notes %} · {{ last_action.notes }}{% endif %}
+                    </small>
+                  </div>
+                  <a href="/tanks/{{ selected_tank_id }}/history?filter=maintenance&amp;task={{ maintenance_type }}">View this task →</a>
+                </aside>
+              {% endif %}
+            {% endfor %}
+            <aside class="last-action-card maintenance-last-empty" {% if last_maintenance_by_type.get(form_values.get('maintenance_type')) %}hidden{% endif %}>
+              <div><span>Last time</span><strong>No matching maintenance logged yet</strong></div>
+              <a href="/tanks/{{ selected_tank_id }}/history?filter=maintenance">View maintenance →</a>
+            </aside>
             <div>
               <label class="form-label" for="quick_equipment_name">Equipment <span class="optional-label">Optional</span></label>
               <input class="form-control form-control-lg" id="quick_equipment_name" name="equipment_name" type="text" list="recent_equipment" placeholder="Filter, heater, light, CO2" value="{{ form_values.get('equipment_name', '') }}" />
@@ -861,6 +907,24 @@
         document.getElementById("quick_equipment_name").value = button.dataset.equipmentName;
       });
     });
+    const maintenanceType = document.getElementById("quick_maintenance_type");
+    const syncLastMaintenance = () => {
+      if (!maintenanceType) {
+        return;
+      }
+      let matched = false;
+      document.querySelectorAll("[data-last-maintenance]").forEach((card) => {
+        const visible = card.dataset.lastMaintenance === maintenanceType.value;
+        card.hidden = !visible;
+        matched ||= visible;
+      });
+      const emptyCard = document.querySelector(".maintenance-last-empty");
+      if (emptyCard) {
+        emptyCard.hidden = matched;
+      }
+    };
+    maintenanceType?.addEventListener("change", syncLastMaintenance);
+    syncLastMaintenance();
     const feedingForm = document.getElementById("feeding-form");
     const foodInput = document.getElementById("quick_food_name");
     const foodNamesInput = document.getElementById("feeding_food_names");
