@@ -23,7 +23,7 @@ from app.core.config import get_settings
 from app.core.time import utc_now
 from app.domain.enums import MaintenanceType
 from app.domain.preferences import volume_from_liters, volume_to_liters
-from app.domain.water import WATER_METRICS
+from app.domain.water import WATER_METRICS, metric_label
 from app.infrastructure.repositories.feature_flags import plant_care_is_active
 from app.infrastructure.repositories.inventory import SqlAlchemyInventoryRepository
 from app.infrastructure.repositories.tanks import SqlAlchemyTankRepository
@@ -736,6 +736,12 @@ def _render_quick_log(
             "water_metrics": display.visible_water_items(WATER_METRICS),
             "water_change_schedule": water_change_schedule,
             "last_water_change_volume": last_water_change_volume,
+            "last_water_change": quick_context.last_water_change if quick_context else None,
+            "last_water_test": quick_context.last_water_test if quick_context else None,
+            "last_maintenance_by_type": (
+                quick_context.last_maintenance_by_type if quick_context else {}
+            ),
+            "metric_label": metric_label,
             "recent_conditioner_names": (
                 quick_context.recent_conditioner_names if quick_context else []
             ),

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="command-strip care-history-command">
+    <div>
+      <strong>{{ history.tank_name }} Care History</strong>
+      <span>{{ history.total_count }} matching {{ "entry" if history.total_count == 1 else "entries" }} · newest first</span>
+    </div>
+    <div class="command-actions">
+      <a class="btn btn-outline-light btn-sm" href="/tanks/{{ history.tank_id }}">Aquarium</a>
+      <a class="btn btn-primary btn-sm" href="/quick-log?tank_id={{ history.tank_id }}">Quick Log</a>
+    </div>
+  </section>
+
+  <nav class="history-filter-scroll" aria-label="Care history filters">
+    {% for value, label in history_filters %}
+      <a class="history-filter-chip {{ 'active' if selected_filter == value else '' }}" href="?filter={{ value }}">{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if selected_filter == "maintenance" %}
+    <form class="history-task-filter" method="get">
+      <input type="hidden" name="filter" value="maintenance" />
+      <label for="history_task">Maintenance task</label>
+      <select class="form-select" id="history_task" name="task" onchange="this.form.submit()">
+        <option value="">All maintenance</option>
+        {% for value, label in maintenance_tasks %}
+          <option value="{{ value }}" {% if selected_task == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  {% endif %}
+
+  <section class="care-history-list" aria-live="polite">
+    {% for event in history.events %}
+      <article class="care-history-card">
+        <header class="care-history-card-heading">
+          <div>
+            <span class="event-pill">{{ (event.maintenance_type or event.event_type).replace("_", " ") }}</span>
+            <h2>{{ event.title }}</h2>
+          </div>
+          <time datetime="{{ event.occurred_at.isoformat() }}">{{ display.format_datetime(event.occurred_at) }}</time>
+        </header>
+
+        {% if event.measurements %}
+          <div class="history-detail-grid water-history-grid">
+            {% for measurement in event.measurements %}
+              <span><strong>{{ metric_label(measurement.metric_key) }}</strong>{{ format_number(measurement.value) }} {{ measurement.unit }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if event.maintenance_type %}
+          <div class="history-detail-list">
+            {% if event.volume_changed_liters is not none %}<span><strong>Water changed</strong>{{ display.format_volume(event.volume_changed_liters) }}</span>{% endif %}
+            {% if event.equipment_name %}<span><strong>Equipment</strong>{{ event.equipment_name }}</span>{% endif %}
+            {% if event.duration_minutes is not none %}<span><strong>Duration</strong>{{ event.duration_minutes }} minutes</span>{% endif %}
+            {% if event.metadata.get("conditioner_name") %}<span><strong>Conditioner</strong>{{ event.metadata.get("conditioner_name") }}</span>{% endif %}
+            {% if event.metadata.get("nitrate_before") or event.metadata.get("nitrate_after") %}<span><strong>Nitrate</strong>{{ event.metadata.get("nitrate_before", "--") }} → {{ event.metadata.get("nitrate_after", "--") }} ppm</span>{% endif %}
+            {% if event.metadata.get("tds_before") or event.metadata.get("tds_after") %}<span><strong>TDS</strong>{{ event.metadata.get("tds_before", "--") }} → {{ event.metadata.get("tds_after", "--") }} ppm</span>{% endif %}
+          </div>
+        {% endif %}
+
+        {% if event.feeding_food_name %}
+          <div class="history-detail-list">
+            <span><strong>Food</strong>{{ event.feeding_food_name }}</span>
+            {% if event.feeding_amount is not none %}<span><strong>Amount</strong>{{ format_number(event.feeding_amount) }} {{ event.feeding_unit or "" }}</span>{% endif %}
+            {% if event.feeding_target %}<span><strong>Fed</strong>{{ event.feeding_target }}</span>{% endif %}
+          </div>
+        {% endif %}
+
+        {% if event.dose_amount is not none %}
+          <div class="history-detail-list">
+            {% if event.dose_product_name %}<span><strong>Product</strong>{{ event.dose_product_name }}</span>{% endif %}
+            <span><strong>Dose</strong>{{ format_number(event.dose_amount) }} {{ event.dose_unit }}</span>
+            {% if event.dose_location %}<span><strong>Location</strong>{{ event.dose_location }}</span>{% endif %}
+          </div>
+        {% endif %}
+
+        {% if event.notes %}<p class="history-notes">{{ event.notes }}</p>{% endif %}
+        {% if event.media_asset_id %}<img class="history-photo" src="/media/{{ event.media_asset_id }}" alt="{{ event.photo_caption or event.title }}" loading="lazy" />{% endif %}
+      </article>
+    {% else %}
+      <div class="empty-state elevated-empty">
+        <strong>No matching history yet</strong>
+        <span>Try another filter or use Quick Log to add care for this aquarium.</span>
+        <a class="btn btn-primary btn-sm" href="/quick-log?tank_id={{ history.tank_id }}">Open Quick Log</a>
+      </div>
+    {% endfor %}
+  </section>
+
+  {% if history.total_pages > 1 %}
+    <nav class="history-pagination" aria-label="Care history pages">
+      {% if history.page > 1 %}<a class="btn btn-outline-primary" href="{{ page_url(history.page - 1) }}">← Newer</a>{% else %}<span></span>{% endif %}
+      <span>Page {{ history.page }} of {{ history.total_pages }}</span>
+      {% if history.page < history.total_pages %}<a class="btn btn-outline-primary" href="{{ page_url(history.page + 1) }}">Older →</a>{% else %}<span></span>{% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

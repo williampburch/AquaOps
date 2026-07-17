@@ -75,6 +75,7 @@
     <div class="panel">
       <div class="panel-heading">
         <h2>Recent Events</h2>
+        <a class="btn btn-outline-primary btn-sm" href="/tanks/{{ tank.id }}/history">Care history</a>
       </div>
       {% if tank.recent_events %}
         <div class="timeline compact">
@@ -88,6 +89,7 @@
             </div>
           {% endfor %}
         </div>
+        <a class="timeline-more-link" href="/tanks/{{ tank.id }}/history">View complete care history →</a>
       {% else %}
         <div class="empty-state">
           <strong>No events yet</strong>

@@ -18,6 +18,8 @@ This repository contains a publishable, working foundation:
 - Water test logging through the generic event model
 - Dashboard metric cards, recent events, reminders, latest readings, and trend charts
 - Activity stream page powered by the generic event table
+- Mobile-first tank Care History with event and maintenance-task filters,
+  structured care details, and older/newer pagination
 - Reports page with event mix and nitrate trend charts
 - Catalog-backed livestock and plant entry from tank detail pages, plus inventory summaries grouped by species with quantity totals
 - Mobile-friendly livestock and plant lifecycle management with quantity edits,
@@ -150,7 +152,8 @@ livestock, plants, and reminders. It refuses to run when `APP_ENV=production` un
 - Mobile Quick Log: focused water change, water test, and maintenance entry with
   thumb-friendly controls, optional details, and visible validation feedback
 - Recent Quick Log context: last water-change volume, previous readings, recent
-  maintenance equipment, and remembered tank selection
+  maintenance equipment, remembered tank selection, and contextual "Last time"
+  summaries that link directly to matching tank history
 - Maintenance schedules: per-tank Care Plan Editor with preset provenance,
   scheduled/as-needed modes, optional weekdays/start dates, custom tasks, and
   non-destructive reminder reconciliation

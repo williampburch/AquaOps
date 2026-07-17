@@ -102,6 +102,26 @@ class RecentDose:
 
 
 @dataclass(frozen=True)
+class RecentCareMeasurement:
+    metric_key: str
+    value: Decimal
+    unit: str
+
+
+@dataclass(frozen=True)
+class RecentCareAction:
+    event_id: int
+    title: str
+    occurred_at: datetime
+    notes: str | None
+    maintenance_type: str | None = None
+    duration_minutes: int | None = None
+    volume_changed_liters: Decimal | None = None
+    equipment_name: str | None = None
+    measurements: tuple[RecentCareMeasurement, ...] = ()
+
+
+@dataclass(frozen=True)
 class QuickLogContext:
     last_water_change_liters: Decimal | None
     recent_conditioner_names: list[str]
@@ -114,6 +134,9 @@ class QuickLogContext:
     last_dose: RecentDose | None
     recent_dose_products: list[str]
     recent_dose_locations: list[str]
+    last_water_change: RecentCareAction | None
+    last_water_test: RecentCareAction | None
+    last_maintenance_by_type: dict[str, RecentCareAction]
 
 
 @dataclass(frozen=True)

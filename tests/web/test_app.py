@@ -196,6 +196,7 @@ def test_tanks_require_authentication(client: TestClient) -> None:
 
 def test_events_and_reports_require_authentication(client: TestClient) -> None:
     events_response = client.get("/events", follow_redirects=False)
+    history_response = client.get("/tanks/1/history", follow_redirects=False)
     reports_response = client.get("/reports", follow_redirects=False)
     livestock_response = client.get("/livestock", follow_redirects=False)
     plants_response = client.get("/plants", follow_redirects=False)
@@ -207,6 +208,8 @@ def test_events_and_reports_require_authentication(client: TestClient) -> None:
 
     assert events_response.status_code == 303
     assert events_response.headers["location"] == "/login"
+    assert history_response.status_code == 303
+    assert history_response.headers["location"] == "/login"
     assert reports_response.status_code == 303
     assert reports_response.headers["location"] == "/login"
     assert livestock_response.status_code == 303
@@ -1268,6 +1271,112 @@ def test_events_page_renders_recent_activity(client: TestClient) -> None:
     assert "Activity Stream" in response.text
     assert "Water test" in response.text
     assert "First full test" in response.text
+
+
+def test_tank_care_history_shows_structured_details_and_filters(
+    client: TestClient,
+) -> None:
+    _register(client)
+    _create_tank(client)
+    _log_water_test(client)
+    client.post(
+        "/quick-log/water-change",
+        data={
+            "tank_id": "1",
+            "volume_changed": "10",
+            "conditioner_name": "Seachem Prime",
+            "nitrate_before": "20",
+            "nitrate_after": "8",
+            "duration_minutes": "25",
+            "notes": "Weekly reset",
+        },
+    )
+    client.post(
+        "/quick-log/maintenance",
+        data={
+            "tank_id": "1",
+            "maintenance_type": "filter_cleaning",
+            "equipment_name": "Canister filter",
+            "duration_minutes": "15",
+            "notes": "Rinsed media in tank water",
+        },
+    )
+
+    history = client.get("/tanks/1/history")
+    water_tests = client.get("/tanks/1/history?filter=water_tests")
+    filter_history = client.get("/tanks/1/history?filter=maintenance&task=filter_cleaning")
+    tank_detail = client.get("/tanks/1")
+
+    assert history.status_code == 200
+    assert "Display Tank Care History" in history.text
+    assert "Water changed" in history.text
+    assert "10.0 gal" in history.text
+    assert "Seachem Prime" in history.text
+    assert "Nitrate" in history.text
+    assert "20 → 8 ppm" in history.text
+    assert "Canister filter" in history.text
+    assert "Rinsed media in tank water" in history.text
+    assert "Water test" in water_tests.text
+    assert "20 ppm" in water_tests.text
+    assert "Filter Cleaning" not in water_tests.text
+    assert "Filter Cleaning" in filter_history.text
+    assert "Weekly reset" not in filter_history.text
+    assert 'href="/tanks/1/history"' in tank_detail.text
+
+
+def test_quick_log_shows_last_matching_care_actions(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+    _log_water_test(client)
+    client.post(
+        "/quick-log/water-change",
+        data={"tank_id": "1", "volume_changed": "10", "duration_minutes": "25"},
+    )
+    client.post(
+        "/quick-log/maintenance",
+        data={
+            "tank_id": "1",
+            "maintenance_type": "filter_cleaning",
+            "equipment_name": "Canister filter",
+            "duration_minutes": "15",
+        },
+    )
+
+    water_change = client.get("/quick-log?action=water_change&tank_id=1")
+    water_test = client.get("/quick-log?action=water_test&tank_id=1")
+    maintenance = client.get(
+        "/quick-log?action=maintenance&tank_id=1&maintenance_type=filter_cleaning"
+    )
+
+    assert "Last water change" in water_change.text
+    assert "10.0 gal" in water_change.text
+    assert "View water changes" in water_change.text
+    assert "Last water test" in water_test.text
+    assert "Nitrate 20.000 ppm" in water_test.text
+    assert "Last filter cleaning" in maintenance.text
+    assert "Canister filter" in maintenance.text
+    assert 'data-last-maintenance="filter_cleaning"' in maintenance.text
+
+
+def test_tank_care_history_paginates_older_entries(client: TestClient) -> None:
+    _register(client)
+    _create_tank(client)
+    for index in range(21):
+        client.post(
+            "/quick-log/observation",
+            data={"tank_id": "1", "title": f"Observation {index + 1}"},
+        )
+
+    first_page = client.get("/tanks/1/history?filter=observations")
+    second_page = client.get("/tanks/1/history?filter=observations&page=2")
+
+    assert "Page 1 of 2" in first_page.text
+    assert "Older →" in first_page.text
+    assert ">Observation 21</h2>" in first_page.text
+    assert ">Observation 1</h2>" not in first_page.text
+    assert "Page 2 of 2" in second_page.text
+    assert "← Newer" in second_page.text
+    assert ">Observation 1</h2>" in second_page.text
 
 
 def test_reports_page_renders_event_charts(client: TestClient) -> None:

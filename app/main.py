@@ -24,6 +24,7 @@ from app.web.routes import (
     pwa,
     quick_log,
     reports,
+    tank_history,
     tanks,
 )
 from app.web.routes import (
@@ -71,6 +72,7 @@ def create_app(
     app.include_router(pwa.router)
     app.include_router(auth.router)
     app.include_router(care_plans.router)
+    app.include_router(tank_history.router)
     app.include_router(tanks.router)
     app.include_router(inventory.router)
     app.include_router(events.router)
